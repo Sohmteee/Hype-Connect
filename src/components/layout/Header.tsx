@@ -31,11 +31,11 @@ export function Header({ className }: { className?: string }) {
 
   return (
     <header className={cn(headerClasses, className)}>
-      <div className="container flex h-14 items-center">
+      <div className="container flex h-16 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2 mr-6">
-            <HypeConnectLogo className="h-6 w-6 neon-glow-primary" />
-            <span className={cn("font-bold font-headline", isHomePage && "text-white")}>HypeConnect</span>
+            <HypeConnectLogo className="h-8 w-8 neon-glow-primary" />
+            <span className={cn("font-bold text-lg font-headline", isHomePage && "text-white")}>HypeConnect</span>
           </Link>
         </div>
          <nav className="hidden md:flex items-center gap-2">
@@ -62,28 +62,36 @@ export function Header({ className }: { className?: string }) {
 
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className={cn("md:hidden", navItemClasses)}>
-                <Menu />
+              <Button variant="ghost" size="icon" className={cn("md:hidden p-2", navItemClasses)}>
+                <Menu className="h-6 w-6" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <div className="flex flex-col h-full">
-                <div className="flex-1 py-8">
-                  <div className="flex flex-col gap-4">
-                    {navLinks.map(link => (
-                      <Link key={link.href} href={link.href} className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary">
-                        <link.icon className="h-5 w-5" />
-                        {link.label}
-                      </Link>
-                    ))}
+            <SheetContent side="right" className="w-[80vw] max-w-sm">
+               <div className="p-4">
+                 <Link href="/" className="flex items-center gap-2 mb-8">
+                  <HypeConnectLogo className="h-8 w-8 text-primary neon-glow-primary" />
+                  <span className="font-bold text-lg font-headline text-foreground">HypeConnect</span>
+                </Link>
+
+                <div className="flex flex-col h-full">
+                  <div className="flex-1 space-y-4">
+                      {navLinks.map(link => (
+                        <Link key={link.href} href={link.href} className="flex items-center gap-4 rounded-lg px-3 py-3 text-lg font-medium text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
+                          <link.icon className="h-6 w-6" />
+                          <span>{link.label}</span>
+                        </Link>
+                      ))}
                   </div>
-                </div>
-                <div className="mt-auto flex flex-col gap-2">
-                  <Button className="glowing-btn w-full">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                  </Button>
+                  <div className="mt-16 flex flex-col gap-4">
+                    <Button size="lg" className="glowing-btn w-full">
+                      <LogIn className="mr-2 h-5 w-5" />
+                      Login
+                    </Button>
+                    <Button size="lg" variant="outline" className="w-full">
+                      Sign Up
+                    </Button>
+                  </div>
                 </div>
               </div>
             </SheetContent>
