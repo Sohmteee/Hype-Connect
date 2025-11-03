@@ -97,7 +97,7 @@ export default function Home() {
       <div className="relative">
         <Header />
         <main className="flex-1">
-          <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white overflow-hidden rounded-b-2xl">
+          <section className="relative w-full h-screen flex items-center justify-center text-center text-white overflow-hidden">
             <Image
               src="https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080"
               alt="Hypeman with a microphone"
