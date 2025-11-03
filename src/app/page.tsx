@@ -1,4 +1,7 @@
 
+'use client';
+
+import * as React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Club, Mic, PartyPopper, Search, Send, Volume2 } from 'lucide-react';
@@ -15,6 +18,8 @@ import { getEvents } from '@/lib/data';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Hypeman } from '@/lib/types';
+import { Input } from '@/components/ui/input';
+
 
 function HowItWorks() {
   const steps = [
@@ -88,8 +93,15 @@ function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
 }
 
 export default function Home() {
-  const events = getEvents();
-  const featuredHypemen = Array.from(new Map(events.map(event => [event.hypeman.id, event.hypeman])).values());
+  const allEvents = getEvents();
+  const [searchTerm, setSearchTerm] = React.useState('');
+
+  const featuredHypemen = Array.from(new Map(allEvents.map(event => [event.hypeman.id, event.hypeman])).values());
+
+  const filteredEvents = allEvents.filter(event =>
+    event.clubName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
 
   return (
@@ -120,13 +132,30 @@ export default function Home() {
             </div>
           </section>
 
-          <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
+          <section id="events" className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
             <div className="container px-4 md:px-6">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-center mb-10 font-headline">
-                Live Events
-              </h2>
+              <div className="text-center mb-10">
+                <h2 className="text-4xl md:text-5xl font-bold tracking-tighter font-headline">
+                  Live Events
+                </h2>
+                <p className="text-muted-foreground mt-2">Find where the party is at tonight.</p>
+              </div>
+
+              <div className="max-w-xl mx-auto mb-10">
+                <div className="relative">
+                  <Input
+                    type="search"
+                    placeholder="Search for an event or hypeman..."
+                    className="w-full text-base h-12 pl-12 pr-4"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {events.map((event) => (
+                {filteredEvents.map((event) => (
                   <Card
                     key={event.id}
                     className="overflow-hidden border-2 border-transparent hover:border-primary transition-all duration-300 group bg-card"
@@ -157,6 +186,9 @@ export default function Home() {
                   </Card>
                 ))}
               </div>
+              {filteredEvents.length === 0 && (
+                <p className="text-center text-muted-foreground mt-8">No events found matching your search.</p>
+              )}
             </div>
           </section>
           
