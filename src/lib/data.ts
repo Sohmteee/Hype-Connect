@@ -10,7 +10,7 @@ const hypemen: Hypeman[] = [
   { id: 'hm-4', name: 'Captain Hype', avatarUrl: findImage('avatar-4') },
 ];
 
-const events: ClubEvent[] = [
+let events: ClubEvent[] = [
   { id: 'evt-1', clubName: 'Club Neon', hypeman: hypemen[0], imageUrl: findImage('event-1'), isActive: true },
   { id: 'evt-2', clubName: 'The Groove Yard', hypeman: hypemen[1], imageUrl: findImage('event-2'), isActive: true },
   { id: 'evt-3', clubName: 'Vortex Lounge', hypeman: hypemen[2], imageUrl: findImage('event-3'), isActive: false },
@@ -32,6 +32,9 @@ const tippers: Tipper[] = [
 ];
 
 export const getEvents = (): ClubEvent[] => events;
+export const getActiveEventsByHypeman = (hypemanId: string): ClubEvent[] => {
+    return events.filter(e => e.hypeman.id === hypemanId && e.isActive);
+}
 export const getEventById = (id: string): ClubEvent | undefined => events.find(e => e.id === id);
 export const getHypesForEvent = (eventId: string): Hype[] => hypes.filter(h => h.eventId === eventId).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 export const getLeaderboardForEvent = (eventId: string): Tipper[] => {
@@ -60,4 +63,13 @@ export const addEvent = (event: Omit<ClubEvent, 'id' | 'hypeman' | 'isActive'>):
     };
     events.unshift(newEvent);
     return newEvent;
+}
+
+export const endEvent = (eventId: string): ClubEvent | undefined => {
+    const eventIndex = events.findIndex(e => e.id === eventId);
+    if (eventIndex > -1) {
+        events[eventIndex].isActive = false;
+        return events[eventIndex];
+    }
+    return undefined;
 }

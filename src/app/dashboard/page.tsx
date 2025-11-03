@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import Image from 'next/image';
 import {
   Check,
   CheckCheck,
@@ -13,12 +14,13 @@ import {
   PlusCircle,
   Building,
   Upload,
+  PowerOff,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 
-import { getHypesForEvent, addEvent } from '@/lib/data';
+import { getHypesForEvent, addEvent, getActiveEventsByHypeman, endEvent } from '@/lib/data';
 import type { Hype, ClubEvent } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -52,6 +54,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
 
 const MAX_FILE_SIZE = 5000000; // 5MB
 const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
@@ -259,14 +262,20 @@ function AiSuggestions({
 }
 
 export default function DashboardPage() {
-  const eventId = 'evt-1'; // Hardcoded for demo
+  const hypemanId = 'hm-1'; // Hardcoded for demo
   const [hypes, setHypes] = React.useState<Hype[]>([]);
   const [selectedHypes, setSelectedHypes] = React.useState<Hype[]>([]);
+  const [activeEvents, setActiveEvents] = React.useState<ClubEvent[]>([]);
   const { toast } = useToast();
 
   React.useEffect(() => {
-    const initialHypes = getHypesForEvent(eventId);
+    // In a real app, you'd fetch based on the selected event
+    const initialHypes = getHypesForEvent('evt-1');
     setHypes(initialHypes);
+    
+    // Fetch active events for the current hypeman
+    const events = getActiveEventsByHypeman(hypemanId);
+    setActiveEvents(events);
   }, []);
   
   const totalEarnings = hypes.reduce((sum, hype) => sum + hype.amount, 0);
@@ -278,8 +287,7 @@ export default function DashboardPage() {
   };
   
   const handleEventCreated = (newEvent: ClubEvent) => {
-    // In a real app, you might want to refresh the list of events or navigate
-    console.log("New event created, redirecting might be needed", newEvent);
+     setActiveEvents((prev) => [newEvent, ...prev]);
   };
 
   const handleMarkAsHyped = (hypeId: string) => {
@@ -289,6 +297,15 @@ export default function DashboardPage() {
     toast({
         title: 'Marked as Hyped!',
         description: 'The crowd loves you!',
+    });
+  };
+  
+  const handleEndEvent = (eventId: string) => {
+    endEvent(eventId);
+    setActiveEvents(prev => prev.filter(e => e.id !== eventId));
+    toast({
+        title: 'Event Ended',
+        description: 'The event is no longer active.',
     });
   };
 
@@ -305,55 +322,86 @@ export default function DashboardPage() {
 
         <div className="grid gap-8 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
-            <h2 className="text-2xl font-semibold">Incoming Hypes for Club Neon</h2>
-            <div className="space-y-4">
-              {hypes.map((hype) => (
-                <Card
-                  key={hype.id}
-                  className={`transition-all ${hype.status === 'hyped' ? 'bg-card/50 opacity-60' : 'bg-card'}`}
-                >
-                  <CardHeader>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle className="flex items-center gap-3">
-                           <Checkbox
-                            id={`select-${hype.id}`}
-                            onCheckedChange={(checked) =>
-                              handleSelectHype(hype, !!checked)
-                            }
-                            checked={selectedHypes.some((h) => h.id === hype.id)}
-                          />
-                          {hype.senderName}
-                        </CardTitle>
-                        <CardDescription className="mt-1">
-                          {formatDistanceToNow(new Date(hype.timestamp), { addSuffix: true })}
-                        </CardDescription>
-                      </div>
-                      <Badge variant={hype.status === 'hyped' ? "secondary" : "default"} className="text-base">
-                        <DollarSign className="h-4 w-4 mr-1" />
-                        {hype.amount.toLocaleString()}
-                      </Badge>
+            
+            <section className="space-y-4">
+                <h2 className="text-2xl font-semibold">Your Active Events</h2>
+                 {activeEvents.length > 0 ? (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        {activeEvents.map(event => (
+                            <Card key={event.id}>
+                                <Image src={event.imageUrl} alt={event.clubName} width={400} height={200} className="rounded-t-lg object-cover h-32 w-full" data-ai-hint="nightclub party" />
+                                <CardHeader>
+                                    <CardTitle>{event.clubName}</CardTitle>
+                                </CardHeader>
+                                <CardFooter>
+                                    <Button variant="destructive" className="w-full" onClick={() => handleEndEvent(event.id)}>
+                                        <PowerOff className="mr-2" />
+                                        End Event
+                                    </Button>
+                                </CardFooter>
+                            </Card>
+                        ))}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-lg">{hype.message}</p>
-                  </CardContent>
-                  <CardFooter className="flex justify-end">
-                    {hype.status === 'new' ? (
-                      <Button onClick={() => handleMarkAsHyped(hype.id)}>
-                        <Check className="mr-2 h-4 w-4" />
-                        Mark as Hyped
-                      </Button>
-                    ) : (
-                      <div className="flex items-center text-muted-foreground">
-                        <CheckCheck className="mr-2 h-4 w-4 text-green-400" />
-                        Hyped!
+                ) : (
+                    <Card className='text-center p-8'>
+                        <CardDescription>You have no active events.</CardDescription>
+                    </Card>
+                )}
+            </section>
+            
+            <Separator className="my-8" />
+            
+            <section className="space-y-4">
+              <h2 className="text-2xl font-semibold">Incoming Hypes for Club Neon</h2>
+              <div className="space-y-4">
+                {hypes.map((hype) => (
+                  <Card
+                    key={hype.id}
+                    className={`transition-all ${hype.status === 'hyped' ? 'bg-card/50 opacity-60' : 'bg-card'}`}
+                  >
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle className="flex items-center gap-3">
+                            <Checkbox
+                              id={`select-${hype.id}`}
+                              onCheckedChange={(checked) =>
+                                handleSelectHype(hype, !!checked)
+                              }
+                              checked={selectedHypes.some((h) => h.id === hype.id)}
+                            />
+                            {hype.senderName}
+                          </CardTitle>
+                          <CardDescription className="mt-1">
+                            {formatDistanceToNow(new Date(hype.timestamp), { addSuffix: true })}
+                          </CardDescription>
+                        </div>
+                        <Badge variant={hype.status === 'hyped' ? "secondary" : "default"} className="text-base">
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          {hype.amount.toLocaleString()}
+                        </Badge>
                       </div>
-                    )}
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-lg">{hype.message}</p>
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+                      {hype.status === 'new' ? (
+                        <Button onClick={() => handleMarkAsHyped(hype.id)}>
+                          <Check className="mr-2 h-4 w-4" />
+                          Mark as Hyped
+                        </Button>
+                      ) : (
+                        <div className="flex items-center text-muted-foreground">
+                          <CheckCheck className="mr-2 h-4 w-4 text-green-400" />
+                          Hyped!
+                        </div>
+                      )}
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            </section>
           </div>
 
           <div className="space-y-8">
@@ -368,5 +416,3 @@ export default function DashboardPage() {
     </>
   );
 }
-
-    
