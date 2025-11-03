@@ -64,14 +64,14 @@ function HowItWorks() {
 
 function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
     return (
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
+        <section className="w-full py-12 md:py-24 lg:py-32">
             <div className="container px-4 md:px-6">
                 <h2 className="text-3xl font-bold tracking-tighter text-center mb-12 font-headline">
                     Featured Hypemen
                 </h2>
                 <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
                     {hypemen.map((hypeman) => (
-                        <Card key={hypeman.id} className="text-center p-4 border-2 border-transparent hover:border-accent transition-all duration-300">
+                        <Card key={hypeman.id} className="text-center p-4 border-2 border-transparent hover:border-accent transition-all duration-300 bg-card">
                            <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-accent">
                              <AvatarImage src={hypeman.avatarUrl} alt={hypeman.name} data-ai-hint="person portrait" />
                              <AvatarFallback>{hypeman.name.charAt(0)}</AvatarFallback>
@@ -98,7 +98,7 @@ export default function Home() {
       <main className="flex-1">
         <section className="relative w-full h-[60vh] flex items-center justify-center text-center text-white overflow-hidden">
           <Image
-            src="https://images.unsplash.com/photo-1590325188824-e5387b38d39e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lJTIwc2luZ2luZ3xlbnwwfHx8fDE3NjIyMDE0NDl8MA&ixlib=rb-4.1.0&q=80&w=1080"
+            src="https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080"
             alt="Hypeman with a microphone"
             fill
             className="object-cover"
