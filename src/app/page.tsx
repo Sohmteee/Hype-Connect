@@ -182,14 +182,14 @@ export default function Home() {
                     />
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="h-12 bg-transparent border-primary/50 text-primary-foreground hover:bg-primary/10 hover:text-primary-foreground"
-                  >
-                    <MapPin className="mr-2 h-5 w-5" />
-                    My Location
-                  </Button>
+                   <div className="relative">
+                    <Input
+                      type="search"
+                      placeholder="Search by location..."
+                      className="w-full text-base h-12 pl-12 pr-4 sm:w-auto"
+                    />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                  </div>
                 </div>
               </div>
 
