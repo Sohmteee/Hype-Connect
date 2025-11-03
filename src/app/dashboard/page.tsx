@@ -10,24 +10,136 @@ import {
   Sparkles,
   Wallet as WalletIcon,
   Download,
+  PlusCircle,
+  Image as ImageIcon,
+  Building,
 } from 'lucide-react';
-import { getHypesForEvent } from '@/lib/data';
-import type { Hype } from '@/lib/types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+import { getHypesForEvent, addEvent } from '@/lib/data';
+import type { Hype, ClubEvent } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Header } from '@/components/layout/Header';
 import { getAiSuggestionsAction } from './actions';
-import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+
+const eventFormSchema = z.object({
+  clubName: z.string().min(3, { message: 'Club name must be at least 3 characters.' }),
+  imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }),
+});
+
+type EventFormValues = z.infer<typeof eventFormSchema>;
+
+
+function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: ClubEvent) => void }) {
+  const [open, setOpen] = React.useState(false);
+  const { toast } = useToast();
+  const form = useForm<EventFormValues>({
+    resolver: zodResolver(eventFormSchema),
+    defaultValues: {
+      clubName: '',
+      imageUrl: '',
+    },
+  });
+
+  function onSubmit(data: EventFormValues) {
+    const newEvent = addEvent({
+      clubName: data.clubName,
+      imageUrl: data.imageUrl,
+    });
+    toast({
+      title: 'Event Created! 🚀',
+      description: `${data.clubName} is now live.`,
+    });
+    onEventCreated(newEvent);
+    form.reset();
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2" />
+          Create New Event
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Create a New Event</DialogTitle>
+          <DialogDescription>
+            Fill in the details to start a new hype session.
+          </DialogDescription>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+            <FormField
+              control={form.control}
+              name="clubName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2"><Building/> Club Name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Club Neon" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2"><ImageIcon/> Event Image URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://images.unsplash.com/..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="submit" className="w-full glowing-accent-btn">
+                Create Event
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function Wallet({ earnings }: { earnings: number }) {
   return (
@@ -142,6 +254,11 @@ export default function DashboardPage() {
       isSelected ? [...prev, hype] : prev.filter((h) => h.id !== hype.id)
     );
   };
+  
+  const handleEventCreated = (newEvent: ClubEvent) => {
+    // In a real app, you might want to refresh the list of events or navigate
+    console.log("New event created, redirecting might be needed", newEvent);
+  };
 
   const handleMarkAsHyped = (hypeId: string) => {
     setHypes((prev) =>
@@ -157,13 +274,16 @@ export default function DashboardPage() {
     <>
       <Header />
       <main className="container py-8 md:py-12">
-        <h1 className="text-4xl font-bold tracking-tighter mb-8 font-headline">
-          MC Gusto&apos;s Dashboard
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold tracking-tighter font-headline">
+            MC Gusto&apos;s Dashboard
+            </h1>
+            <CreateEventDialog onEventCreated={handleEventCreated} />
+        </div>
 
         <div className="grid gap-8 md:grid-cols-3">
           <div className="md:col-span-2 space-y-6">
-            <h2 className="text-2xl font-semibold">Incoming Hypes</h2>
+            <h2 className="text-2xl font-semibold">Incoming Hypes for Club Neon</h2>
             <div className="space-y-4">
               {hypes.map((hype) => (
                 <Card

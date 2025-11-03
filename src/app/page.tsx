@@ -158,10 +158,10 @@ export default function Home() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 mt-6">
                   <Button asChild size="lg" className="glowing-accent-btn">
-                    <Link href="#events">Get Hype</Link>
+                    <Link href="#events">Find Event</Link>
                   </Button>
                    <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent">
-                     <Link href="/dashboard">Join as Hypeman</Link>
+                     <Link href="/signup">Create Your Event</Link>
                   </Button>
                 </div>
               </div>

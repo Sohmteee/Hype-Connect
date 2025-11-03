@@ -47,4 +47,17 @@ export const addHype = (hype: Omit<Hype, 'id' | 'timestamp' | 'status'>): Hype =
     };
     hypes.unshift(newHype);
     return newHype;
+};
+
+export const addEvent = (event: Omit<ClubEvent, 'id' | 'hypeman' | 'isActive'>): ClubEvent => {
+    // In a real app, the logged-in user would be the hypeman.
+    // We'll use MC Gusto as the default for this demo.
+    const newEvent: ClubEvent = {
+        ...event,
+        id: `evt-${Date.now()}`,
+        hypeman: hypemen[0],
+        isActive: true, // New events are live by default
+    };
+    events.unshift(newEvent);
+    return newEvent;
 }
