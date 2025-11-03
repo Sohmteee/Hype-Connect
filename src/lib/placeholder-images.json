@@ -32,27 +32,27 @@
     },
     {
       "id": "avatar-1",
-      "description": "Portrait of a hype man with a microphone",
-      "imageUrl": "https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "man microphone"
+      "description": "Stylish man in a vibrant jacket looking to the side",
+      "imageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYWxlJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYzNTYxMjAxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man portrait"
     },
     {
       "id": "avatar-2",
-      "description": "Portrait of a female DJ",
-      "imageUrl": "https://images.unsplash.com/photo-1686242585398-6a069e7eb7c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3b21hbiUyMGRqfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlibrb-4.1.0&q=80&w=1080",
-      "imageHint": "woman dj"
+      "description": "Woman with curly hair smiling against a textured background",
+      "imageUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwb3J0cmFpdCUyMHdvbWFufGVufDB8fHx8MTc2MzU2MTU4NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman portrait"
     },
     {
       "id": "avatar-3",
-      "description": "Stylish person in a club",
-      "imageUrl": "https://images.unsplash.com/photo-1655459765544-39065b741a9e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXJzb24lMjBjbHViYmluZ3xlbnwwfHx8fDE3NjIyMDE0NDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "person clubbing"
+      "description": "Woman in a hat and stylish outfit looking confidently at the camera",
+      "imageUrl": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwb3J0cmFpdHxlbnwwfHx8fDE3NjM1NjE2NTV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "stylish portrait"
     },
     {
       "id": "avatar-4",
-      "description": "Man wearing sunglasses at night",
-      "imageUrl": "https://images.unsplash.com/photo-1728034262250-7cdb43a02491?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtYW4lMjBzdW5nbGFzc2VzfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "man sunglasses"
+      "description": "Man with dreadlocks smiling warmly in an urban setting",
+      "imageUrl": "https://images.unsplash.com/photo-1528892952291-009c663ce843?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtYWxlJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYzNTYxMjAxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man smiling"
     },
     {
       "id": "tipper-1",
