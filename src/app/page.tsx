@@ -93,77 +93,79 @@ export default function Home() {
 
 
   return (
-    <>
-      <Header />
-      <main className="flex-1">
-        <section className="relative w-full h-[60vh] flex items-center justify-center text-center text-white overflow-hidden rounded-b-2xl">
-          <Image
-            src="https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080"
-            alt="Hypeman with a microphone"
-            fill
-            className="object-cover"
-            data-ai-hint="man microphone"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/60" />
-          <div className="relative z-10 container px-4 md:px-6">
-            <div className="flex flex-col items-center space-y-4">
-              <PartyPopper className="w-16 h-16 text-accent neon-glow" />
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text">
-                Welcome to HypeConnect
-              </h1>
-              <p className="max-w-[700px] text-neutral-200 md:text-xl">
-                Join the party, find your event, and send some hype to your favorite MCs.
-              </p>
+    <div className="flex-1">
+      <div className="relative">
+        <Header />
+        <main className="flex-1">
+          <section className="relative w-full h-[60vh] min-h-[400px] flex items-center justify-center text-center text-white overflow-hidden rounded-b-2xl">
+            <Image
+              src="https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080"
+              alt="Hypeman with a microphone"
+              fill
+              className="object-cover"
+              data-ai-hint="man microphone"
+              priority
+            />
+            <div className="absolute inset-0 bg-black/60" />
+            <div className="relative z-10 container px-4 md:px-6">
+              <div className="flex flex-col items-center space-y-4">
+                <PartyPopper className="w-16 h-16 text-accent neon-glow" />
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text">
+                  Welcome to HypeConnect
+                </h1>
+                <p className="max-w-[700px] text-neutral-200 md:text-xl">
+                  Join the party, find your event, and send some hype to your favorite MCs.
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
-          <div className="container px-4 md:px-6">
-            <h2 className="text-3xl font-bold tracking-tighter text-center mb-10 font-headline">
-              Live Events
-            </h2>
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {events.map((event) => (
-                <Card
-                  key={event.id}
-                  className="overflow-hidden border-2 border-transparent hover:border-primary transition-all duration-300 group bg-card"
-                >
-                  <CardHeader className="p-0 relative">
-                    <Image
-                      src={event.imageUrl}
-                      alt={event.clubName}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105"
-                      data-ai-hint="nightclub party"
-                    />
-                     <Badge variant="destructive" className="absolute top-2 right-2 glowing-text">LIVE</Badge>
-                  </CardHeader>
-                  <CardContent className="p-4">
-                    <CardTitle className="flex items-center gap-2 font-headline">{event.clubName}</CardTitle>
-                    <div className="flex items-center gap-2 mt-2 text-muted-foreground">
-                      <Mic className="w-4 h-4" />
-                      <span>{event.hypeman.name}</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="p-4">
-                    <Button asChild className="w-full glowing-btn">
-                      <Link href={`/event/${event.id}`}>Join & Send Hype</Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+          <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
+            <div className="container px-4 md:px-6">
+              <h2 className="text-3xl font-bold tracking-tighter text-center mb-10 font-headline">
+                Live Events
+              </h2>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {events.map((event) => (
+                  <Card
+                    key={event.id}
+                    className="overflow-hidden border-2 border-transparent hover:border-primary transition-all duration-300 group bg-card"
+                  >
+                    <CardHeader className="p-0 relative">
+                      <Image
+                        src={event.imageUrl}
+                        alt={event.clubName}
+                        width={600}
+                        height={400}
+                        className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105"
+                        data-ai-hint="nightclub party"
+                      />
+                      <Badge variant="destructive" className="absolute top-2 right-2 glowing-text">LIVE</Badge>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <CardTitle className="flex items-center gap-2 font-headline">{event.clubName}</CardTitle>
+                      <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                        <Mic className="w-4 h-4" />
+                        <span>{event.hypeman.name}</span>
+                      </div>
+                    </CardContent>
+                    <CardFooter className="p-4">
+                      <Button asChild className="w-full glowing-btn">
+                        <Link href={`/event/${event.id}`}>Join & Send Hype</Link>
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
-        
-        <HowItWorks />
+          </section>
+          
+          <HowItWorks />
 
-        <FeaturedHypemen hypemen={featuredHypemen} />
+          <FeaturedHypemen hypemen={featuredHypemen} />
 
-      </main>
-    </>
+        </main>
+      </div>
+    </div>
   );
 }
