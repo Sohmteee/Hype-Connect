@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { notFound } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +15,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -37,7 +37,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { addHype, getEventById, getLeaderboardForEvent } from '@/lib/data';
-import type { ClubEvent, Hype, Tipper } from '@/lib/types';
+import type { ClubEvent, Tipper } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -263,8 +263,8 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   );
 }
 
-
-export default function EventPage({ params }: { params: { id: string } }) {
+// This is now a Server Component
+export default async function EventPage({ params }: { params: { id: string } }) {
   const event = getEventById(params.id);
   const leaderboard = getLeaderboardForEvent(params.id);
 
