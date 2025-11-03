@@ -163,11 +163,11 @@ export default function Home() {
             <div className="container px-4 md:px-6">
               <div className="text-center mb-10">
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <PartyPopper className="w-12 h-12 text-accent neon-glow" />
+                  <Mic className="w-12 h-12 text-accent neon-glow" />
                   <h2 className="text-4xl md:text-5xl font-bold tracking-tighter font-headline">
                     Live Events
                   </h2>
-                  <PartyPopper className="w-12 h-12 text-accent neon-glow" />
+                  <Mic className="w-12 h-12 text-accent neon-glow" />
                 </div>
                 <p className="text-muted-foreground mt-2">
                   Find where the party is at tonight.
