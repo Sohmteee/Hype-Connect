@@ -21,13 +21,13 @@ body {
     --secondary-foreground: 0 0% 98%;
     --muted: 265 39% 18%;
     --muted-foreground: 0 0% 63.9%;
-    --accent: 51 100% 85%;
-    --accent-foreground: 0 0% 10%;
+    --accent: 271 100% 85%;
+    --accent-foreground: 271 20% 10%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 265 39% 18%;
     --input: 265 39% 18%;
-    --ring: 51 100% 90%;
+    --ring: 271 100% 90%;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
