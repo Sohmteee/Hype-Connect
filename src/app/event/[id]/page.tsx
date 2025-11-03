@@ -13,6 +13,7 @@ import {
   User,
   Wallet,
   ArrowLeft,
+  MapPin,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -145,6 +146,10 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
               <CardDescription className="flex items-center gap-2">
                 <Mic className="h-4 w-4" />
                 Hype hosted by {event.hypeman.name}
+              </CardDescription>
+              <CardDescription className="flex items-center gap-2 pt-1">
+                <MapPin className="h-4 w-4" />
+                {event.location}
               </CardDescription>
             </CardHeader>
             <CardFooter className="flex-wrap gap-2">

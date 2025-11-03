@@ -10,6 +10,7 @@ export type ClubEvent = {
   hypeman: Hypeman;
   imageUrl: string;
   isActive: boolean;
+  location: string;
 };
 
 export type Hype = {

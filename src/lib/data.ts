@@ -11,11 +11,11 @@ const hypemen: Hypeman[] = [
 ];
 
 let events: ClubEvent[] = [
-  { id: 'evt-1', clubName: 'Club Neon', hypeman: hypemen[0], imageUrl: findImage('event-1'), isActive: true },
-  { id: 'evt-2', clubName: 'The Groove Yard', hypeman: hypemen[1], imageUrl: findImage('event-2'), isActive: true },
-  { id: 'evt-5', clubName: 'Somto', hypeman: hypemen[3], imageUrl: findImage('event-5'), isActive: true },
-  { id: 'evt-3', clubName: 'Vortex Lounge', hypeman: hypemen[2], imageUrl: findImage('event-3'), isActive: false },
-  { id: 'evt-4', clubName: 'After Dark', hypeman: hypemen[3], imageUrl: findImage('event-4'), isActive: false },
+  { id: 'evt-1', clubName: 'Club Neon', hypeman: hypemen[0], imageUrl: findImage('event-1'), isActive: true, location: 'Lagos, NG' },
+  { id: 'evt-2', clubName: 'The Groove Yard', hypeman: hypemen[1], imageUrl: findImage('event-2'), isActive: true, location: 'Abuja, NG' },
+  { id: 'evt-5', clubName: 'Somto', hypeman: hypemen[3], imageUrl: findImage('event-5'), isActive: true, location: 'Enugu, NG' },
+  { id: 'evt-3', clubName: 'Vortex Lounge', hypeman: hypemen[2], imageUrl: findImage('event-3'), isActive: false, location: 'Lagos, NG' },
+  { id: 'evt-4', clubName: 'After Dark', hypeman: hypemen[3], imageUrl: findImage('event-4'), isActive: false, location: 'Port Harcourt, NG' },
 ];
 
 const hypes: Hype[] = [

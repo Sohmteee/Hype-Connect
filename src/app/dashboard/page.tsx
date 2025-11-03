@@ -15,6 +15,7 @@ import {
   Building,
   Upload,
   PowerOff,
+  MapPin,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,6 +62,7 @@ const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/web
 
 const eventFormSchema = z.object({
   clubName: z.string().min(3, { message: 'Club name must be at least 3 characters.' }),
+  location: z.string().min(3, { message: 'Location must be at least 3 characters.' }),
   image: z
     .any()
     .refine((files) => files?.length == 1, "Image is required.")
@@ -80,6 +82,7 @@ function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: Club
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
       clubName: '',
+      location: '',
       image: undefined,
     },
   });
@@ -89,6 +92,7 @@ function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: Club
 
     const newEvent = addEvent({
       clubName: data.clubName,
+      location: data.location,
       imageUrl: imageUrl,
     });
     toast({
@@ -125,6 +129,19 @@ function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: Club
                   <FormLabel className="flex items-center gap-2"><Building/> Club Name</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g. Club Neon" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2"><MapPin/> Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Lagos, NG" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -332,6 +349,7 @@ export default function DashboardPage() {
                                 <Image src={event.imageUrl} alt={event.clubName} width={400} height={200} className="rounded-t-lg object-cover h-32 w-full" data-ai-hint="nightclub party" />
                                 <CardHeader>
                                     <CardTitle>{event.clubName}</CardTitle>
+                                    <CardDescription className="flex items-center gap-2 pt-1"><MapPin className="h-4 w-4" />{event.location}</CardDescription>
                                 </CardHeader>
                                 <CardFooter>
                                     <Button variant="destructive" className="w-full" onClick={() => handleEndEvent(event.id)}>

@@ -29,6 +29,7 @@ import type { Hypeman } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { HandMicIcon, PaperCashIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
+import { CardDescription } from '@/components/ui/card';
 
 function HowItWorks() {
   const steps = [
@@ -127,6 +128,7 @@ const hypeHeadlines = [
 export default function Home() {
   const allEvents = getEvents();
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [locationTerm, setLocationTerm] = React.useState('');
   const [filter, setFilter] = React.useState<'all' | 'live'>('live');
   const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
 
@@ -148,6 +150,7 @@ export default function Home() {
     (event) =>
       (event.clubName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (event.location.toLowerCase().includes(locationTerm.toLowerCase())) &&
       (filter === 'live' ? event.isActive : true)
   );
 
@@ -222,6 +225,8 @@ export default function Home() {
                     type="search"
                     placeholder="Search by location..."
                     className="w-full text-base h-12 pl-12 pr-4 sm:w-auto"
+                    value={locationTerm}
+                    onChange={(e) => setLocationTerm(e.target.value)}
                   />
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 </div>
@@ -274,10 +279,14 @@ export default function Home() {
                       <Club className="w-5 h-5 text-accent" />
                       {event.clubName}
                     </CardTitle>
-                    <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                    <CardDescription className="flex items-center gap-2 mt-2 text-muted-foreground">
                       <Mic className="w-4 h-4" />
                       <span>{event.hypeman.name}</span>
-                    </div>
+                    </CardDescription>
+                     <CardDescription className="flex items-center gap-2 mt-2 text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{event.location}</span>
+                    </CardDescription>
                   </CardContent>
                   <CardFooter className="p-4">
                     <Button asChild className="w-full glowing-btn">
