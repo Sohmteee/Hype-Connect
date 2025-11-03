@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
   title: 'HypeConnect',
@@ -23,7 +24,10 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-        {children}
+        <div className='flex-1'>
+          {children}
+        </div>
+        <Footer />
         <Toaster />
       </body>
     </html>
