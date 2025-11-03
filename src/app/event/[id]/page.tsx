@@ -264,7 +264,8 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
 }
 
 // This is now a Server Component that fetches data and renders the client component.
-export default function EventPage({ params }: { params: { id: string } }) {
+export default function EventPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
+  const params = React.use(paramsPromise);
   const event = getEventById(params.id);
   const leaderboard = getLeaderboardForEvent(params.id);
 
