@@ -201,7 +201,7 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="flex justify-center gap-2 mb-8">
+              <div className="flex justify-end gap-2 mb-8">
                 <Button
                   variant={filter === 'live' ? 'default' : 'outline'}
                   onClick={() => setFilter('live')}
