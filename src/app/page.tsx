@@ -115,10 +115,30 @@ function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
   );
 }
 
+const hypeHeadlines = [
+  'Welcome to HypeConnect',
+  'The Life of the Party',
+  'Your Voice, Your Vibe',
+  'E Choke! Send Your Hype',
+  'Oya, Make Somebody Known!',
+  'The Ultimate Shoutout Platform',
+];
+
 export default function Home() {
   const allEvents = getEvents();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filter, setFilter] = React.useState<'all' | 'live'>('live');
+  const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
+
+  React.useEffect(() => {
+    let index = 0;
+    const intervalId = setInterval(() => {
+      index = (index + 1) % hypeHeadlines.length;
+      setHeadline(hypeHeadlines[index]);
+    }, 3000); // Change text every 3 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   const featuredHypemen = Array.from(
     new Map(allEvents.map((event) => [event.hypeman.id, event.hypeman])).values()
@@ -148,8 +168,8 @@ export default function Home() {
           <div className="relative z-10 container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-6">
               <PartyPopper className="w-16 h-16 text-accent neon-glow" />
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text">
-                Welcome to HypeConnect
+              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text transition-all duration-500">
+                {headline}
               </h1>
               <p className="max-w-[700px] text-neutral-200 md:text-xl">
                 Join the party, find your event, and send some hype to your
