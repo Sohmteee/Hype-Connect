@@ -50,7 +50,7 @@ const hypeFormSchema = z.object({
     .string()
     .min(5, { message: 'Message must be at least 5 characters.' })
     .max(140, { message: 'Message must not be longer than 140 characters.' }),
-  amount: z.string({ required_error: 'Please select or enter an amount.' }),
+  amount: z.coerce.number().min(1, { message: 'Please select or enter an amount.'}),
   paymentMethod: z.string({ required_error: 'Please select a payment method.' }),
 });
 
@@ -106,6 +106,7 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   });
 
   const selectedAmount = form.watch('amount');
+  const [customAmountActive, setCustomAmountActive] = React.useState(false);
 
   function onSubmit(data: HypeFormValues) {
     if (!event) return;
@@ -115,14 +116,15 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
       eventId: event.id,
       senderName: data.name,
       message: data.message,
-      amount: Number(data.amount),
+      amount: data.amount,
     });
 
     toast({
       title: 'Hype Sent! 🎉',
-      description: `Your message and ₦${Number(data.amount).toLocaleString()} have been sent to ${event.hypeman.name}.`,
+      description: `Your message and ₦${data.amount.toLocaleString()} have been sent to ${event.hypeman.name}.`,
     });
     form.reset();
+    setCustomAmountActive(false);
   }
 
   return (
@@ -206,42 +208,54 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                         <FormLabel className="flex items-center gap-2"><DollarSign /> Amount (₦)</FormLabel>
                         <FormControl>
                           <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            onValueChange={(value) => {
+                              if (value === 'other') {
+                                setCustomAmountActive(true);
+                                // Don't set field value yet, wait for input
+                              } else {
+                                setCustomAmountActive(false);
+                                field.onChange(Number(value));
+                              }
+                            }}
                             className="grid grid-cols-2 gap-4 sm:grid-cols-5"
                           >
                             {amounts.map((amount) => (
                               <FormItem key={amount} className="relative">
-                                <RadioGroupItem value={String(amount)} id={`amount-${amount}`} className="sr-only peer" />
+                                <FormControl>
+                                  <RadioGroupItem value={String(amount)} id={`amount-${amount}`} className="sr-only peer" />
+                                </FormControl>
                                 <FormLabel
                                   htmlFor={`amount-${amount}`}
-                                  className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                                    selectedAmount === amount && !customAmountActive && "border-primary bg-primary text-primary-foreground"
+                                  )}
                                 >
                                   {amount.toLocaleString()}
                                 </FormLabel>
                               </FormItem>
                             ))}
                              <FormItem className="relative">
-                                <RadioGroupItem value="other" id="amount-other" className="sr-only peer" />
+                                <FormControl>
+                                   <RadioGroupItem value="other" id="amount-other" className="sr-only peer" />
+                                </FormControl>
                                 <FormLabel
                                   htmlFor="amount-other"
-                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground [&:has([data-state=checked])]:border-primary cursor-pointer", selectedAmount === "other" && "border-primary bg-primary text-primary-foreground")}
+                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                                    customAmountActive && "border-primary bg-primary text-primary-foreground"
+                                  )}
                                 >
                                   Other
                                 </FormLabel>
                               </FormItem>
                           </RadioGroup>
                         </FormControl>
-                         {selectedAmount === 'other' && (
+                         {customAmountActive && (
                           <FormControl>
                             <Input
                               type="number"
-                              placeholder="Enter amount"
+                              placeholder="Enter amount in numbers"
                               className="mt-2"
-                              onChange={(e) => {
-                                // Also update the main form field
-                                form.setValue('amount', e.target.value)
-                              }}
+                              onChange={(e) => field.onChange(e.target.valueAsNumber)}
                               min="1"
                             />
                           </FormControl>
