@@ -12,9 +12,11 @@ import {
   QrCode,
   User,
   Wallet,
+  ArrowLeft,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter, notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -40,7 +42,6 @@ import type { ClubEvent, Tipper } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { notFound } from 'next/navigation';
 
 const hypeFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -94,6 +95,7 @@ function Leaderboard({ tippers }: { tippers: Tipper[] }) {
 
 function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: Tipper[] }) {
   const { toast } = useToast();
+  const router = useRouter();
   const form = useForm<HypeFormValues>({
     resolver: zodResolver(hypeFormSchema),
     defaultValues: {
@@ -140,7 +142,11 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                 Hype hosted by {event.hypeman.name}
               </CardDescription>
             </CardHeader>
-            <CardFooter>
+            <CardFooter className="flex-wrap gap-2">
+               <Button variant="outline" onClick={() => router.back()}>
+                    <ArrowLeft className="mr-2 h-4 w-4"/>
+                    Go Back
+               </Button>
                <Button variant="outline" asChild>
                   <Link href={`/event/${event.id}/qr`}>
                       <QrCode className="mr-2 h-4 w-4"/>
@@ -267,11 +273,12 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
 export default function EventPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
   const params = React.use(paramsPromise);
   const event = getEventById(params.id);
-  const leaderboard = getLeaderboardForEvent(params.id);
-
+  
   if (!event) {
     notFound();
   }
+
+  const leaderboard = getLeaderboardForEvent(params.id);
 
   return (
     <>
@@ -280,3 +287,5 @@ export default function EventPage({ params: paramsPromise }: { params: Promise<{
     </>
   );
 }
+
+    
