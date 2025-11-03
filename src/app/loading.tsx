@@ -4,11 +4,11 @@ import * as React from 'react';
 import { HypeConnectLogo } from '@/components/icons';
 
 const hypePhrases = [
-  'Connecting the crowd...',
-  'Writing awesome hypes...',
-  'Getting the party started...',
-  'Tuning the vibes...',
-  'Prepping the shoutouts...',
+  'You are the king of the event...',
+  'Crowning the top supporter...',
+  'Building your hype kingdom...',
+  'The main character is loading...',
+  'Polishing your crown...',
 ];
 
 export default function Loading() {
