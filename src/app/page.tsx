@@ -122,7 +122,7 @@ export default function Home() {
 
           <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
             <div className="container px-4 md:px-6">
-              <h2 className="text-3xl font-bold tracking-tighter text-center mb-10 font-headline">
+              <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-center mb-10 font-headline">
                 Live Events
               </h2>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
