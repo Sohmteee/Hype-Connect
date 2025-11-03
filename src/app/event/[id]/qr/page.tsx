@@ -1,16 +1,18 @@
 
 'use client';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import * as React from 'react';
 import Image from 'next/image';
-import { Club, Mic } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Club, Mic, ArrowLeft } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { getEventById } from '@/lib/data';
 import type { ClubEvent } from '@/lib/types';
 import { Header } from '@/components/layout/Header';
 import { HypeConnectLogo } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 
 function QrCodeDetails({ event }: { event: ClubEvent }) {
+  const router = useRouter();
   const [eventUrl, setEventUrl] = React.useState('');
 
   React.useEffect(() => {
@@ -58,6 +60,12 @@ function QrCodeDetails({ event }: { event: ClubEvent }) {
             </p>
           </div>
         </CardContent>
+        <CardFooter className='justify-center'>
+            <Button variant="outline" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back
+            </Button>
+        </CardFooter>
       </Card>
     </main>
   );
