@@ -42,6 +42,7 @@ import type { ClubEvent, Tipper } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { cn } from '@/lib/utils';
 
 const hypeFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -49,7 +50,7 @@ const hypeFormSchema = z.object({
     .string()
     .min(5, { message: 'Message must be at least 5 characters.' })
     .max(140, { message: 'Message must not be longer than 140 characters.' }),
-  amount: z.string({ required_error: 'Please select an amount.' }),
+  amount: z.string({ required_error: 'Please select or enter an amount.' }),
   paymentMethod: z.string({ required_error: 'Please select a payment method.' }),
 });
 
@@ -103,6 +104,8 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
       message: '',
     },
   });
+
+  const selectedAmount = form.watch('amount');
 
   function onSubmit(data: HypeFormValues) {
     if (!event) return;
@@ -205,23 +208,44 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                           <RadioGroup
                             onValueChange={field.onChange}
                             defaultValue={field.value}
-                            className="grid grid-cols-2 gap-4 sm:grid-cols-4"
+                            className="grid grid-cols-2 gap-4 sm:grid-cols-5"
                           >
                             {amounts.map((amount) => (
-                              <FormItem key={amount}>
-                                <FormControl>
-                                  <RadioGroupItem value={String(amount)} className="sr-only" id={`amount-${amount}`} />
-                                </FormControl>
+                              <FormItem key={amount} className="relative">
+                                <RadioGroupItem value={String(amount)} id={`amount-${amount}`} className="sr-only peer" />
                                 <FormLabel
                                   htmlFor={`amount-${amount}`}
-                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                  className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
                                 >
                                   {amount.toLocaleString()}
                                 </FormLabel>
                               </FormItem>
                             ))}
+                             <FormItem className="relative">
+                                <RadioGroupItem value="other" id="amount-other" className="sr-only peer" />
+                                <FormLabel
+                                  htmlFor="amount-other"
+                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer", selectedAmount === "other" && "border-primary")}
+                                >
+                                  Other
+                                </FormLabel>
+                              </FormItem>
                           </RadioGroup>
                         </FormControl>
+                         {selectedAmount === 'other' && (
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="Enter amount"
+                              className="mt-2"
+                              onChange={(e) => {
+                                // Also update the main form field
+                                form.setValue('amount', e.target.value)
+                              }}
+                              min="1"
+                            />
+                          </FormControl>
+                        )}
                         <FormMessage />
                       </FormItem>
                     )}
@@ -287,5 +311,3 @@ export default function EventPage({ params: paramsPromise }: { params: Promise<{
     </>
   );
 }
-
-    
