@@ -11,8 +11,8 @@ import {
   Wallet as WalletIcon,
   Download,
   PlusCircle,
-  Image as ImageIcon,
   Building,
+  Upload,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,13 +53,22 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
+const MAX_FILE_SIZE = 5000000; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
 const eventFormSchema = z.object({
   clubName: z.string().min(3, { message: 'Club name must be at least 3 characters.' }),
-  imageUrl: z.string().url({ message: 'Please enter a valid image URL.' }),
+  image: z
+    .any()
+    .refine((files) => files?.length == 1, "Image is required.")
+    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `Max file size is 5MB.`)
+    .refine(
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
+      ".jpg, .jpeg, .png and .webp files are accepted."
+    ),
 });
 
 type EventFormValues = z.infer<typeof eventFormSchema>;
-
 
 function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: ClubEvent) => void }) {
   const [open, setOpen] = React.useState(false);
@@ -68,14 +77,16 @@ function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: Club
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
       clubName: '',
-      imageUrl: '',
+      image: undefined,
     },
   });
 
   function onSubmit(data: EventFormValues) {
+     const imageUrl = URL.createObjectURL(data.image[0]);
+
     const newEvent = addEvent({
       clubName: data.clubName,
-      imageUrl: data.imageUrl,
+      imageUrl: imageUrl,
     });
     toast({
       title: 'Event Created! 🚀',
@@ -116,18 +127,28 @@ function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: Club
                 </FormItem>
               )}
             />
-            <FormField
+             <FormField
               control={form.control}
-              name="imageUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2"><ImageIcon/> Event Image URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://images.unsplash.com/..." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              name="image"
+              render={({ field }) => {
+                const { onChange, value, ...rest } = field;
+                return (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2"><Upload/> Event Image</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp"
+                        onChange={(event) => {
+                          onChange(event.target.files);
+                        }}
+                        {...rest}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
             <DialogFooter>
               <Button type="submit" className="w-full glowing-accent-btn">
@@ -347,3 +368,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
