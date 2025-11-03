@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import {
   Club,
+  Hourglass,
   MapPin,
   Mic,
   PartyPopper,
@@ -127,7 +128,7 @@ export default function Home() {
   const filteredEvents = allEvents.filter(
     (event) =>
       (event.clubName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+        event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
       (filter === 'live' ? event.isActive : true)
   );
 
@@ -136,7 +137,7 @@ export default function Home() {
       <div className="relative">
         <Header />
         <main className="flex-1">
-          <section className="relative w-full h-screen flex items-center justify-center text-center text-white overflow-hidden">
+          <section className="relative w-full h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
             <Image
               src="https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080"
               alt="Hypeman with a microphone"
@@ -190,7 +191,7 @@ export default function Home() {
                     />
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                   </div>
-                   <div className="relative">
+                  <div className="relative">
                     <Input
                       type="search"
                       placeholder="Search by location..."
@@ -200,7 +201,7 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex justify-center gap-2 mb-8">
                 <Button
                   variant={filter === 'live' ? 'default' : 'outline'}
@@ -210,9 +211,9 @@ export default function Home() {
                   Live Now
                 </Button>
                 <Button
-                   variant={filter === 'all' ? 'default' : 'outline'}
-                   onClick={() => setFilter('all')}
-                   className={cn(filter === 'all' && 'glowing-btn')}
+                  variant={filter === 'all' ? 'default' : 'outline'}
+                  onClick={() => setFilter('all')}
+                  className={cn(filter === 'all' && 'glowing-btn')}
                 >
                   All Events
                 </Button>
@@ -261,6 +262,17 @@ export default function Home() {
                     </CardFooter>
                   </Card>
                 ))}
+                 {filteredEvents.length > 0 && filteredEvents.length < 4 && (
+                    <Card className="overflow-hidden bg-card/80 border-2 border-dashed border-muted flex flex-col items-center justify-center text-center p-4">
+                        <Hourglass className="w-12 h-12 text-accent animate-bounce" />
+                        <CardHeader>
+                            <CardTitle className="font-headline text-xl">More Events Soon</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">Check back later for more parties!</p>
+                        </CardContent>
+                    </Card>
+                )}
               </div>
               {filteredEvents.length === 0 && (
                 <p className="text-center text-muted-foreground mt-8">
