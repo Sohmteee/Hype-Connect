@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, LogIn } from 'lucide-react';
+import { LayoutDashboard, LogIn, Info, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function Header({ className }: { className?: string }) {
@@ -15,6 +15,20 @@ export function Header({ className }: { className?: string }) {
             <span className="font-bold font-headline text-white">HypeConnect</span>
           </Link>
         </div>
+         <nav className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" asChild className="text-white hover:bg-white/10 hover:text-white">
+                <Link href="/about">
+                    <Info className="mr-2 h-4 w-4" />
+                    About
+                </Link>
+            </Button>
+            <Button variant="ghost" asChild className="text-white hover:bg-white/10 hover:text-white">
+                <Link href="/contact">
+                    <Mail className="mr-2 h-4 w-4" />
+                    Contact
+                </Link>
+            </Button>
+        </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
           <Button variant="ghost" asChild className="text-white hover:bg-white/10 hover:text-white">
             <Link href="/dashboard">
