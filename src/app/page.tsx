@@ -28,6 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Hypeman } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { HandMicIcon, PaperCashIcon } from '@/components/icons';
+import { cn } from '@/lib/utils';
 
 function HowItWorks() {
   const steps = [
@@ -117,6 +118,7 @@ function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
 export default function Home() {
   const allEvents = getEvents();
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [filter, setFilter] = React.useState<'all' | 'live'>('live');
 
   const featuredHypemen = Array.from(
     new Map(allEvents.map((event) => [event.hypeman.id, event.hypeman])).values()
@@ -124,8 +126,9 @@ export default function Home() {
 
   const filteredEvents = allEvents.filter(
     (event) =>
-      event.clubName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())
+      (event.clubName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (filter === 'live' ? event.isActive : true)
   );
 
   return (
@@ -197,6 +200,23 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+              
+              <div className="flex justify-center gap-2 mb-8">
+                <Button
+                  variant={filter === 'live' ? 'default' : 'outline'}
+                  onClick={() => setFilter('live')}
+                  className={cn(filter === 'live' && 'glowing-btn')}
+                >
+                  Live Now
+                </Button>
+                <Button
+                   variant={filter === 'all' ? 'default' : 'outline'}
+                   onClick={() => setFilter('all')}
+                   className={cn(filter === 'all' && 'glowing-btn')}
+                >
+                  All Events
+                </Button>
+              </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {filteredEvents.map((event) => (
@@ -213,12 +233,14 @@ export default function Home() {
                         className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105"
                         data-ai-hint="nightclub party"
                       />
-                      <Badge
-                        variant="destructive"
-                        className="absolute top-2 right-2 glowing-text"
-                      >
-                        LIVE
-                      </Badge>
+                      {event.isActive && (
+                        <Badge
+                          variant="destructive"
+                          className="absolute top-2 right-2 glowing-text"
+                        >
+                          LIVE
+                        </Badge>
+                      )}
                     </CardHeader>
                     <CardContent className="p-4">
                       <CardTitle className="flex items-center gap-2 font-headline">
@@ -242,7 +264,7 @@ export default function Home() {
               </div>
               {filteredEvents.length === 0 && (
                 <p className="text-center text-muted-foreground mt-8">
-                  No events found matching your search.
+                  No events found matching your criteria.
                 </p>
               )}
             </div>
