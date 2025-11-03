@@ -1,6 +1,7 @@
+
 import Image from 'next/image';
 import Link from 'next/link';
-import { Club, Mic, PartyPopper } from 'lucide-react';
+import { Club, Mic, PartyPopper, Search, Send, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,9 +13,84 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { getEvents } from '@/lib/data';
 import { Header } from '@/components/layout/Header';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { Hypeman } from '@/lib/types';
+
+function HowItWorks() {
+  const steps = [
+    {
+      icon: <Search className="w-10 h-10 mb-4 text-accent" />,
+      title: 'Find Your Event',
+      description: 'Browse live events and find where you and your friends are.',
+    },
+    {
+      icon: <Send className="w-10 h-10 mb-4 text-accent" />,
+      title: 'Send Your Hype',
+      description: 'Craft your message, choose a tip amount, and send it directly to the MC.',
+    },
+    {
+      icon: <Volume2 className="w-10 h-10 mb-4 text-accent" />,
+      title: 'Get a Shoutout',
+      description: 'Listen for your name! The MC will give you a live shoutout during the event.',
+    },
+  ];
+
+  return (
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
+      <div className="container px-4 md:px-6">
+        <h2 className="text-3xl font-bold tracking-tighter text-center mb-12 font-headline">
+          How HypeConnect Works
+        </h2>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {steps.map((step, index) => (
+            <Card key={index} className="bg-card/50 text-center flex flex-col items-center p-6">
+                <div className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary">
+                    {step.icon}
+                </div>
+              <CardHeader className="p-0">
+                <CardTitle className="font-headline">{step.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 mt-2">
+                <p className="text-muted-foreground">{step.description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
+    return (
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
+            <div className="container px-4 md:px-6">
+                <h2 className="text-3xl font-bold tracking-tighter text-center mb-12 font-headline">
+                    Featured Hypemen
+                </h2>
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
+                    {hypemen.map((hypeman) => (
+                        <Card key={hypeman.id} className="text-center p-4 border-2 border-transparent hover:border-accent transition-all duration-300">
+                           <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-accent">
+                             <AvatarImage src={hypeman.avatarUrl} alt={hypeman.name} data-ai-hint="person portrait" />
+                             <AvatarFallback>{hypeman.name.charAt(0)}</AvatarFallback>
+                           </Avatar>
+                           <CardHeader className="p-0">
+                             <CardTitle className="text-xl font-headline">{hypeman.name}</CardTitle>
+                           </CardHeader>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
 
 export default function Home() {
   const events = getEvents();
+  const featuredHypemen = Array.from(new Map(events.map(event => [event.hypeman.id, event.hypeman])).values());
+
 
   return (
     <>
@@ -73,6 +149,11 @@ export default function Home() {
             </div>
           </div>
         </section>
+        
+        <HowItWorks />
+
+        <FeaturedHypemen hypemen={featuredHypemen} />
+
       </main>
     </>
   );
