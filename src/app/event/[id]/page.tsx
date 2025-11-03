@@ -215,7 +215,7 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                                 <RadioGroupItem value={String(amount)} id={`amount-${amount}`} className="sr-only peer" />
                                 <FormLabel
                                   htmlFor={`amount-${amount}`}
-                                  className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                  className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground [&:has([data-state=checked])]:border-primary cursor-pointer"
                                 >
                                   {amount.toLocaleString()}
                                 </FormLabel>
@@ -225,7 +225,7 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                                 <RadioGroupItem value="other" id="amount-other" className="sr-only peer" />
                                 <FormLabel
                                   htmlFor="amount-other"
-                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer", selectedAmount === "other" && "border-primary")}
+                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground [&:has([data-state=checked])]:border-primary cursor-pointer", selectedAmount === "other" && "border-primary bg-primary text-primary-foreground")}
                                 >
                                   Other
                                 </FormLabel>
