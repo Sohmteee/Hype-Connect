@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -41,6 +40,7 @@ import type { ClubEvent, Tipper } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { notFound } from 'next/navigation';
 
 const hypeFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -263,8 +263,8 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   );
 }
 
-// This is now a Server Component
-export default async function EventPage({ params }: { params: { id: string } }) {
+// This is now a Server Component that fetches data and renders the client component.
+export default function EventPage({ params }: { params: { id: string } }) {
   const event = getEventById(params.id);
   const leaderboard = getLeaderboardForEvent(params.id);
 
