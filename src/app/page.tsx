@@ -217,6 +217,7 @@ export default function Home() {
                     </CardHeader>
                     <CardContent className="p-4">
                       <CardTitle className="flex items-center gap-2 font-headline">
+                        <Club className="w-5 h-5 text-accent" />
                         {event.clubName}
                       </CardTitle>
                       <div className="flex items-center gap-2 mt-2 text-muted-foreground">
