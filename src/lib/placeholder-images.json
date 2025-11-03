@@ -1,3 +1,70 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "event-1",
+      "description": "A bustling nightclub with neon lights",
+      "imageUrl": "https://images.unsplash.com/photo-1597329204992-214518c367b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxuaWdodGNsdWIlMjBwYXJ0eXxlbnwwfHx8fDE3NjIxNzAxMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "nightclub party"
+    },
+    {
+      "id": "event-2",
+      "description": "DJ performing at a concert",
+      "imageUrl": "https://images.unsplash.com/photo-1631786083436-02d4b1c98207?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwZGp8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "concert dj"
+    },
+    {
+      "id": "event-3",
+      "description": "Crowd at a music festival",
+      "imageUrl": "https://images.unsplash.com/photo-1658227633934-b589ca17d602?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtdXNpYyUyMGZlc3RpdmFsfGVufDB8fHx8MTc2MjEyNjc4MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "music festival"
+    },
+    {
+      "id": "event-4",
+      "description": "Intimate lounge bar setting",
+      "imageUrl": "https://images.unsplash.com/photo-1711429526427-679eb0b2f156?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYXIlMjBsb3VuZ2V8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "bar lounge"
+    },
+    {
+      "id": "avatar-1",
+      "description": "Portrait of a hype man with a microphone",
+      "imageUrl": "https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man microphone"
+    },
+    {
+      "id": "avatar-2",
+      "description": "Portrait of a female DJ",
+      "imageUrl": "https://images.unsplash.com/photo-1686242585398-6a069e7eb7c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx3b21hbiUyMGRqfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman dj"
+    },
+    {
+      "id": "avatar-3",
+      "description": "Stylish person in a club",
+      "imageUrl": "https://images.unsplash.com/photo-1655459765544-39065b741a9e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxwZXJzb24lMjBjbHViYmluZ3xlbnwwfHx8fDE3NjIyMDE0NDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person clubbing"
+    },
+    {
+      "id": "avatar-4",
+      "description": "Man wearing sunglasses at night",
+      "imageUrl": "https://images.unsplash.com/photo-1728034262250-7cdb43a02491?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxtYW4lMjBzdW5nbGFzc2VzfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man sunglasses"
+    },
+    {
+      "id": "tipper-1",
+      "description": "Happy person smiling",
+      "imageUrl": "https://images.unsplash.com/photo-1542353436-312f0e1f67ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoYXBweSUyMHBlcnNvbnxlbnwwfHx8fDE3NjIxNjI4OTN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "happy person"
+    },
+    {
+      "id": "tipper-2",
+      "description": "Person winking at the camera",
+      "imageUrl": "https://images.unsplash.com/photo-1759197333009-114366842259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjB3aW5raW5nfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person winking"
+    },
+    {
+      "id": "tipper-3",
+      "description": "Person holding a drink",
+      "imageUrl": "https://images.unsplash.com/photo-1708077807043-1db0e99c4112?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjBkcmlua3xlbnwwfHx8fDE3NjIyMDE0NDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "person drink"
+    }
+  ]
 }
