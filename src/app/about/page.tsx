@@ -3,9 +3,16 @@
 import { Header } from '@/components/layout/Header';
 import { HypeConnectLogo } from '@/components/icons';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRouter } from 'next/navigation';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
+const teamMembers = [
+  { name: 'Damian Wose', role: 'Founder' },
+  { name: 'Somto', role: 'Head of Dev' },
+  { name: 'Colins', role: 'Head of Operations' },
+];
 
 export default function AboutPage() {
   const router = useRouter();
@@ -25,7 +32,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-          <Card>
+          <Card className="mb-8">
             <CardHeader>
               <CardTitle>Our Mission</CardTitle>
             </CardHeader>
@@ -41,6 +48,24 @@ export default function AboutPage() {
               </p>
             </CardContent>
           </Card>
+          
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2"><Users /> Our Team</CardTitle>
+            </CardHeader>
+            <CardContent className="grid sm:grid-cols-3 gap-6 text-center">
+              {teamMembers.map((member) => (
+                <div key={member.name}>
+                  <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-accent">
+                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-semibold text-lg">{member.name}</h3>
+                  <p className="text-sm text-muted-foreground">{member.role}</p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
            <div className="mt-8 flex justify-center">
             <Button variant="outline" onClick={() => router.back()}>
               <ArrowLeft className="mr-2 h-4 w-4" />
