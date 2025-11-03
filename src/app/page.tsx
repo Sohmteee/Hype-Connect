@@ -27,6 +27,7 @@ import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Hypeman } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { HandMicIcon, PaperCashIcon } from '@/components/icons';
 
 function HowItWorks() {
   const steps = [
@@ -163,11 +164,11 @@ export default function Home() {
             <div className="container px-4 md:px-6">
               <div className="text-center mb-10">
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <Mic className="w-12 h-12 text-accent neon-glow" />
+                  <HandMicIcon className="w-12 h-12 text-accent neon-glow" />
                   <h2 className="text-4xl md:text-5xl font-bold tracking-tighter font-headline">
                     Live Events
                   </h2>
-                  <Mic className="w-12 h-12 text-accent neon-glow" />
+                  <PaperCashIcon className="w-12 h-12 text-accent neon-glow" />
                 </div>
                 <p className="text-muted-foreground mt-2">
                   Find where the party is at tonight.
