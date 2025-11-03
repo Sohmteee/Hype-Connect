@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -148,7 +147,7 @@ export default function Home() {
             />
             <div className="absolute inset-0 bg-black/60" />
             <div className="relative z-10 container px-4 md:px-6">
-              <div className="flex flex-col items-center space-y-4">
+              <div className="flex flex-col items-center space-y-6">
                 <PartyPopper className="w-16 h-16 text-accent neon-glow" />
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text">
                   Welcome to HypeConnect
@@ -157,6 +156,14 @@ export default function Home() {
                   Join the party, find your event, and send some hype to your
                   favorite MCs.
                 </p>
+                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                  <Button asChild size="lg" className="glowing-accent-btn">
+                    <Link href="#events">Get Hype</Link>
+                  </Button>
+                   <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent">
+                     <Link href="/dashboard">Join as Hypeman</Link>
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
