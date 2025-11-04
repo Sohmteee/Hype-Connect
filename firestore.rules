@@ -56,6 +56,12 @@ service cloud.firestore {
       allow delete: if isExistingOwner(userId);
     }
 
+    match /users/{uid}/profiles/{profileId} {
+      allow create: if request.auth.uid == uid;
+      allow read: if resource.data.visibility == 'public' || request.auth.uid == uid;
+      allow update, delete: if request.auth.uid == uid;
+    }
+
      /**
       * @description Secure hypeman profiles.  Access permissions are not clearly specified in the JSON.
       * @path /hypemen/{hypemanId}
