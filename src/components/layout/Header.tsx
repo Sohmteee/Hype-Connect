@@ -14,9 +14,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
+  const [isScrolled, setIsScrolled] = useState(false);
 
   const mainNavLinks = [
     { href: "/#events", label: "Events"},
@@ -37,11 +39,26 @@ export function Header({ className }: { className?: string }) {
     { href: "/dashboard/user", label: "User Dashboard", icon: User },
   ]
   
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const isHomePage = pathname === '/';
-  const headerClasses = isHomePage
-    ? "absolute top-0 z-50 w-full bg-transparent"
-    : "sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60";
-  const navItemClasses = isHomePage ? "text-white hover:bg-white/10 hover:text-white" : "text-foreground";
+  
+  const headerClasses = cn(
+    "sticky top-0 z-50 w-full transition-all duration-300",
+    {
+      "bg-transparent border-b border-transparent": isHomePage && !isScrolled,
+      "border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60": !isHomePage || isScrolled
+    }
+  );
+
+  const navItemClasses = (isHomePage && !isScrolled) ? "text-white hover:bg-white/10 hover:text-white" : "text-foreground";
+  const logoTextClasses = (isHomePage && !isScrolled) ? "text-white" : "text-foreground";
 
   return (
     <header className={cn(headerClasses, className)}>
@@ -49,7 +66,7 @@ export function Header({ className }: { className?: string }) {
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2 mr-6">
             <HypeConnectLogo className="h-10 w-10 neon-glow-primary" />
-            <span className={cn("font-bold text-xl font-headline", isHomePage && "text-white")}>HypeConnect</span>
+            <span className={cn("font-bold text-xl font-headline", logoTextClasses)}>HypeConnect</span>
           </Link>
         </div>
          <nav className="hidden md:flex items-center gap-2">
