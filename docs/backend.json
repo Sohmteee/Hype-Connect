@@ -1,301 +1,140 @@
 {
   "entities": {
-    "User": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "User",
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents the root user document containing core authentication details and role information.",
       "type": "object",
-      "description": "Represents a user of the HypeConnect application.",
       "properties": {
-        "id": {
+        "uid": {
           "type": "string",
-          "description": "Unique identifier for the user."
+          "description": "The unique identifier for the user, matching the Firebase Auth UID."
         },
-        "username": {
+        "email": {
           "type": "string",
-          "description": "User's chosen username or nickname."
+          "format": "email",
+          "description": "The user's primary email address."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's primary display name."
+        },
+        "roles": {
+          "type": "array",
+          "description": "An array of roles assigned to the user.",
+          "items": {
+            "type": "string",
+            "enum": ["hypeman", "spotlight"]
+          }
+        },
+        "defaultProfileId": {
+          "type": "string",
+          "description": "The ID of the default profile to display for this user."
         }
       },
-      "required": [
-        "id",
-        "username"
-      ]
+      "required": ["uid", "email", "displayName", "roles"]
     },
-    "Hypeman": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Hypeman",
+    "Profile": {
+      "title": "Profile",
+      "description": "Represents a specific user profile, either for a 'hypeman' or a 'spotlight' user.",
       "type": "object",
-      "description": "Represents a hypeman registered in the HypeConnect application.",
       "properties": {
-        "id": {
+        "profileId": {
           "type": "string",
-          "description": "Unique identifier for the hypeman."
+          "description": "The unique identifier for this profile."
         },
-        "name": {
+        "type": {
           "type": "string",
-          "description": "Name of the hypeman."
+          "description": "The type of profile.",
+          "enum": ["hypeman", "spotlight"]
         },
-        "approved": {
-          "type": "boolean",
-          "description": "Indicates whether the hypeman is approved by the admin."
+        "displayName": {
+          "type": "string",
+          "description": "The display name for this specific profile."
+        },
+        "publicBio": {
+          "type": "string",
+          "description": "A public biography for this profile."
+        },
+        "payoutInfo": {
+          "type": "object",
+          "description": "Bank or fintech details for payouts (hypeman profile).",
+          "properties": {}
+        },
+        "visibility": {
+          "type": "string",
+          "description": "The visibility state of the profile.",
+          "enum": ["public", "private"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the profile was created."
+        },
+        "stats": {
+          "type": "object",
+          "description": "Performance statistics for the profile.",
+          "properties": {
+            "hypesReceived": {
+              "type": "number"
+            },
+            "earnings": {
+              "type": "number"
+            }
+          }
         }
       },
-      "required": [
-        "id",
-        "name",
-        "approved"
-      ]
-    },
-    "ClubEvent": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ClubEvent",
-      "type": "object",
-      "description": "Represents a club or event where hyping is happening.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the club event."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the club or event."
-        },
-        "hypemanId": {
-          "type": "string",
-          "description": "Reference to Hypeman. (Relationship: Hypeman 1:N ClubEvent). The hypeman performing at this event."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "hypemanId"
-      ]
+      "required": ["profileId", "type", "displayName", "visibility", "createdAt"]
     },
     "HypeMessage": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "HypeMessage",
+      "title": "Hype Message",
+      "description": "Represents a hype message sent by a user to an event.",
       "type": "object",
-      "description": "Represents a hype message sent by a user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the hype message."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N HypeMessage). The user who sent the message."
-        },
-        "clubEventId": {
-          "type": "string",
-          "description": "Reference to ClubEvent. (Relationship: ClubEvent 1:N HypeMessage). The event the message was sent to."
-        },
-        "message": {
-          "type": "string",
-          "description": "The content of the hype message."
-        },
-        "amount": {
-          "type": "number",
-          "description": "The amount sent with the hype message."
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Timestamp of when the message was sent.",
-          "format": "date-time"
-        },
-        "hyped": {
-          "type": "boolean",
-          "description": "Indicates whether the hypeman has acknowledged the message."
-        }
+        "messageId": { "type": "string" },
+        "userId": { "type": "string" },
+        "profileId": { "type": "string" },
+        "eventId": { "type": "string" },
+        "message": { "type": "string" },
+        "amount": { "type": "number" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "status": { "type": "string", "enum": ["new", "hyped"] }
       },
-      "required": [
-        "id",
-        "userId",
-        "clubEventId",
-        "message",
-        "amount",
-        "timestamp",
-        "hyped"
-      ]
+      "required": ["messageId", "userId", "profileId", "eventId", "message", "amount", "timestamp", "status"]
     },
-    "PaymentTransaction": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "PaymentTransaction",
+    "ClubEvent": {
+      "title": "Club Event",
+      "description": "Represents a live event at a venue.",
       "type": "object",
-      "description": "Represents a payment transaction made by a user.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the payment transaction."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to User. (Relationship: User 1:N PaymentTransaction). The user who made the payment."
-        },
-        "hypeMessageId": {
-          "type": "string",
-          "description": "Reference to HypeMessage. (Relationship: HypeMessage 1:1 PaymentTransaction). The hype message associated with the payment."
-        },
-        "amount": {
-          "type": "number",
-          "description": "The amount of the payment transaction."
-        },
-        "paymentMethod": {
-          "type": "string",
-          "description": "The payment method used for the transaction (e.g., Paystack, Flutterwave)."
-        },
-        "transactionDate": {
-          "type": "string",
-          "description": "The date and time of the transaction.",
-          "format": "date-time"
-        }
+        "eventId": { "type": "string" },
+        "hypemanProfileId": { "type": "string" },
+        "name": { "type": "string" },
+        "location": { "type": "string" },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": [
-        "id",
-        "userId",
-        "hypeMessageId",
-        "amount",
-        "paymentMethod",
-        "transactionDate"
-      ]
-    },
-    "HypemanWallet": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "HypemanWallet",
-      "type": "object",
-      "description": "Represents the digital wallet of a hypeman.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the hypeman's wallet."
-        },
-        "hypemanId": {
-          "type": "string",
-          "description": "Reference to Hypeman. (Relationship: Hypeman 1:1 HypemanWallet). The hypeman who owns the wallet."
-        },
-        "balance": {
-          "type": "number",
-          "description": "The current balance in the hypeman's wallet."
-        }
-      },
-      "required": [
-        "id",
-        "hypemanId",
-        "balance"
-      ]
+      "required": ["eventId", "hypemanProfileId", "name", "isActive", "createdAt"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["password", "anonymous"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}",
-        "definition": {
-          "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
-          "description": "Stores user profiles. Only the authenticated user can access their own profile. Includes the 'userId' parameter.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/hypemen/{hypemanId}",
-        "definition": {
-          "entityName": "Hypeman",
-          "schema": {
-            "$ref": "#/backend/entities/Hypeman"
-          },
-          "description": "Stores hypeman profiles. The 'approved' status is directly stored here for easy access in rules. Includes the 'hypemanId' parameter.",
-          "params": [
-            {
-              "name": "hypemanId",
-              "description": "The unique identifier for the hypeman."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/hypemen/{hypemanId}/clubEvents/{clubEventId}",
-        "definition": {
-          "entityName": "ClubEvent",
-          "schema": {
-            "$ref": "#/backend/entities/ClubEvent"
-          },
-          "description": "Stores club events associated with a hypeman.  The 'hypemanId' is denormalized into this collection to ensure authorization independence. Includes 'hypemanId' and 'clubEventId' parameters.",
-          "params": [
-            {
-              "name": "hypemanId",
-              "description": "The unique identifier for the hypeman."
-            },
-            {
-              "name": "clubEventId",
-              "description": "The unique identifier for the club event."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/hypeMessages/{hypeMessageId}",
-        "definition": {
-          "entityName": "HypeMessage",
-          "schema": {
-            "$ref": "#/backend/entities/HypeMessage"
-          },
-          "description": "Stores hype messages sent by users. The 'userId' and 'clubEventId' are denormalized to enforce user and event context without parent lookups. Includes 'userId' and 'hypeMessageId' parameters.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            },
-            {
-              "name": "hypeMessageId",
-              "description": "The unique identifier for the hype message."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/paymentTransactions/{paymentTransactionId}",
-        "definition": {
-          "entityName": "PaymentTransaction",
-          "schema": {
-            "$ref": "#/backend/entities/PaymentTransaction"
-          },
-          "description": "Stores payment transactions made by users. Includes 'paymentTransactionId' parameter.",
-          "params": [
-            {
-              "name": "paymentTransactionId",
-              "description": "The unique identifier for the payment transaction."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/hypemanWallets/{hypemanWalletId}",
-        "definition": {
-          "entityName": "HypemanWallet",
-          "schema": {
-            "$ref": "#/backend/entities/HypemanWallet"
-          },
-          "description": "Stores hypeman wallet information. Includes 'hypemanWalletId' parameter.",
-          "params": [
-            {
-              "name": "hypemanWalletId",
-              "description": "The unique identifier for the hypeman's wallet."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The Firestore structure is designed to provide a secure, scalable, and easily maintainable backend for the HypeConnect application, focusing on real-time interactions between users and hypemen at club events. The structure adheres to the core design principles of Authorization Independence, Clarity of Intent, DBAC (Database Authenticated Credentials), and QAPs (Rules are not Filters).\n\n**Authorization Independence (CRITICAL):**  Ownership and authorization contexts are denormalized to avoid `get()` calls in security rules. This ensures atomic operations and simplifies debugging. For instance, the `ClubEvent` includes the `hypemanId`, which is used for authorization without needing to fetch the hypeman's document. Similarly, `HypeMessage` stores `userId` and `clubEventId` to enforce rules based on the user and event context without relying on parent document lookups. The `Hypeman` `approved` status is not inherited and is directly checked in the hypeman document.\n\n**Structural Segregation (Homogeneous Security Posture):**  Each collection is designed to hold documents with similar security requirements. For example, `users/{userId}` stores private user data, while `hypemen/{hypemanId}` stores hypeman data. There is no mixing of data with different access needs within the same collection.\n\n**Access Modeling (Standardization and Consistency):**\n*   **Path-Based Ownership:** `/users/{userId}` collections enforces that only the authenticated user can access their data.\n*   **Hierarchical Paths:**  The structure `/users/{userId}/hypeMessages/{hypeMessageId}` establishes a clear ownership hierarchy, ensuring that only the user can manage their hype messages. Similarly, `/hypemen/{hypemanId}/clubEvents/{clubEventId}` structures events owned by a hypeman.\n*   **Membership Map (Not Applicable):** Collaborative access is not modeled in this version.\n*   **Global Roles (DBAC):** Global roles are not explicitly used in this version, but could be added in a `/roles_admin/{uid}` collection to store admin user IDs.\n\n**QAPs (Rules are not Filters):**  The structure enables secure `list` operations by clearly defining ownership. For example, listing hype messages under `/users/{userId}/hypeMessages` will only return messages owned by that user. Listing club events under `/hypemen/{hypemanId}/clubEvents` only returns club events managed by that hypeman.\n\n**Data Clarity and Predictability:**  The data model uses explicit state modeling with a `status` field where applicable (though not explicitly present in the initial schema, it could be added to entities like `ClubEvent`). The schema is predictable with static keys and consistent naming conventions (`userId`, `hypemanId`)."
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores the primary user record, including auth info and roles."
+    },
+    "/users/{userId}/profiles/{profileId}": {
+      "schema": { "$ref": "#/entities/Profile" },
+      "description": "Stores individual profiles (hypeman or spotlight) for a user."
+    },
+    "/events/{eventId}": {
+        "schema": { "$ref": "#/entities/ClubEvent" },
+        "description": "Stores all event documents."
+    },
+    "/events/{eventId}/hypes/{hypeId}": {
+      "schema": { "$ref": "#/entities/HypeMessage" },
+      "description": "Stores all hype messages for a specific event."
+    }
   }
 }
