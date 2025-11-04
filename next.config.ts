@@ -43,7 +43,7 @@ const nextConfig: NextConfig = {
   // as of Next.js 14.2 and is now a top-level configuration.
   // This is necessary to allow cross-origin requests from the development
   // environment and prevent security errors in the browser.
-  allowedDomains: [
+  allowedDevOrigins: [
     '6000-firebase-studio-1762199227866.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev',
   ]
 };
