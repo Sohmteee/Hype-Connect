@@ -22,6 +22,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { getHypesForEvent, addEvent, getActiveEventsByHypeman, endEvent } from '@/lib/data';
 import type { Hype, ClubEvent } from '@/lib/types';
@@ -335,18 +336,22 @@ export default function DashboardPage() {
       <main className="container py-8 md:py-12">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" className="sm:hidden" onClick={() => router.back()}>
-                    <ArrowLeft />
-                    <span className="sr-only">Go Back</span>
+                <Button variant="outline" size="icon" className="sm:hidden" asChild>
+                    <Link href="/">
+                      <ArrowLeft />
+                      <span className="sr-only">Go Back</span>
+                    </Link>
                 </Button>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter font-headline text-center sm:text-left">
                 MC Gusto&apos;s Dashboard
                 </h1>
             </div>
             <div className="flex w-full sm:w-auto items-center gap-4">
-                <Button variant="outline" className="hidden sm:flex" onClick={() => router.back()}>
+                <Button variant="outline" className="hidden sm:flex" asChild>
+                  <Link href="/">
                     <ArrowLeft className="mr-2"/>
-                    Go Back
+                    Go Home
+                  </Link>
                 </Button>
                 <CreateEventDialog onEventCreated={handleEventCreated} />
             </div>
@@ -449,3 +454,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+    
