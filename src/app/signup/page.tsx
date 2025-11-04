@@ -36,7 +36,7 @@ const signupFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
-  accountType: z.enum(['user', 'hypeman'], {
+  accountType: z.enum(['spotlight', 'hypeman'], {
     required_error: 'You need to select an account type.',
   }),
 });
@@ -54,7 +54,7 @@ export default function SignupPage() {
       name: '',
       email: '',
       password: '',
-      accountType: 'user',
+      accountType: 'spotlight',
     },
   });
 
@@ -99,7 +99,7 @@ export default function SignupPage() {
                   name="accountType"
                   render={({ field }) => (
                     <FormItem className="space-y-3">
-                      <FormLabel>What are you here for?</FormLabel>
+                      <FormLabel>Choose Your Role</FormLabel>
                       <FormControl>
                         <RadioGroup
                           onValueChange={field.onChange}
@@ -108,10 +108,10 @@ export default function SignupPage() {
                         >
                           <FormItem className="flex items-center space-x-3 space-y-0">
                             <FormControl>
-                              <RadioGroupItem value="user" />
+                              <RadioGroupItem value="spotlight" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              To send hype and book videos
+                              Join the Spotlight: Send hype & book videos
                             </FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
@@ -119,7 +119,7 @@ export default function SignupPage() {
                               <RadioGroupItem value="hypeman" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              To host events as a Hypeman
+                              Become a Hypeman: Host events & get paid
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
@@ -176,7 +176,7 @@ export default function SignupPage() {
           <CardFooter className="justify-center">
             <p className="text-sm text-muted-foreground">
               Already have an account?{' '}
-              <Link href="/dashboard" className="text-accent hover:underline">
+              <Link href="/login" className="text-accent hover:underline">
                 Log in
               </Link>
             </p>
