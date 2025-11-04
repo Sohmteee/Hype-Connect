@@ -37,7 +37,7 @@ const signupFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
-  accountType: z.enum(['spotlight', 'hypeman'], {
+  accountType: z.enum(['spotlight', 'hypeman', 'dj'], {
     required_error: 'You need to select an account type.',
   }),
 });
@@ -72,7 +72,7 @@ export default function SignupPage() {
     });
     
     // Redirect based on account type
-    if (data.accountType === 'hypeman') {
+    if (data.accountType === 'hypeman' || data.accountType === 'dj') {
       router.push('/dashboard');
     } else {
       router.push('/'); // Redirect regular users to the homepage
@@ -122,6 +122,14 @@ export default function SignupPage() {
                             </FormControl>
                             <FormLabel className="font-normal">
                               I'm a Hypeman & want to host events
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="dj" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              I'm a DJ & want to manage events
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
