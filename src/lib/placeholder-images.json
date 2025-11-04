@@ -1,10 +1,22 @@
 {
   "placeholderImages": [
     {
-      "id": "hero-banner",
+      "id": "hero-banner-1",
       "description": "A crowd of people dancing in a club with vibrant lights.",
       "imageUrl": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjbHViJTIwcGFydHl8ZW58MHx8fHwxNzYzNTYxMjAxfDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "club party"
+    },
+    {
+      "id": "hero-banner-2",
+      "description": "A crowd at a concert with their hands in the air.",
+      "imageUrl": "https://images.unsplash.com/photo-1492684223066-89434abcda35?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwY3Jvd2R8ZW58MHx8fHwxNzYzNTYyMDIwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "concert crowd"
+    },
+    {
+      "id": "hero-banner-3",
+      "description": "People celebrating at a party with confetti.",
+      "imageUrl": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwYXJ0eSUyMHBlb3BsZXxlbnwwfHx8fDE3NjM1NjIwNzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "party people"
     },
     {
       "id": "event-1",
@@ -27,7 +39,7 @@
     {
       "id": "event-4",
       "description": "Intimate lounge bar setting",
-      "imageUrl": "https://images.unsplash.com/photo-1711429526427-679eb0b2f156?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYXIlMjBsb3VuZ2V8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1711429526427-679eb0b2f156?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYXIlMjBsb3VuZ2V8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "bar lounge"
     },
     {

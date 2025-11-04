@@ -18,6 +18,7 @@ import {
   Volume2,
   Wallet,
 } from 'lucide-react';
+import Autoplay from "embla-carousel-autoplay";
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -37,6 +38,11 @@ import { cn } from '@/lib/utils';
 import { CardDescription } from '@/components/ui/card';
 import { AnimateOnScroll } from '@/components/AnimateOnScroll';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel"
 
 function HowItWorks() {
   const steps = [
@@ -206,7 +212,7 @@ export default function Home() {
   const [locationTerm, setLocationTerm] = React.useState('');
   const [filter, setFilter] = React.useState<'all' | 'live'>('live');
   const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
-  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-banner');
+  const heroImages = PlaceHolderImages.filter(img => img.id.startsWith('hero-banner'));
 
   React.useEffect(() => {
     let index = 0;
@@ -235,16 +241,33 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="relative w-full h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
-          {heroImage && (
-            <Image
-              src={heroImage.imageUrl}
-              alt={heroImage.description}
-              fill
-              className="object-cover"
-              data-ai-hint={heroImage.imageHint}
-              priority
-            />
-          )}
+          <Carousel 
+            className="w-full h-full"
+            plugins={[
+              Autoplay({
+                delay: 4000,
+                stopOnInteraction: false,
+              }),
+            ]}
+            opts={{
+              loop: true,
+            }}
+          >
+            <CarouselContent className="h-full -ml-0">
+              {heroImages.map((image, index) => (
+                <CarouselItem key={index} className="pl-0">
+                    <Image
+                      src={image.imageUrl}
+                      alt={image.description}
+                      fill
+                      className="object-cover"
+                      data-ai-hint={image.imageHint}
+                      priority={index === 0}
+                    />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-6">
