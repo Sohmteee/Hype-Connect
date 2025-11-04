@@ -12,6 +12,7 @@ import {
   PartyPopper,
   Search,
   Send,
+  Video,
   Volume2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -185,7 +186,7 @@ export default function Home() {
                   <Link href="#events">Find Event</Link>
                 </Button>
                  <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent">
-                   <Link href="/signup">Create Your Event</Link>
+                   <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
                 </Button>
               </div>
             </div>

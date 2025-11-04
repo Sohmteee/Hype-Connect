@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, LogIn, Info, Mail } from 'lucide-react';
+import { LayoutDashboard, LogIn, Info, Mail, Video } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -21,6 +21,7 @@ export function Header({ className }: { className?: string }) {
   const navLinks = [
     { href: "/about", label: "About", icon: Info },
     { href: "/contact", label: "Contact", icon: Mail },
+    { href: "/book-video-hype", label: "Book a Video", icon: Video },
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   ];
 
@@ -41,7 +42,7 @@ export function Header({ className }: { className?: string }) {
           </Link>
         </div>
          <nav className="hidden md:flex items-center gap-2">
-             {navLinks.slice(0, 2).map(link => (
+             {navLinks.slice(0, 3).map(link => (
                  <Button key={link.href} variant="ghost" asChild className={navItemClasses}>
                     <Link href={link.href}>
                         <link.icon className="mr-2 h-4 w-4" />
@@ -93,8 +94,8 @@ export function Header({ className }: { className?: string }) {
                       <LogIn className="mr-2 h-6 w-6" />
                       Login
                     </Button>
-                    <Button size="lg" variant="outline" className="w-full text-lg py-6">
-                      Sign Up
+                    <Button size="lg" variant="outline" className="w-full text-lg py-6" asChild>
+                       <Link href="/signup">Sign Up</Link>
                     </Button>
                   </div>
                 </div>
