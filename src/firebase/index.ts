@@ -2,27 +2,30 @@
 
 import { firebaseConfig } from '@/firebase/config';
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore'
+import { Auth, getAuth } from 'firebase/auth';
+import { Firestore, getFirestore } from 'firebase/firestore';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// This function now acts as a singleton for Firebase services.
+let firebaseServices: { firebaseApp: FirebaseApp; auth: Auth; firestore: Firestore; } | null = null;
+
+// IMPORTANT: This function is simplified to ensure it runs correctly.
 export function initializeFirebase() {
-  if (getApps().length) {
-    // If already initialized, return the SDKs with the already initialized App
-    return getSdks(getApp());
+  if (firebaseServices) {
+    return firebaseServices;
   }
   
-  // Always initialize with the explicit config
-  const firebaseApp = initializeApp(firebaseConfig);
-  return getSdks(firebaseApp);
-}
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  
+  const auth = getAuth(app);
+  const firestore = getFirestore(app);
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp)
+  firebaseServices = {
+    firebaseApp: app,
+    auth,
+    firestore,
   };
+  
+  return firebaseServices;
 }
 
 export * from './provider';
