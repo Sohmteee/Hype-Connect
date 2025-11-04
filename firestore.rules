@@ -1,149 +1,97 @@
 /**
- * @fileoverview Firestore Security Rules for HypeConnect.
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user-specific data,
- * combined with specific access control for hypemen and club events.  Authorization
- * independence is achieved by denormalizing key ownership and relationship data
- * directly onto documents. This avoids costly and complex `get()` calls within
- * the security rules.
- *
- * Data Structure:
- * - /users/{userId}: User profiles, accessible only by the user themselves.
- * - /hypemen/{hypemanId}: Hypeman profiles, access to which is not defined in provided JSON.
- * - /hypemen/{hypemanId}/clubEvents/{clubEventId}: Club events associated with a hypeman.
- * - /users/{userId}/hypeMessages/{hypeMessageId}: Hype messages sent by users, nested under the user's profile.
- * - /paymentTransactions/{paymentTransactionId}: Payment transactions (not user-scoped).
- * - /hypemanWallets/{hypemanWalletId}: Hypeman Wallets (not hypeman-scoped).
- *
- * Key Security Decisions:
- * - Users can only access their own profile data.
- * - Hypemen access is not defined in JSON.
- * - Hype messages are owned by the user who created them.
- * - Payment transactions have open access.
- * - Hypeman Wallets have open access.
- * - Data validation is minimal, focusing on authorization-critical fields.
- *
- * Denormalization for Authorization:
- * - ClubEvent documents are nested under Hypeman documents and include the hypemanId for easy authorization.
- * - HypeMessage documents include both userId and clubEventId to simplify access control.
- */
+* @fileoverview Firestore Security Rules for HypeConnect
+* 
+* Structure:
+* - /users/{userId}: User profile (auth + roles)
+* - /users/{userId}/profiles/{profileId}: Hypeman or Spotlight profiles
+* - /events/{eventId}: Club events
+* - /events/{eventId}/hypes/{hypeId}: Hype messages sent to events
+*/
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Secure user profiles. Only the authenticated user can access their own profile.
-     * @path /users/{userId}
-     * @allow (create, get, update, delete, list) if the user's ID matches the requested document ID.
-     * @deny (create, get, update, delete, list) if the user's ID does not match the requested document ID.
-     * @principle Enforces document ownership for all operations.
-     */
+    // Helper functions
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isUser(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    function getUserRoles(userId) {
+      return get(/databases/$(database)/documents/users/$(userId)).data.roles;
+    }
+
+    function hasRole(userId, role) {
+      return role in getUserRoles(userId);
+    }
+
+    // User Profile - Root document
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
+      allow create: if isUser(userId) && 
+      request.resource.data.uid == userId &&
+      request.resource.data.email != null &&
+      request.resource.data.displayName != null &&
+      request.resource.data.roles is list &&
+      request.resource.data.roles.size() > 0;
 
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
-      }
-
-      allow get: if isOwner(userId);
-      allow list: if false; // Listing all users is not permitted
-
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(userId);
+      allow read: if isUser(userId);
+      allow update: if isUser(userId);
+      allow delete: if false; // Never delete user profiles
     }
 
-    match /users/{uid}/profiles/{profileId} {
-      allow create: if request.auth.uid == uid;
-      allow read: if resource.data.visibility == 'public' || request.auth.uid == uid;
-      allow update, delete: if request.auth.uid == uid;
+    // User Profiles (hypeman/spotlight)
+    match /users/{userId}/profiles/{profileId} {
+      allow create: if isUser(userId) &&
+      request.resource.data.type in ['hypeman', 'spotlight'] &&
+      request.resource.data.displayName != null;
+
+      allow read: if 
+      (resource.data.visibility == 'public') ||
+      (isUser(userId));
+
+      allow update: if isUser(userId);
+      allow delete: if isUser(userId);
     }
 
-     /**
-      * @description Secure hypeman profiles.  Access permissions are not clearly specified in the JSON.
-      * @path /hypemen/{hypemanId}
-      * @allow (get, list) Public read access is permitted for all hypemen profiles.
-      * @allow (create, update, delete) if false.
-      * @principle Public read access with undefined write access.
-      */
-     match /hypemen/{hypemanId} {
-        allow get, list: if true;
-        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     }
+    // Events - Public read, hypeman create
+    match /events/{eventId} {
+      allow create: if isAuth() &&
+      hasRole(request.auth.uid, 'hypeman') &&
+      request.resource.data.hypemanProfileId != null &&
+      request.resource.data.name != null &&
+      request.resource.data.isActive == true;
 
-     /**
-      * @description Secure club events associated with a hypeman.  Only the hypeman should be able to manage their own events.
-      * @path /hypemen/{hypemanId}/clubEvents/{clubEventId}
-      * @allow (create) if the user's ID matches the hypemanId in the path.
-      * @deny (create) if the user's ID does not match the hypemanId in the path.
-      * @allow (get, list, update, delete) if the hypeman's ID matches the hypemanId in the path.
-      * @deny (get, list, update, delete) if the hypeman's ID does not match the hypemanId in the path.
-      * @principle Enforces document ownership for all operations.
-      */
-    match /hypemen/{hypemanId}/clubEvents/{clubEventId} {
-        function isHypeman(hypemanId) {
-            return request.auth != null && request.auth.uid == hypemanId;
-        }
+      allow read: if true; // Events are public
 
-        function isExistingHypeman(hypemanId) {
-            return isHypeman(hypemanId) && resource != null;
-        }
+      allow update: if isAuth() &&
+      resource.data.hypemanProfileId == request.auth.uid;
 
-        allow get, list: if isHypeman(hypemanId);
-        allow create: if isHypeman(hypemanId);
-        allow update: if isExistingHypeman(hypemanId);
-        allow delete: if isExistingHypeman(hypemanId);
-     }
+      allow delete: if isAuth() &&
+      resource.data.hypemanProfileId == request.auth.uid;
 
-     /**
-      * @description Secure hype messages sent by users.  Only the user should be able to manage their own messages.
-      * @path /users/{userId}/hypeMessages/{hypeMessageId}
-      * @allow (create) if the user's ID matches the userId in the path and the message's userId field matches the path.
-      * @deny (create) if the user's ID does not match the userId in the path or the message's userId field does not match the path.
-      * @allow (get, list, update, delete) if the user's ID matches the userId in the path.
-      * @deny (get, list, update, delete) if the user's ID does not match the userId in the path.
-      * @principle Enforces document ownership for all operations.
-      */
-    match /users/{userId}/hypeMessages/{hypeMessageId} {
-        function isOwner(userId) {
-            return request.auth != null && request.auth.uid == userId;
-        }
+      // Hype Messages under events
+      match /hypes/{hypeId} {
+        allow create: if isAuth() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.eventId == eventId &&
+        request.resource.data.message != null &&
+        request.resource.data.amount > 0;
 
-        function isExistingOwner(userId) {
-            return isOwner(userId) && resource != null;
-        }
+        allow read: if 
+        (isAuth() && request.auth.uid == resource.data.userId) ||
+        (isAuth() && get(/databases/$(database)/documents/events/$(eventId)).data.hypemanProfileId == request.auth.uid);
 
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId);
-        allow delete: if isExistingOwner(userId);
-     }
+        // Only hypeman can update hype status
+        allow update: if isAuth() &&
+        get(/databases/$(database)/documents/events/$(eventId)).data.hypemanProfileId == request.auth.uid &&
+        request.resource.data.status in ['new', 'hyped'];
 
-     /**
-      * @description Secure payment transactions.  Access permissions are not clearly specified in the JSON.
-      * @path /paymentTransactions/{paymentTransactionId}
-      * @allow (get, list) Public read access is permitted for all payment transactions.
-      * @allow (create, update, delete) if false.
-      * @principle Public read access with undefined write access.
-      */
-    match /paymentTransactions/{paymentTransactionId} {
-        allow get, list: if true;
-        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     }
-
-     /**
-      * @description Secure hypeman wallets.  Access permissions are not clearly specified in the JSON.
-      * @path /hypemanWallets/{hypemanWalletId}
-      * @allow (get, list) Public read access is permitted for all hypeman wallets.
-      * @allow (create, update, delete) if false.
-      * @principle Public read access with undefined write access.
-      */
-    match /hypemanWallets/{hypemanWalletId} {
-        allow get, list: if true;
-        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-     }
+        allow delete: if false; // Never delete hypes
+      }
+    }
   }
 }
