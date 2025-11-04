@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates a personalized "Hype Badge" for a user after they send a hype.
@@ -43,9 +44,9 @@ function HypeBadge({ senderName, eventName, hypemanName, amount }: GenerateHypeB
         >
             <defs>
                 <style>
-                    {`
-                        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
-                    `}
+                  {`
+                    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
+                  `}
                 </style>
                 <linearGradient id="backgroundGradient" x1="0" y1="0" x2="1" y2="1">
                     <stop offset="0%" stopColor="#120c18" />
