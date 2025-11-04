@@ -61,22 +61,23 @@ export default function SignupPage() {
   });
 
   function onSubmit(data: SignupFormValues) {
-    initiateEmailSignUp(auth, data.email, data.password);
-    
-    // In a real app, you'd also save the user's name and account type
-    // to a 'users' collection in Firestore upon successful registration.
+    // This function is now non-blocking
+    initiateEmailSignUp(auth, data.email, data.password, data.name, data.accountType);
     
     toast({
       title: 'Account Created! 🎉',
-      description: `Welcome, ${data.name}! You're now ready to go.`,
+      description: `Welcome, ${data.name}! Redirecting you now...`,
     });
     
-    // Redirect based on account type
-    if (data.accountType === 'hypeman') {
-      router.push('/dashboard');
-    } else {
-      router.push('/'); // Redirect regular users to the homepage
-    }
+    // The redirection will be handled by the listener in the header
+    // but we can optimistically push them to a loading or home page.
+    setTimeout(() => {
+      if (data.accountType === 'hypeman') {
+        router.push('/dashboard');
+      } else {
+        router.push('/dashboard/user');
+      }
+    }, 1500); // Give a bit of time for auth state to propagate
   }
 
   return (

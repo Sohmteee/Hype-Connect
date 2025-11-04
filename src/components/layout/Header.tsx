@@ -15,7 +15,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { doc } from 'firebase/firestore';
 
 
 export function Header({ className }: { className?: string }) {
@@ -32,6 +33,14 @@ export function Header({ className }: { className?: string }) {
   const router = useRouter();
   const auth = useAuth();
   const { user } = useUser();
+  const { firestore } = useFirebase();
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
+  const { data: userProfile } = useDoc<{ role: 'hypeman' | 'spotlight' }>(userDocRef);
 
   const navLinks = [
     { href: "/about", label: "About", icon: Info },
@@ -49,9 +58,7 @@ export function Header({ className }: { className?: string }) {
   }
   
   const handleDashboardClick = () => {
-     // A simple way to check for hypeman, in a real app this would be more robust (e.g., custom claims)
-    const isHypeman = user?.email?.includes('hypeman');
-    if (isHypeman) {
+    if (userProfile?.role === 'hypeman') {
         router.push('/dashboard');
     } else {
         router.push('/dashboard/user');

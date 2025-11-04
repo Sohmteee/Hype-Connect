@@ -29,8 +29,9 @@ import { Header } from '@/components/layout/Header';
 import { useToast } from '@/hooks/use-toast';
 import { HypeConnectLogo } from '@/components/icons';
 import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { doc } from 'firebase/firestore';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -44,8 +45,16 @@ export default function LoginPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
+  const { firestore } = useFirebase();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+
+  const userDocRef = useMemoFirebase(() => {
+    if (!user || !firestore) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [user, firestore]);
+
+  const { data: userProfile } = useDoc<{ role: 'hypeman' | 'spotlight' }>(userDocRef);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -56,41 +65,37 @@ export default function LoginPage() {
   });
   
   React.useEffect(() => {
-    // If user is already logged in, redirect them.
-    // We can decide where they should go, for now, let's check account type.
-    if (!isUserLoading && user) {
-        // A simple way to check for hypeman, in a real app this would be more robust (e.g., custom claims)
-        const isHypeman = user.email?.includes('hypeman');
-        if (isHypeman) {
-            router.push('/dashboard');
-        } else {
-            router.push('/dashboard/user');
-        }
+    if (!isUserLoading && user && userProfile) {
+      if (userProfile.role === 'hypeman') {
+        router.push('/dashboard');
+      } else {
+        router.push('/dashboard/user');
+      }
     }
-  }, [user, isUserLoading, router]);
+  }, [user, userProfile, isUserLoading, router]);
 
   function onSubmit(data: LoginFormValues) {
     setIsSubmitting(true);
-    // This function doesn't return a promise, it relies on the onAuthStateChanged listener
     initiateEmailSignIn(auth, data.email, data.password);
     
-    // We can't immediately know if login was successful here.
-    // The useEffect hook will handle redirection on successful login.
-    // We can show a toast and wait.
     toast({
       title: 'Logging In...',
       description: 'Please wait while we check your credentials.',
     });
     
-    // We might need a way to handle login failure.
-    // For now, let's assume it works and the useEffect redirects.
-    // A more robust solution would involve listening for auth errors.
     setTimeout(() => {
+      if(!user) { // If user is still not logged in after 3s
         setIsSubmitting(false);
-    }, 3000) // Reset submit button after a few seconds if redirect doesn't happen
+        toast({
+            variant: "destructive",
+            title: "Login Failed",
+            description: "Please check your email and password.",
+        })
+      }
+    }, 3000)
   }
 
-  if (isUserLoading || user) {
+  if (isUserLoading || (user && !userProfile)) {
       return (
         <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
