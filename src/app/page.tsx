@@ -241,7 +241,7 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="relative w-full h-[90vh] text-white overflow-hidden">
-          <Carousel 
+          <Carousel
             className="w-full h-full"
             plugins={[
               Autoplay({
@@ -256,14 +256,14 @@ export default function Home() {
             <CarouselContent className="h-full -ml-0">
               {heroImages.map((image, index) => (
                 <CarouselItem key={index} className="pl-0">
-                    <Image
-                      src={image.imageUrl}
-                      alt={image.description}
-                      fill
-                      className="object-cover"
-                      data-ai-hint={image.imageHint}
-                      priority={index === 0}
-                    />
+                  <Image
+                    src={image.imageUrl}
+                    alt={image.description}
+                    fill
+                    className="object-cover"
+                    data-ai-hint={image.imageHint}
+                    priority={index === 0}
+                  />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -271,7 +271,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/60" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <div className="relative z-10 container px-4 md:px-6">
-                <div className="flex flex-col items-center space-y-6">
+              <div className="flex flex-col items-center space-y-6">
                 <PartyPopper className="w-16 h-16 text-accent neon-glow" />
                 <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text transition-all duration-500">
                     {headline}
@@ -288,7 +288,7 @@ export default function Home() {
                     <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
                     </Button>
                 </div>
-                </div>
+              </div>
             </div>
           </div>
         </section>
