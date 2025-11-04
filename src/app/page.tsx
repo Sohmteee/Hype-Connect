@@ -10,6 +10,7 @@ import {
   MapPin,
   Mic,
   PartyPopper,
+  PlusCircle,
   Search,
   Send,
   Video,
@@ -187,6 +188,9 @@ export default function Home() {
                 </Button>
                  <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent">
                    <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
+                </Button>
+                 <Button asChild size="lg" variant="outline" className="border-primary text-primary hover:bg-primary/10 hover:text-primary">
+                   <Link href="/signup"><PlusCircle className="mr-2"/>Create an Event</Link>
                 </Button>
               </div>
             </div>
