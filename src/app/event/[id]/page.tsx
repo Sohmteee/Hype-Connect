@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, notFound } from 'next/navigation';
+import { useRouter, notFound, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -326,16 +326,38 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   );
 }
 
-// This is now a Server Component that fetches data and renders the client component.
-export default function EventPage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
-  const params = React.use(paramsPromise);
-  const event = getEventById(params.id);
+// This is now a standard client component that fetches data on mount.
+export default function EventPage() {
+  const params = useParams();
+  const [event, setEvent] = React.useState<ClubEvent | null>(null);
+  const [leaderboard, setLeaderboard] = React.useState<Tipper[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const id = typeof params.id === 'string' ? params.id : '';
+
+  React.useEffect(() => {
+    if (!id) return;
+
+    const eventData = getEventById(id);
+    if (!eventData) {
+      notFound();
+    } else {
+      setEvent(eventData);
+      const leaderboardData = getLeaderboardForEvent(id);
+      setLeaderboard(leaderboardData);
+      setLoading(false);
+    }
+  }, [id]);
+
+  if (loading) {
+    // You can replace this with a proper loading skeleton component
+    return <div>Loading...</div>;
+  }
   
   if (!event) {
-    notFound();
+    return null;
   }
 
-  const leaderboard = getLeaderboardForEvent(params.id);
 
   return (
     <>

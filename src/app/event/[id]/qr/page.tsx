@@ -1,6 +1,6 @@
 
 'use client';
-import { notFound, useRouter } from 'next/navigation';
+import { notFound, useRouter, useParams } from 'next/navigation';
 import * as React from 'react';
 import Image from 'next/image';
 import { Club, Mic, ArrowLeft } from 'lucide-react';
@@ -71,12 +71,31 @@ function QrCodeDetails({ event }: { event: ClubEvent }) {
   );
 }
 
-export default function QrCodePage({ params: paramsPromise }: { params: Promise<{ id: string }> }) {
-    const params = React.use(paramsPromise);
-    const event = getEventById(params.id);
+export default function QrCodePage() {
+    const params = useParams();
+    const [event, setEvent] = React.useState<ClubEvent | null>(null);
+    const [loading, setLoading] = React.useState(true);
 
+    const id = typeof params.id === 'string' ? params.id : '';
+
+    React.useEffect(() => {
+        if (!id) return;
+        const eventData = getEventById(id);
+        if (!eventData) {
+            notFound();
+        } else {
+            setEvent(eventData);
+            setLoading(false);
+        }
+    }, [id]);
+
+
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+    
     if (!event) {
-        notFound();
+        return null;
     }
     
     return (
