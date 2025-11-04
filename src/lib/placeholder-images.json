@@ -7,18 +7,6 @@
       "imageHint": "club party"
     },
     {
-      "id": "hero-banner-2",
-      "description": "A crowd at a concert with their hands in the air.",
-      "imageUrl": "https://images.unsplash.com/photo-1492684223066-89434abcda35?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwY3Jvd2R8ZW58MHx8fHwxNzYzNTYyMDIwfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "concert crowd"
-    },
-    {
-      "id": "hero-banner-3",
-      "description": "People celebrating at a party with confetti.",
-      "imageUrl": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxwYXJ0eSUyMHBlb3BsZXxlbnwwfHx8fDE3NjM1NjIwNzV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "party people"
-    },
-    {
       "id": "event-1",
       "description": "A bustling nightclub with neon lights",
       "imageUrl": "https://images.unsplash.com/photo-1597329204992-214518c367b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxuaWdodGNsdWIlMjBwYXJ0eXxlbnwwfHx8fDE3NjIxNzAxMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",

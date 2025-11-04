@@ -212,7 +212,7 @@ export default function Home() {
   const [locationTerm, setLocationTerm] = React.useState('');
   const [filter, setFilter] = React.useState<'all' | 'live'>('live');
   const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
-  const heroImages = PlaceHolderImages.filter(img => img.id.startsWith('hero-banner'));
+  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-banner-1');
 
   React.useEffect(() => {
     let index = 0;
@@ -241,33 +241,16 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="relative w-full h-[90vh] text-white overflow-hidden">
-          <Carousel
-            className="w-full h-full"
-            plugins={[
-              Autoplay({
-                delay: 4000,
-                stopOnInteraction: false,
-              }),
-            ]}
-            opts={{
-              loop: true,
-            }}
-          >
-            <CarouselContent className="h-full -ml-0">
-              {heroImages.map((image, index) => (
-                <CarouselItem key={index} className="pl-0">
-                  <Image
-                    src={image.imageUrl}
-                    alt={image.description}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={image.imageHint}
-                    priority={index === 0}
-                  />
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-          </Carousel>
+         {heroImage && (
+            <Image
+                src={heroImage.imageUrl}
+                alt={heroImage.description}
+                fill
+                className="object-cover"
+                data-ai-hint={heroImage.imageHint}
+                priority
+            />
+         )}
           <div className="absolute inset-0 bg-black/60" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <div className="relative z-10 container px-4 md:px-6">
