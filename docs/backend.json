@@ -1,0 +1,554 @@
+{
+  "entities": {
+    "Club": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Club",
+      "type": "object",
+      "description": "Represents a club or event venue hosting hypemen.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the club."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the club."
+        },
+        "address": {
+          "type": "string",
+          "description": "Address of the club."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the club or event."
+        },
+        "adminId": {
+          "type": "string",
+          "description": "Reference to Admin. (Relationship: Admin 1:N Club)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "address",
+        "description",
+        "adminId"
+      ]
+    },
+    "Hypeman": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Hypeman",
+      "type": "object",
+      "description": "Represents a hypeman registered on the platform.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the hypeman."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the hypeman."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the hypeman.",
+          "format": "email"
+        },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Phone number of the hypeman."
+        },
+        "clubIds": {
+          "type": "array",
+          "description": "References to Clubs. (Relationship: Hypeman N:N Club)",
+          "items": {
+            "type": "string"
+          }
+        },
+        "approved": {
+          "type": "boolean",
+          "description": "Indicates whether the hypeman has been approved by an admin."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "phoneNumber",
+        "approved"
+      ]
+    },
+    "HypeMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "HypeMessage",
+      "type": "object",
+      "description": "Represents a hype message sent by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the hype message."
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Name or nickname of the sender."
+        },
+        "message": {
+          "type": "string",
+          "description": "The hype message content."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount sent with the hype message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of when the message was sent.",
+          "format": "date-time"
+        },
+        "hypemanId": {
+          "type": "string",
+          "description": "Reference to Hypeman. (Relationship: Hypeman 1:N HypeMessage)"
+        },
+        "clubId": {
+          "type": "string",
+          "description": "Reference to Club. (Relationship: Club 1:N HypeMessage)"
+        },
+        "hyped": {
+          "type": "boolean",
+          "description": "Indicates whether the hypeman has marked the message as 'Hyped'."
+        }
+      },
+      "required": [
+        "id",
+        "senderName",
+        "message",
+        "amount",
+        "timestamp",
+        "hypemanId",
+        "clubId",
+        "hyped"
+      ]
+    },
+    "Transaction": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Transaction",
+      "type": "object",
+      "description": "Represents a financial transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the transaction."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of the transaction."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp of the transaction.",
+          "format": "date-time"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "description": "Payment method used for the transaction (e.g., Paystack, Flutterwave)."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N Transaction)"
+        },
+        "hypemanId": {
+          "type": "string",
+          "description": "Reference to Hypeman. (Relationship: Hypeman 1:N Transaction)"
+        },
+        "hypeMessageId": {
+          "type": "string",
+          "description": "Reference to HypeMessage. (Relationship: HypeMessage 1:1 Transaction)"
+        }
+      },
+      "required": [
+        "id",
+        "amount",
+        "timestamp",
+        "paymentMethod",
+        "userId",
+        "hypemanId",
+        "hypeMessageId"
+      ]
+    },
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the user.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "Admin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Admin",
+      "type": "object",
+      "description": "Represents an administrator of the application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the admin."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the admin."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the admin.",
+          "format": "email"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "VideoBooking": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "VideoBooking",
+      "type": "object",
+      "description": "Represents a video booking made by a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the video booking."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N VideoBooking)"
+        },
+        "bookingDate": {
+          "type": "string",
+          "description": "Date and time the video was booked.",
+          "format": "date-time"
+        },
+        "videoId": {
+          "type": "string",
+          "description": "Reference to Video. (Relationship: Video 1:1 VideoBooking)"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "bookingDate",
+        "videoId"
+      ]
+    },
+    "Video": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Video",
+      "type": "object",
+      "description": "Represents the video that is booked.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the video."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the video."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the video."
+        },
+        "url": {
+          "type": "string",
+          "description": "URL of the video.",
+          "format": "uri"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "description",
+        "url"
+      ]
+    },
+    "UserDashboard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "UserDashboard",
+      "type": "object",
+      "description": "Represents the dashboard for a user where they can download their videos.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user dashboard."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:1 UserDashboard)"
+        },
+        "videoBookingIds": {
+          "type": "array",
+          "description": "References to VideoBooking. (Relationship: UserDashboard 1:N VideoBooking)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userId"
+      ]
+    },
+    "HypemanDashboard": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "HypemanDashboard",
+      "type": "object",
+      "description": "Represents the dashboard for a hypeman where they can see message/payment info.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user dashboard."
+        },
+        "hypemanId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: Hypeman 1:1 HypemanDashboard)"
+        },
+        "hypeMessageIds": {
+          "type": "array",
+          "description": "References to HypeMessage. (Relationship: HypemanDashboard 1:N HypeMessage)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "hypemanId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Uses path-based ownership for private user data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/admins/{adminId}",
+        "definition": {
+          "entityName": "Admin",
+          "schema": {
+            "$ref": "#/backend/entities/Admin"
+          },
+          "description": "Stores administrator profiles.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier for the administrator."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hypemen/{hypemanId}",
+        "definition": {
+          "entityName": "Hypeman",
+          "schema": {
+            "$ref": "#/backend/entities/Hypeman"
+          },
+          "description": "Stores hypeman profiles. Uses path-based ownership.",
+          "params": [
+            {
+              "name": "hypemanId",
+              "description": "The unique identifier for the hypeman."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/clubs/{clubId}",
+        "definition": {
+          "entityName": "Club",
+          "schema": {
+            "$ref": "#/backend/entities/Club"
+          },
+          "description": "Stores club information.",
+          "params": [
+            {
+              "name": "clubId",
+              "description": "The unique identifier for the club."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hypemen/{hypemanId}/hypeMessages/{hypeMessageId}",
+        "definition": {
+          "entityName": "HypeMessage",
+          "schema": {
+            "$ref": "#/backend/entities/HypeMessage"
+          },
+          "description": "Stores hype messages for a specific hypeman. Includes denormalized 'clubId' for authorization independence.",
+          "params": [
+            {
+              "name": "hypemanId",
+              "description": "The unique identifier for the hypeman."
+            },
+            {
+              "name": "hypeMessageId",
+              "description": "The unique identifier for the hype message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/clubs/{clubId}/hypeMessages/{hypeMessageId}",
+        "definition": {
+          "entityName": "HypeMessage",
+          "schema": {
+            "$ref": "#/backend/entities/HypeMessage"
+          },
+          "description": "Stores hype messages for a specific club. Includes denormalized 'hypemanId' for authorization independence.",
+          "params": [
+            {
+              "name": "clubId",
+              "description": "The unique identifier for the club."
+            },
+            {
+              "name": "hypeMessageId",
+              "description": "The unique identifier for the hype message."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/transactions/{transactionId}",
+        "definition": {
+          "entityName": "Transaction",
+          "schema": {
+            "$ref": "#/backend/entities/Transaction"
+          },
+          "description": "Stores transaction details.",
+          "params": [
+            {
+              "name": "transactionId",
+              "description": "The unique identifier for the transaction."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/videos/{videoId}",
+        "definition": {
+          "entityName": "Video",
+          "schema": {
+            "$ref": "#/backend/entities/Video"
+          },
+          "description": "Stores video content details.",
+          "params": [
+            {
+              "name": "videoId",
+              "description": "The unique identifier for the video."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/videoBookings/{videoBookingId}",
+        "definition": {
+          "entityName": "VideoBooking",
+          "schema": {
+            "$ref": "#/backend/entities/VideoBooking"
+          },
+          "description": "Stores video booking information for a specific user.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "videoBookingId",
+              "description": "The unique identifier for the video booking."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/userDashboard/{userDashboardId}",
+        "definition": {
+          "entityName": "UserDashboard",
+          "schema": {
+            "$ref": "#/backend/entities/UserDashboard"
+          },
+          "description": "Stores user dashboard information.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "userDashboardId",
+              "description": "The unique identifier for the user dashboard."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/hypemen/{hypemanId}/hypemanDashboard/{hypemanDashboardId}",
+        "definition": {
+          "entityName": "HypemanDashboard",
+          "schema": {
+            "$ref": "#/backend/entities/HypemanDashboard"
+          },
+          "description": "Stores hypeman dashboard information.",
+          "params": [
+            {
+              "name": "hypemanId",
+              "description": "The unique identifier for the hypeman."
+            },
+            {
+              "name": "hypemanDashboardId",
+              "description": "The unique identifier for the hypeman dashboard."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to support the HypeConnect application, focusing on real-time hype messages and transactions between users and hypemen. The structure emphasizes authorization independence, clarity, and scalability.\n\n*   **Authorization Independence:** This is achieved by using path-based ownership for user and hypeman data and denormalizing membership information where needed. For instance, the `HypeMessage` documents are placed within subcollections owned by both `Hypeman` and `Club`. This denormalization avoids the need for `get()` calls in security rules, which can hinder atomic operations.\n*   **Structural Segregation:** Data with different access requirements are stored in separate collections. Public user data is stored under `/users/{userId}`, while private hypeman data is under `/hypemen/{hypemanId}`. This segregation simplifies the security rules and improves maintainability.\n*   **Access Modeling:** Standard access patterns are consistently applied. User-owned data is managed under `/users/{userId}`, while hypeman-related data is under `/hypemen/{hypemanId}`. The `HypeMessage` documents maintain references to both hypemen and clubs.\n*   **Dashboard data:** UserDashboard and HypemanDashboard are 1:1 relationships with Users and Hypemen respectively. This allows efficient data retrieval associated with a specific user or hypeman.\n\nTo support **QAPs (Rules are not Filters)**, the structure leverages segregation and path-based ownership to allow secure `list` operations. For instance, listing hype messages for a specific hypeman within a club can be done securely by querying the `/hypemen/{hypemanId}/hypeMessages` collection and using the membership data denormalized into each `HypeMessage` document."
+  }
+}
