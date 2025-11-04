@@ -40,7 +40,7 @@ export function Header({ className }: { className?: string }) {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfile } = useDoc<{ role: 'hypeman' | 'spotlight' }>(userDocRef);
+  const { data: userProfile } = useDoc<{ roles: ('hypeman' | 'spotlight')[] }>(userDocRef);
 
   const navLinks = [
     { href: "/about", label: "About", icon: Info },
@@ -58,7 +58,7 @@ export function Header({ className }: { className?: string }) {
   }
   
   const handleDashboardClick = () => {
-    if (userProfile?.role === 'hypeman') {
+    if (userProfile?.roles?.includes('hypeman')) {
         router.push('/dashboard');
     } else {
         router.push('/dashboard/user');
@@ -190,3 +190,5 @@ export function Header({ className }: { className?: string }) {
     </header>
   );
 }
+
+    

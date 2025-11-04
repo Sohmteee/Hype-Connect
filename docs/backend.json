@@ -179,11 +179,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the application.",
+      "description": "Represents a user of the application, who can have multiple roles.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user."
+          "description": "Unique identifier for the user (matches Firebase Auth UID)."
         },
         "name": {
           "type": "string",
@@ -193,12 +193,21 @@
           "type": "string",
           "description": "Email address of the user.",
           "format": "email"
+        },
+        "roles": {
+          "type": "array",
+          "description": "An array of roles the user holds, e.g., ['spotlight', 'hypeman'].",
+          "items": {
+            "type": "string",
+            "enum": ["spotlight", "hypeman"]
+          }
         }
       },
       "required": [
         "id",
         "name",
-        "email"
+        "email",
+        "roles"
       ]
     },
     "Admin": {
@@ -551,3 +560,4 @@
     "reasoning": "The Firestore structure is designed to support the HypeConnect application, focusing on real-time hype messages and transactions between users and hypemen. The structure emphasizes authorization independence, clarity, and scalability.\n\n*   **Authorization Independence:** This is achieved by using path-based ownership for user and hypeman data and denormalizing membership information where needed. For instance, the `HypeMessage` documents are placed within subcollections owned by both `Hypeman` and `Club`. This denormalization avoids the need for `get()` calls in security rules, which can hinder atomic operations.\n*   **Structural Segregation:** Data with different access requirements are stored in separate collections. Public user data is stored under `/users/{userId}`, while private hypeman data is under `/hypemen/{hypemanId}`. This segregation simplifies the security rules and improves maintainability.\n*   **Access Modeling:** Standard access patterns are consistently applied. User-owned data is managed under `/users/{userId}`, while hypeman-related data is under `/hypemen/{hypemanId}`. The `HypeMessage` documents maintain references to both hypemen and clubs.\n*   **Dashboard data:** UserDashboard and HypemanDashboard are 1:1 relationships with Users and Hypemen respectively. This allows efficient data retrieval associated with a specific user or hypeman.\n\nTo support **QAPs (Rules are not Filters)**, the structure leverages segregation and path-based ownership to allow secure `list` operations. For instance, listing hype messages for a specific hypeman within a club can be done securely by querying the `/hypemen/{hypemanId}/hypeMessages` collection and using the membership data denormalized into each `HypeMessage` document."
   }
 }
+    

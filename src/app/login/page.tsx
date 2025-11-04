@@ -54,7 +54,7 @@ export default function LoginPage() {
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfile } = useDoc<{ role: 'hypeman' | 'spotlight' }>(userDocRef);
+  const { data: userProfile } = useDoc<{ roles: ('hypeman' | 'spotlight')[] }>(userDocRef);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -66,7 +66,8 @@ export default function LoginPage() {
   
   React.useEffect(() => {
     if (!isUserLoading && user && userProfile) {
-      if (userProfile.role === 'hypeman') {
+      // If user has 'hypeman' role, go to hypeman dashboard, otherwise user dash.
+      if (userProfile.roles?.includes('hypeman')) {
         router.push('/dashboard');
       } else {
         router.push('/dashboard/user');
@@ -193,3 +194,5 @@ export default function LoginPage() {
     </>
   );
 }
+
+    
