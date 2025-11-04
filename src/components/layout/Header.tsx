@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, Info, Mail, Video, User, LogIn, LogOut, UserPlus, Home } from 'lucide-react';
+import { LayoutDashboard, Info, Mail, Video, User, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -14,22 +14,9 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { toast } = useToast();
 
   const mainNavLinks = [
     { href: "/#events", label: "Events"},
@@ -45,13 +32,11 @@ export function Header({ className }: { className?: string }) {
     { href: "/dashboard/user", label: "User Dashboard", icon: User },
   ]
   
-
   const isHomePage = pathname === '/';
   const headerClasses = isHomePage
     ? "absolute top-0 z-50 w-full bg-transparent"
     : "sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60";
   const navItemClasses = isHomePage ? "text-white hover:bg-white/10 hover:text-white" : "text-foreground";
-
 
   return (
     <header className={cn(headerClasses, className)}>
@@ -72,20 +57,18 @@ export function Header({ className }: { className?: string }) {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-            <>
-                <Button variant="ghost" asChild className={cn(navItemClasses, 'hidden sm:flex')}>
-                  <Link href="/dashboard">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Hypeman
-                  </Link>
-                </Button>
-                <Button asChild className='glowing-btn'>
-                  <Link href="/dashboard/user">
-                      <User className="mr-2 h-4 w-4" />
-                      Spotlight
-                  </Link>
-                </Button>
-            </>
+            <Button variant="ghost" asChild className={cn(navItemClasses, 'hidden sm:flex')}>
+              <Link href="/dashboard">
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Hypeman
+              </Link>
+            </Button>
+            <Button asChild className='glowing-btn'>
+              <Link href="/dashboard/user">
+                  <User className="mr-2 h-4 w-4" />
+                  Spotlight
+              </Link>
+            </Button>
 
           <Sheet>
             <SheetTrigger asChild>
