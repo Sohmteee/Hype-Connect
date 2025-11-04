@@ -73,9 +73,13 @@ function HowItWorks() {
               <Card
                 className="bg-card/50 text-center flex flex-col items-center p-6 h-full"
               >
-                <div className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary">
+                <AnimateOnScroll
+                    animation="flip"
+                    delay={index * 0.2}
+                    className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary"
+                >
                   {step.icon}
-                </div>
+                </AnimateOnScroll>
                 <CardHeader className="p-0">
                   <CardTitle className="font-headline">{step.title}</CardTitle>
                 </CardHeader>
@@ -125,9 +129,13 @@ function WhyHypeConnect() {
           {features.map((feature, index) => (
             <AnimateOnScroll key={index} delay={index * 0.1}>
               <Card className="bg-card text-center flex flex-col items-center p-6 h-full border-primary/20">
-                <div className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary">
+                 <AnimateOnScroll
+                    animation="flip"
+                    delay={index * 0.2}
+                    className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary"
+                >
                   {feature.icon}
-                </div>
+                </AnimateOnScroll>
                 <CardHeader className="p-0">
                   <CardTitle className="font-headline">{feature.title}</CardTitle>
                 </CardHeader>
