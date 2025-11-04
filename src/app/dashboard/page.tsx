@@ -107,7 +107,7 @@ function CreateEventDialog({ onEventCreated }: { onEventCreated: (newEvent: Club
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button className="w-full sm:w-auto">
           <PlusCircle className="mr-2" />
           Create New Event
         </Button>
@@ -193,7 +193,7 @@ function Wallet({ earnings }: { earnings: number }) {
         <WalletIcon className="h-4 w-4 text-primary-foreground/80" />
       </CardHeader>
       <CardContent>
-        <div className="text-4xl font-bold text-primary-foreground">
+        <div className="text-3xl sm:text-4xl font-bold text-primary-foreground">
           ₦{earnings.toLocaleString()}
         </div>
         <p className="text-xs text-primary-foreground/80 mt-1">
@@ -240,7 +240,7 @@ function AiSuggestions({
   };
 
   return (
-    <Card className="sticky top-24">
+    <Card className="md:sticky md:top-24">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-accent">
           <Sparkles className="neon-glow" />
@@ -330,15 +330,15 @@ export default function DashboardPage() {
     <>
       <Header />
       <main className="container py-8 md:py-12">
-        <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold tracking-tighter font-headline">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tighter font-headline text-center sm:text-left">
             MC Gusto&apos;s Dashboard
             </h1>
             <CreateEventDialog onEventCreated={handleEventCreated} />
         </div>
 
-        <div className="grid gap-8 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
             
             <section className="space-y-4">
                 <h2 className="text-2xl font-semibold">Your Active Events</h2>
@@ -394,7 +394,7 @@ export default function DashboardPage() {
                             {formatDistanceToNow(new Date(hype.timestamp), { addSuffix: true })}
                           </CardDescription>
                         </div>
-                        <Badge variant={hype.status === 'hyped' ? "secondary" : "default"} className="text-base">
+                        <Badge variant={hype.status === 'hyped' ? "secondary" : "default"} className="text-base shrink-0">
                           <DollarSign className="h-4 w-4 mr-1" />
                           {hype.amount.toLocaleString()}
                         </Badge>
