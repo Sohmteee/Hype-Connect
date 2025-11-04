@@ -40,7 +40,11 @@ export async function signUpWithEmail(
   if (!user) {
     throw new Error('User creation failed.');
   }
+  
+  console.log("Firebase Auth user created:", user.uid);
 
+  // The rest of the logic is temporarily commented out to isolate the auth issue.
+  /*
   // 2. Create the root user document in Firestore
   const userDocRef = doc(firestore, 'users', user.uid);
   await setDoc(userDocRef, {
@@ -64,6 +68,7 @@ export async function signUpWithEmail(
         defaultProfileId: profileIds[0]
     }, { merge: true });
   }
+  */
 
   return userCredential;
 }
