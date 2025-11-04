@@ -29,7 +29,7 @@ import { Header } from '@/components/layout/Header';
 import { useToast } from '@/hooks/use-toast';
 import { HypeConnectLogo } from '@/components/icons';
 import { useAuth, useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mic, User as UserIcon } from 'lucide-react';
 import { doc } from 'firebase/firestore';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -39,6 +39,38 @@ const loginFormSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginFormSchema>;
+type UserRole = 'hypeman' | 'spotlight';
+
+function RoleSelection({ onSelectRole }: { onSelectRole: (role: UserRole) => void }) {
+    return (
+        <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+                <CardTitle className="text-2xl font-headline">Choose Your Role</CardTitle>
+                <CardDescription>How do you want to use HypeConnect today?</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                 <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-20 text-lg"
+                    onClick={() => onSelectRole('hypeman')}
+                >
+                    <Mic className="mr-4" />
+                    Continue as Hypeman
+                </Button>
+                <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-20 text-lg"
+                    onClick={() => onSelectRole('spotlight')}
+                >
+                    <UserIcon className="mr-4" />
+                    Continue as Spotlight
+                </Button>
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -49,13 +81,14 @@ export default function LoginPage() {
   const { firestore } = useFirebase();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
+  const [showRoleSelection, setShowRoleSelection] = React.useState(false);
 
   const userDocRef = useMemoFirebase(() => {
     if (!user || !firestore) return null;
     return doc(firestore, 'users', user.uid);
   }, [user, firestore]);
 
-  const { data: userProfile } = useDoc<{ roles: ('hypeman' | 'spotlight')[] }>(userDocRef);
+  const { data: userProfile } = useDoc<{ roles: UserRole[] }>(userDocRef);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -67,10 +100,18 @@ export default function LoginPage() {
   
   React.useEffect(() => {
     if (!isUserLoading && user && userProfile) {
-      const redirectUrl = searchParams.get('redirect') || (userProfile.roles?.includes('hypeman') ? '/dashboard' : '/dashboard/user');
-      router.push(redirectUrl);
+        if (userProfile.roles?.includes('hypeman') && userProfile.roles?.includes('spotlight')) {
+            setShowRoleSelection(true);
+        } else {
+            handleRoleSelection(userProfile.roles?.[0] || 'spotlight');
+        }
     }
-  }, [user, userProfile, isUserLoading, router, searchParams]);
+  }, [user, userProfile, isUserLoading]);
+
+  function handleRoleSelection(role: UserRole) {
+      const redirectUrl = searchParams.get('redirect') || (role === 'hypeman' ? '/dashboard' : '/dashboard/user');
+      router.push(redirectUrl);
+  }
 
   async function onSubmit(data: LoginFormValues) {
     setIsSubmitting(true);
@@ -78,9 +119,9 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, data.email, data.password);
         toast({
             title: 'Login Successful!',
-            description: 'Redirecting you to your dashboard...',
+            description: 'Checking your roles...',
         });
-        // The useEffect will handle redirection
+        // The useEffect will handle redirection or role selection
     } catch (error: any) {
         console.error('Login Error:', error);
         toast({
@@ -88,11 +129,12 @@ export default function LoginPage() {
             title: "Login Failed",
             description: error.message || "Please check your email and password.",
         });
+    } finally {
         setIsSubmitting(false);
     }
   }
 
-  if (isUserLoading || (user && !userProfile)) {
+  if (isUserLoading || (user && !userProfile && !showRoleSelection)) {
       return (
         <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -105,87 +147,91 @@ export default function LoginPage() {
     <>
       <Header />
       <main className="container flex-1 flex items-center justify-center py-12">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4">
-              <HypeConnectLogo className="h-12 w-12 text-primary neon-glow-primary" />
-            </div>
-            <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
-            <CardDescription>
-              Log in to your HypeConnect account.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email Address</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="you@awesome.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <div className="relative">
+        {showRoleSelection ? (
+            <RoleSelection onSelectRole={handleRoleSelection} />
+        ) : (
+            <Card className="w-full max-w-md">
+            <CardHeader className="text-center">
+                <div className="mx-auto mb-4">
+                <HypeConnectLogo className="h-12 w-12 text-primary neon-glow-primary" />
+                </div>
+                <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
+                <CardDescription>
+                Log in to your HypeConnect account.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Email Address</FormLabel>
                         <FormControl>
-                          <Input
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="********"
-                            {...field}
-                            className="pr-10"
-                          />
+                            <Input type="email" placeholder="you@awesome.com" {...field} />
                         </FormControl>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
-                          onClick={() => setShowPassword(!showPassword)}
-                          tabIndex={-1}
-                        >
-                          {showPassword ? <EyeOff /> : <Eye />}
-                          <span className="sr-only">
-                            {showPassword ? 'Hide password' : 'Show password'}
-                          </span>
-                        </Button>
-                      </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
-                   {isSubmitting ? (
-                        <>
-                            <Loader2 className="animate-spin mr-2" />
-                            Signing In...
-                        </>
-                    ) : (
-                        'Log In'
+                        <FormMessage />
+                        </FormItem>
                     )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="justify-center">
-            <p className="text-sm text-muted-foreground">
-              Don't have an account?{' '}
-              <Link href="/signup" className="text-accent hover:underline">
-                Sign Up
-              </Link>
-            </p>
-          </CardFooter>
-        </Card>
+                    />
+                    <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <div className="relative">
+                            <FormControl>
+                            <Input
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="********"
+                                {...field}
+                                className="pr-10"
+                            />
+                            </FormControl>
+                            <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 text-muted-foreground"
+                            onClick={() => setShowPassword(!showPassword)}
+                            tabIndex={-1}
+                            >
+                            {showPassword ? <EyeOff /> : <Eye />}
+                            <span className="sr-only">
+                                {showPassword ? 'Hide password' : 'Show password'}
+                            </span>
+                            </Button>
+                        </div>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                            <>
+                                <Loader2 className="animate-spin mr-2" />
+                                Signing In...
+                            </>
+                        ) : (
+                            'Log In'
+                        )}
+                    </Button>
+                </form>
+                </Form>
+            </CardContent>
+            <CardFooter className="justify-center">
+                <p className="text-sm text-muted-foreground">
+                Don't have an account?{' '}
+                <Link href="/signup" className="text-accent hover:underline">
+                    Sign Up
+                </Link>
+                </p>
+            </CardFooter>
+            </Card>
+        )}
       </main>
     </>
   );
