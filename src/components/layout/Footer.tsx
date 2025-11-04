@@ -25,7 +25,7 @@ export function Footer() {
               <li><Link href="/book-video-hype" className="text-muted-foreground hover:text-primary">Book a Video</Link></li>
               <li><Link href="/about" className="text-muted-foreground hover:text-primary">About Us</Link></li>
               <li><Link href="/contact" className="text-muted-foreground hover:text-primary">Contact</Link></li>
-              <li><Link href="/signup" className="text-muted-foreground hover:text-primary">For Hypemen</Link></li>
+              <li><Link href="/signup" className="text-muted-foreground hover:text-primary">For Creators</Link></li>
             </ul>
           </div>
           <div className="space-y-2">
