@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -336,18 +337,12 @@ export default function DashboardPage() {
       <main className="container py-8 md:py-12">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
             <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" className="sm:hidden" asChild>
-                    <Link href="/">
-                      <ArrowLeft />
-                      <span className="sr-only">Go Back</span>
-                    </Link>
-                </Button>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter font-headline text-center sm:text-left">
                 MC Gusto&apos;s Dashboard
                 </h1>
             </div>
             <div className="flex w-full sm:w-auto items-center gap-4">
-                <Button variant="outline" className="hidden sm:flex" asChild>
+                <Button variant="outline" asChild>
                   <Link href="/">
                     <ArrowLeft className="mr-2"/>
                     Go Home
