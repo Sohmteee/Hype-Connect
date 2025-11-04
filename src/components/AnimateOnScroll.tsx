@@ -15,7 +15,7 @@ interface Props {
 
 export function AnimateOnScroll({ children, className, delay = 0, animation = 'fade-in' }: Props) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const isInView = useInView(ref, { once: false, amount: 0.2 });
 
   const animationVariants = {
     'fade-in': {
