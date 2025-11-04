@@ -13,8 +13,10 @@ import {
   PlusCircle,
   Search,
   Send,
+  ShieldCheck,
   Video,
   Volume2,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -88,6 +90,59 @@ function HowItWorks() {
     </section>
   );
 }
+
+function WhyHypeConnect() {
+  const features = [
+    {
+      icon: <ShieldCheck className="w-10 h-10 mb-4 text-accent" />,
+      title: '100% Secure Payments',
+      description:
+        'Your transactions are protected with industry-leading payment gateways. Tip with confidence.',
+    },
+    {
+      icon: <PartyPopper className="w-10 h-10 mb-4 text-accent" />,
+      title: '100% Fun Guaranteed',
+      description:
+        'We connect you directly to the action. Your hype gets heard, making you a real part of the event.',
+    },
+    {
+      icon: <Wallet className="w-10 h-10 mb-4 text-accent" />,
+      title: 'Empowering Creators',
+      description:
+        'We support hypemen and DJs by providing a new way to engage with their audience and earn from their craft.',
+    },
+  ];
+
+  return (
+    <section className="w-full py-12 md:py-24 lg:py-32 bg-card/50">
+      <div className="container px-4 md:px-6">
+        <AnimateOnScroll>
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-center mb-12 font-headline">
+            The HypeConnect Guarantee
+          </h2>
+        </AnimateOnScroll>
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+          {features.map((feature, index) => (
+            <AnimateOnScroll key={index} delay={index * 0.1}>
+              <Card className="bg-card text-center flex flex-col items-center p-6 h-full border-primary/20">
+                <div className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary">
+                  {feature.icon}
+                </div>
+                <CardHeader className="p-0">
+                  <CardTitle className="font-headline">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 mt-2">
+                  <p className="text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
+            </AnimateOnScroll>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 
 function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
   return (
@@ -340,9 +395,13 @@ export default function Home() {
         </section>
 
         <HowItWorks />
+        
+        <WhyHypeConnect />
 
         <FeaturedHypemen hypemen={featuredHypemen} />
       </main>
     </>
   );
 }
+
+    
