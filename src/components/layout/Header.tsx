@@ -46,6 +46,17 @@ export function Header({ className }: { className?: string }) {
     auth.signOut();
     router.push('/');
   }
+  
+  const handleDashboardClick = () => {
+     // A simple way to check for hypeman, in a real app this would be more robust (e.g., custom claims)
+    const isHypeman = user?.email?.includes('hypeman');
+    if (isHypeman) {
+        router.push('/dashboard');
+    } else {
+        router.push('/dashboard/user');
+    }
+  }
+
 
   const isHomePage = pathname === '/';
   const headerClasses = isHomePage
@@ -87,14 +98,14 @@ export function Header({ className }: { className?: string }) {
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-sm font-medium leading-none">{user.displayName || 'Hype User'}</p>
                         <p className="text-xs leading-none text-muted-foreground">
                           {user.email}
                         </p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/dashboard/user')}>
+                    <DropdownMenuItem onClick={handleDashboardClick}>
                       <LayoutDashboard className="mr-2 h-4 w-4" />
                       <span>Dashboard</span>
                     </DropdownMenuItem>
@@ -131,7 +142,7 @@ export function Header({ className }: { className?: string }) {
 
                 <div className="flex flex-col h-full">
                   <div className="flex-1 space-y-4">
-                      {[...navLinks, { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }].map(link => (
+                      {[...navLinks, { href: "/dashboard/user", label: "Dashboard", icon: LayoutDashboard }].map(link => (
                         <Link key={link.href} href={link.href} className="flex items-center gap-4 rounded-lg px-4 py-4 text-xl font-medium text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
                           <link.icon className="h-7 w-7" />
                           <span>{link.label}</span>

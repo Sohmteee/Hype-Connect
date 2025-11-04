@@ -47,7 +47,7 @@ export default function UserDashboardPage() {
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.push('/login?redirect=/dashboard/user');
     }
   }, [user, isUserLoading, router]);
 
@@ -92,6 +92,7 @@ export default function UserDashboardPage() {
               </CardHeader>
               <CardContent>
                 {booking.status === 'pending' && <p className='text-sm text-muted-foreground'>Your video is being created. You'll be notified when it's ready!</p>}
+                 {booking.status === 'completed' && <p className='text-sm text-muted-foreground'>Your video is ready to be downloaded!</p>}
               </CardContent>
               <CardFooter>
                 <Button className="w-full glowing-accent-btn" disabled={booking.status !== 'completed'}>
