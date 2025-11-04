@@ -111,7 +111,7 @@ export default function SignupPage() {
                               <RadioGroupItem value="spotlight" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              Join the Spotlight: Send hype & book videos
+                              I want to send hype & book videos (Spotlight)
                             </FormLabel>
                           </FormItem>
                           <FormItem className="flex items-center space-x-3 space-y-0">
@@ -119,7 +119,7 @@ export default function SignupPage() {
                               <RadioGroupItem value="hypeman" />
                             </FormControl>
                             <FormLabel className="font-normal">
-                              Become a Hypeman: Host events & get paid
+                              I'm a Hypeman & want to host events
                             </FormLabel>
                           </FormItem>
                         </RadioGroup>
