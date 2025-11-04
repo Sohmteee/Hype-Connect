@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -239,7 +240,7 @@ export default function Home() {
     <>
       <Header />
       <main className="flex-1">
-        <section className="relative w-full h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
+        <section className="relative w-full h-[90vh] text-white overflow-hidden">
           <Carousel 
             className="w-full h-full"
             plugins={[
@@ -268,24 +269,26 @@ export default function Home() {
             </CarouselContent>
           </Carousel>
           <div className="absolute inset-0 bg-black/60" />
-          <div className="relative z-10 container px-4 md:px-6">
-            <div className="flex flex-col items-center space-y-6">
-              <PartyPopper className="w-16 h-16 text-accent neon-glow" />
-              <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text transition-all duration-500">
-                {headline}
-              </h1>
-              <p className="max-w-[700px] text-neutral-200 md:text-xl">
-                Join the party, find your event, and send some hype to your
-                favorite MCs.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                <Button asChild size="lg" className="glowing-accent-btn px-10 py-6 text-lg">
-                  <Link href="#events">Find Event</Link>
-                </Button>
-                 <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent px-10 py-6 text-lg">
-                   <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
-                </Button>
-              </div>
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <div className="relative z-10 container px-4 md:px-6">
+                <div className="flex flex-col items-center space-y-6">
+                <PartyPopper className="w-16 h-16 text-accent neon-glow" />
+                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text transition-all duration-500">
+                    {headline}
+                </h1>
+                <p className="max-w-[700px] text-neutral-200 md:text-xl">
+                    Join the party, find your event, and send some hype to your
+                    favorite MCs.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                    <Button asChild size="lg" className="glowing-accent-btn px-10 py-6 text-lg">
+                    <Link href="#events">Find Event</Link>
+                    </Button>
+                    <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent px-10 py-6 text-lg">
+                    <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
+                    </Button>
+                </div>
+                </div>
             </div>
           </div>
         </section>
