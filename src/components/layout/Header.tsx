@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -86,6 +87,11 @@ export function Header({ className }: { className?: string }) {
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
            {user ? (
+              <>
+                <Button onClick={handleDashboardClick} className="glowing-btn hidden sm:flex">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
@@ -116,6 +122,7 @@ export function Header({ className }: { className?: string }) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+              </>
             ) : (
                 <Button onClick={handleLoginClick} className="glowing-btn hidden sm:flex">
                     <LogIn className="mr-2 h-4 w-4" />
