@@ -252,18 +252,19 @@ export default function Home() {
             />
          )}
           <div className="absolute inset-0 bg-black/60" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <div className="relative z-10 container px-4 md:px-6">
-              <div className="flex flex-col items-center space-y-6">
-                <PartyPopper className="w-16 h-16 text-accent neon-glow" />
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl font-headline glowing-text transition-all duration-500">
+          <div className="relative z-10 container h-full px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
+                <AnimateOnScroll animation='flip'>
+                    <PartyPopper className="w-16 h-16 text-accent neon-glow" />
+                </AnimateOnScroll>
+                <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl font-headline glowing-text transition-all duration-500">
                     {headline}
                 </h1>
                 <p className="max-w-[700px] text-neutral-200 md:text-xl">
                     Join the party, find your event, and send some hype to your
                     favorite MCs.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 mt-6">
+                <div className="flex flex-col sm:flex-row gap-4">
                     <Button asChild size="lg" className="glowing-accent-btn px-10 py-6 text-lg">
                     <Link href="#events">Find Event</Link>
                     </Button>
@@ -272,7 +273,6 @@ export default function Home() {
                     </Button>
                 </div>
               </div>
-            </div>
           </div>
         </section>
 
@@ -423,3 +423,5 @@ export default function Home() {
     </>
   );
 }
+
+    
