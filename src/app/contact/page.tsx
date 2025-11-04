@@ -49,7 +49,7 @@ export default function ContactPage() {
     console.log('Contact form submitted:', data);
     toast({
       title: 'Message Sent! 👍',
-      description: 'Thanks for reaching out. We\'ll get back to you soon.',
+      description: "Thanks for reaching out. We'll get back to you soon.",
     });
     form.reset();
   }
