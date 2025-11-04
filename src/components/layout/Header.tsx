@@ -1,11 +1,10 @@
-
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, LogIn, Info, Mail, Video } from 'lucide-react';
+import { LayoutDashboard, LogIn, Info, Mail, Video, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -15,15 +14,38 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
+import { useAuth, useUser } from '@/firebase';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const auth = useAuth();
+  const { user } = useUser();
+
   const navLinks = [
     { href: "/about", label: "About", icon: Info },
     { href: "/contact", label: "Contact", icon: Mail },
     { href: "/book-video-hype", label: "Book a Video", icon: Video },
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   ];
+  
+  const handleLoginClick = () => {
+    router.push('/login');
+  }
+
+  const handleLogout = () => {
+    auth.signOut();
+    router.push('/');
+  }
 
   const isHomePage = pathname === '/';
   const headerClasses = isHomePage
@@ -42,7 +64,7 @@ export function Header({ className }: { className?: string }) {
           </Link>
         </div>
          <nav className="hidden md:flex items-center gap-2">
-             {navLinks.slice(0, 3).map(link => (
+             {navLinks.map(link => (
                  <Button key={link.href} variant="ghost" asChild className={navItemClasses}>
                     <Link href={link.href}>
                         <link.icon className="mr-2 h-4 w-4" />
@@ -52,16 +74,43 @@ export function Header({ className }: { className?: string }) {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-           <Button variant="ghost" asChild className={cn("hidden sm:flex", navItemClasses)}>
-            <Link href="/dashboard">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Dashboard
-            </Link>
-          </Button>
-          <Button className="glowing-btn hidden sm:flex">
-             <LogIn className="mr-2 h-4 w-4" />
-             Login
-          </Button>
+           {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                       <Avatar className="h-10 w-10">
+                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || ''} data-ai-hint="person portrait" />
+                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/dashboard/user')}>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>Dashboard</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+            ) : (
+                <Button onClick={handleLoginClick} className="glowing-btn hidden sm:flex">
+                    <LogIn className="mr-2 h-4 w-4" />
+                    Login
+                </Button>
+            )}
 
           <Sheet>
             <SheetTrigger asChild>
@@ -70,8 +119,8 @@ export function Header({ className }: { className?: string }) {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[80vw] max-w-sm">
-                <SheetHeader>
+            <SheetContent side="right" className="w-[80vw] max-w-sm p-0">
+                <SheetHeader className="p-4">
                     <SheetTitle className="sr-only">Main Menu</SheetTitle>
                 </SheetHeader>
                <div className="p-4">
@@ -82,7 +131,7 @@ export function Header({ className }: { className?: string }) {
 
                 <div className="flex flex-col h-full">
                   <div className="flex-1 space-y-4">
-                      {navLinks.map(link => (
+                      {[...navLinks, { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }].map(link => (
                         <Link key={link.href} href={link.href} className="flex items-center gap-4 rounded-lg px-4 py-4 text-xl font-medium text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
                           <link.icon className="h-7 w-7" />
                           <span>{link.label}</span>
@@ -90,13 +139,22 @@ export function Header({ className }: { className?: string }) {
                       ))}
                   </div>
                   <div className="mt-16 flex flex-col gap-4">
-                    <Button size="lg" className="glowing-btn w-full text-lg py-6">
-                      <LogIn className="mr-2 h-6 w-6" />
-                      Login
-                    </Button>
-                    <Button size="lg" variant="outline" className="w-full text-lg py-6" asChild>
-                       <Link href="/signup">Sign Up</Link>
-                    </Button>
+                    {user ? (
+                       <Button size="lg" variant="ghost" onClick={handleLogout} className="w-full text-lg py-6">
+                            <LogOut className="mr-2 h-6 w-6" />
+                            Log Out
+                        </Button>
+                    ) : (
+                        <>
+                            <Button size="lg" className="glowing-btn w-full text-lg py-6" onClick={handleLoginClick}>
+                                <LogIn className="mr-2 h-6 w-6" />
+                                Login
+                            </Button>
+                            <Button size="lg" variant="outline" className="w-full text-lg py-6" asChild>
+                                <Link href="/signup">Sign Up</Link>
+                            </Button>
+                        </>
+                    )}
                   </div>
                 </div>
               </div>

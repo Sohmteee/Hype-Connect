@@ -16,7 +16,6 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { getEvents } from '@/lib/data';
-import type { Hypeman } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -45,6 +44,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
+import { useUser } from '@/firebase';
 
 const bookingFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -65,6 +65,7 @@ const bookingPrice = 25000;
 export default function BookVideoHypePage() {
   const { toast } = useToast();
   const router = useRouter();
+  const { user, isUserLoading } = useUser();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   
   const allEvents = getEvents();
@@ -75,10 +76,24 @@ export default function BookVideoHypePage() {
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      name: '',
-      email: '',
+      name: user?.displayName || '',
+      email: user?.email || '',
     },
   });
+
+  React.useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login?redirect=/book-video-hype');
+    }
+    // Pre-fill form if user data becomes available
+    if(user) {
+        form.reset({
+            name: user.displayName || '',
+            email: user.email || '',
+        });
+    }
+  }, [user, isUserLoading, router, form]);
+
 
   function onSubmit(data: BookingFormValues) {
     setIsSubmitting(true);
@@ -88,13 +103,22 @@ export default function BookVideoHypePage() {
     setTimeout(() => {
       toast({
         title: 'Booking Confirmed! 🎬',
-        description: `Your request for a video has been sent. You'll receive an email confirmation shortly.`,
+        description: `Your request has been sent. You can check its status on your dashboard.`,
       });
       setIsSubmitting(false);
-      form.reset();
-      router.push('/');
+      router.push('/dashboard/user');
     }, 2000);
   }
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <p className="mt-4 text-lg text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
 
   return (
     <>
