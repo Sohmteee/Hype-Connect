@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ScrollArea } from '../ui/scroll-area';
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
@@ -83,38 +84,36 @@ export function Header({ className }: { className?: string }) {
         <div className="flex flex-1 items-center justify-end space-x-2">
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className={cn("md:hidden p-2 h-10 w-10", navItemClasses)}>
-                <Menu className="h-7 w-7" />
+              <Button variant="ghost" size="icon" className={cn("md:hidden p-2 h-12 w-12", navItemClasses)}>
+                <Menu className="h-8 w-8" />
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[80vw] max-w-sm p-0">
+            <SheetContent side="right" className="w-[80vw] max-w-sm flex flex-col p-0">
                 <SheetHeader className="p-4 border-b">
                     <SheetTitle className="flex items-center gap-2">
                         <HypeConnectLogo className="h-8 w-8 text-primary neon-glow-primary" />
-                        <span className="font-bold text-xl font-headline text-foreground">HypeConnect</span>
+                        <span className="font-bold text-xl font-headline text-foreground">HypeConnect Menu</span>
                     </SheetTitle>
                 </SheetHeader>
-               <div className="p-4">
-                <div className="flex flex-col h-full">
-                  <div className="flex-1 space-y-2">
-                      {mobileNavLinks.map(link => (
-                        <Button
-                          key={link.href}
-                          variant={pathname === link.href ? 'secondary' : 'ghost'}
-                          asChild
-                          className="w-full justify-start text-lg h-auto p-4"
-                          onClick={() => setIsMenuOpen(false)}
-                        >
-                          <Link href={link.href} className="flex items-center gap-4">
-                            <link.icon className="h-6 w-6" />
-                            <span>{link.label}</span>
-                          </Link>
-                        </Button>
-                      ))}
-                  </div>
+               <ScrollArea className="flex-1">
+                 <div className="p-4 space-y-2">
+                    {mobileNavLinks.map(link => (
+                      <Button
+                        key={link.href}
+                        variant={pathname === link.href ? 'secondary' : 'ghost'}
+                        asChild
+                        className="w-full justify-start text-lg h-auto p-4"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Link href={link.href} className="flex items-center gap-4">
+                          <link.icon className="h-6 w-6" />
+                          <span>{link.label}</span>
+                        </Link>
+                      </Button>
+                    ))}
                 </div>
-              </div>
+               </ScrollArea>
             </SheetContent>
           </Sheet>
         </div>
