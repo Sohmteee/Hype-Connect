@@ -16,10 +16,12 @@ import {
   Upload,
   PowerOff,
   MapPin,
+  ArrowLeft,
 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { useRouter } from 'next/navigation';
 
 import { getHypesForEvent, addEvent, getActiveEventsByHypeman, endEvent } from '@/lib/data';
 import type { Hype, ClubEvent } from '@/lib/types';
@@ -284,6 +286,7 @@ export default function DashboardPage() {
   const [selectedHypes, setSelectedHypes] = React.useState<Hype[]>([]);
   const [activeEvents, setActiveEvents] = React.useState<ClubEvent[]>([]);
   const { toast } = useToast();
+  const router = useRouter();
 
   React.useEffect(() => {
     // In a real app, you'd fetch based on the selected event
@@ -331,17 +334,29 @@ export default function DashboardPage() {
       <Header />
       <main className="container py-8 md:py-12">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tighter font-headline text-center sm:text-left">
-            MC Gusto&apos;s Dashboard
-            </h1>
-            <CreateEventDialog onEventCreated={handleEventCreated} />
+            <div className="flex items-center gap-4">
+                <Button variant="outline" size="icon" className="sm:hidden" onClick={() => router.back()}>
+                    <ArrowLeft />
+                    <span className="sr-only">Go Back</span>
+                </Button>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter font-headline text-center sm:text-left">
+                MC Gusto&apos;s Dashboard
+                </h1>
+            </div>
+            <div className="flex w-full sm:w-auto items-center gap-4">
+                <Button variant="outline" className="hidden sm:flex" onClick={() => router.back()}>
+                    <ArrowLeft className="mr-2"/>
+                    Go Back
+                </Button>
+                <CreateEventDialog onEventCreated={handleEventCreated} />
+            </div>
         </div>
 
         <div className="grid gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
             
             <section className="space-y-4">
-                <h2 className="text-2xl font-semibold">Your Active Events</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold">Your Active Events</h2>
                  {activeEvents.length > 0 ? (
                     <div className="grid gap-4 sm:grid-cols-2">
                         {activeEvents.map(event => (
@@ -370,7 +385,7 @@ export default function DashboardPage() {
             <Separator className="my-8" />
             
             <section className="space-y-4">
-              <h2 className="text-2xl font-semibold">Incoming Hypes for Club Neon</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold">Incoming Hypes for Club Neon</h2>
               <div className="space-y-4">
                 {hypes.map((hype) => (
                   <Card
@@ -380,7 +395,7 @@ export default function DashboardPage() {
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="flex items-center gap-3">
+                          <CardTitle className="flex items-center gap-3 text-base sm:text-xl">
                             <Checkbox
                               id={`select-${hype.id}`}
                               onCheckedChange={(checked) =>
@@ -394,14 +409,14 @@ export default function DashboardPage() {
                             {formatDistanceToNow(new Date(hype.timestamp), { addSuffix: true })}
                           </CardDescription>
                         </div>
-                        <Badge variant={hype.status === 'hyped' ? "secondary" : "default"} className="text-base shrink-0">
+                        <Badge variant={hype.status === 'hyped' ? "secondary" : "default"} className="text-sm sm:text-base shrink-0">
                           <DollarSign className="h-4 w-4 mr-1" />
                           {hype.amount.toLocaleString()}
                         </Badge>
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <p className="text-lg">{hype.message}</p>
+                      <p className="text-base sm:text-lg">{hype.message}</p>
                     </CardContent>
                     <CardFooter className="flex justify-end">
                       {hype.status === 'new' ? (
