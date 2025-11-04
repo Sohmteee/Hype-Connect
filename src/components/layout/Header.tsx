@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, Info, Mail, Video, User, Home, LogOut } from 'lucide-react';
+import { LayoutDashboard, Info, Mail, Video, User, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -14,40 +14,25 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
-import { useUser, useAuth } from '@/firebase';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Skeleton } from '../ui/skeleton';
-
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
-  const { user, isUserLoading } = useUser();
-  const auth = useAuth();
-  const router = useRouter();
-
-  const handleLogout = async () => {
-    await auth.signOut();
-    router.push('/');
-  }
 
   const mainNavLinks = [
     { href: "/#events", label: "Events"},
     { href: "/about", label: "About"},
     { href: "/contact", label: "Contact"},
     { href: "/book-video-hype", label: "Book a Video"},
+    { href: "/dashboard", label: "Hypeman Dashboard"},
+    { href: "/dashboard/user", label: "User Dashboard"},
   ];
 
   const mobileNavLinks = [
     { href: "/", label: "Home", icon: Home },
-    ...mainNavLinks.map(link => ({...link, icon: Info})), // Placeholder icons
+    { href: "/#events", label: "Events", icon: Info},
+    { href: "/about", label: "About", icon: Info},
+    { href: "/contact", label: "Contact", icon: Mail},
+    { href: "/book-video-hype", label: "Book a Video", icon: Video},
     { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
     { href: "/dashboard/user", label: "User Dashboard", icon: User },
   ]
@@ -77,52 +62,6 @@ export function Header({ className }: { className?: string }) {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-           { isUserLoading ? (
-             <Skeleton className="h-10 w-24" />
-           ) : user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className={cn("relative h-10 w-10 rounded-full", navItemClasses)}>
-                   <Avatar className="h-10 w-10">
-                    <AvatarFallback>{user.displayName?.charAt(0) || 'U'}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dashboard"><LayoutDashboard className='mr-2'/>Hypeman</Link>
-                </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/user"><User className='mr-2'/>Spotlight</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut className="mr-2" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-           ) : (
-            <>
-              <Button variant="ghost" asChild className={cn(navItemClasses, 'hidden sm:flex')}>
-                  <Link href="/login">Log In</Link>
-              </Button>
-              <Button asChild className='glowing-btn'>
-                  <Link href="/signup">Sign Up</Link>
-              </Button>
-            </>
-           )}
-
-
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className={cn("md:hidden p-2 h-10 w-10", navItemClasses)}>
