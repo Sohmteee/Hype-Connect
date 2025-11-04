@@ -36,6 +36,7 @@ import { HandMicIcon, PaperCashIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { CardDescription } from '@/components/ui/card';
 import { AnimateOnScroll } from '@/components/AnimateOnScroll';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 function HowItWorks() {
   const steps = [
@@ -205,6 +206,7 @@ export default function Home() {
   const [locationTerm, setLocationTerm] = React.useState('');
   const [filter, setFilter] = React.useState<'all' | 'live'>('live');
   const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
+  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-banner');
 
   React.useEffect(() => {
     let index = 0;
@@ -233,14 +235,16 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="relative w-full h-[90vh] flex items-center justify-center text-center text-white overflow-hidden">
-          <Image
-            src="https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib-rb-4.1.0&q=80&w=1080"
-            alt="Hypeman with a microphone"
-            fill
-            className="object-cover"
-            data-ai-hint="man microphone"
-            priority
-          />
+          {heroImage && (
+            <Image
+              src={heroImage.imageUrl}
+              alt={heroImage.description}
+              fill
+              className="object-cover"
+              data-ai-hint={heroImage.imageHint}
+              priority
+            />
+          )}
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-6">

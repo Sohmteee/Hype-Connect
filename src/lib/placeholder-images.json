@@ -1,6 +1,12 @@
 {
   "placeholderImages": [
     {
+      "id": "hero-banner",
+      "description": "A crowd of people dancing in a club with vibrant lights.",
+      "imageUrl": "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjbHViJTIwcGFydHl8ZW58MHx8fHwxNzYzNTYxMjAxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "club party"
+    },
+    {
       "id": "event-1",
       "description": "A bustling nightclub with neon lights",
       "imageUrl": "https://images.unsplash.com/photo-1597329204992-214518c367b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxuaWdodGNsdWIlMjBwYXJ0eXxlbnwwfHx8fDE3NjIxNzAxMDl8MA&ixlib=rb-4.1.0&q=80&w=1080",
@@ -21,7 +27,7 @@
     {
       "id": "event-4",
       "description": "Intimate lounge bar setting",
-      "imageUrl": "https://images.unsplash.com/photo-1711429526427-679eb0b2f156?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYXIlMjBsb3VuZ2V8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1711429526427-679eb0b2f156?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxiYXIlMjBsb3VuZ2V8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib-rb-4.1.0&q=80&w=1080",
       "imageHint": "bar lounge"
     },
     {
@@ -63,13 +69,13 @@
     {
       "id": "tipper-2",
       "description": "Person winking at the camera",
-      "imageUrl": "https://images.unsplash.com/photo-1759197333009-114366842259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjB3aW5raW5nfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1759197333009-114366842259?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjB3aW5raW5nfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person winking"
     },
     {
       "id": "tipper-3",
       "description": "Person holding a drink",
-      "imageUrl": "https://images.unsplash.com/photo-1708077807043-1db0e99c4112?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjBkcmlua3xlbnwwfHx8fDE3NjIyMDE0NDh8MA&ixlib-rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1708077807043-1db0e99c4112?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwZXJzb24lMjBkcmlua3xlbnwwfHx8fDE3NjIyMDE0NDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "person drink"
     }
   ]
