@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Footer } from '@/components/layout/Footer';
 import { Suspense } from 'react';
 import Loading from './loading';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'HypeConnect',
@@ -26,13 +27,15 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-        <div className='flex-1'>
-          <Suspense fallback={<Loading />}>
-            {children}
-          </Suspense>
-        </div>
-        <Footer />
-        <Toaster />
+        <FirebaseClientProvider>
+          <div className='flex-1'>
+            <Suspense fallback={<Loading />}>
+              {children}
+            </Suspense>
+          </div>
+          <Footer />
+          <Toaster />
+        </FirebaseClientProvider>
       </body>
     </html>
   );

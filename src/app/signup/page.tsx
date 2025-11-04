@@ -28,11 +28,17 @@ import { Input } from '@/components/ui/input';
 import { Header } from '@/components/layout/Header';
 import { useToast } from '@/hooks/use-toast';
 import { HypeConnectLogo } from '@/components/icons';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { useAuth } from '@/firebase';
 
 const signupFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
   email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z.string().min(8, { message: 'Password must be at least 8 characters.' }),
+  accountType: z.enum(['user', 'hypeman'], {
+    required_error: 'You need to select an account type.',
+  }),
 });
 
 type SignupFormValues = z.infer<typeof signupFormSchema>;
@@ -40,24 +46,35 @@ type SignupFormValues = z.infer<typeof signupFormSchema>;
 export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const auth = useAuth();
+
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
     defaultValues: {
       name: '',
       email: '',
       password: '',
+      accountType: 'user',
     },
   });
 
   function onSubmit(data: SignupFormValues) {
-    // In a real app, you would handle user registration here.
-    console.log('New Hypeman Sign up:', data);
+    initiateEmailSignUp(auth, data.email, data.password);
+    
+    // In a real app, you'd also save the user's name and account type
+    // to a 'users' collection in Firestore upon successful registration.
+    
     toast({
       title: 'Account Created! 🎉',
-      description: `Welcome, ${data.name}! You're now ready to hype.`,
+      description: `Welcome, ${data.name}! You're now ready to go.`,
     });
-    // Redirect to the dashboard after successful sign up
-    router.push('/dashboard');
+    
+    // Redirect based on account type
+    if (data.accountType === 'hypeman') {
+      router.push('/dashboard');
+    } else {
+      router.push('/'); // Redirect regular users to the homepage
+    }
   }
 
   return (
@@ -69,14 +86,48 @@ export default function SignupPage() {
             <div className="mx-auto mb-4">
                 <HypeConnectLogo className="h-12 w-12 text-primary neon-glow-primary" />
             </div>
-            <CardTitle className="text-2xl font-headline">Join as a Hypeman</CardTitle>
+            <CardTitle className="text-2xl font-headline">Create Your Account</CardTitle>
             <CardDescription>
-              Create your account to start hosting events.
+              Join the HypeConnect community.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="accountType"
+                  render={({ field }) => (
+                    <FormItem className="space-y-3">
+                      <FormLabel>What are you here for?</FormLabel>
+                      <FormControl>
+                        <RadioGroup
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                          className="flex flex-col space-y-1"
+                        >
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="user" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              To send hype and book videos
+                            </FormLabel>
+                          </FormItem>
+                          <FormItem className="flex items-center space-x-3 space-y-0">
+                            <FormControl>
+                              <RadioGroupItem value="hypeman" />
+                            </FormControl>
+                            <FormLabel className="font-normal">
+                              To host events as a Hypeman
+                            </FormLabel>
+                          </FormItem>
+                        </RadioGroup>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="name"
