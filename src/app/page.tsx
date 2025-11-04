@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -56,7 +57,7 @@ function HowItWorks() {
   return (
     <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
       <div className="container px-4 md:px-6">
-        <h2 className="text-3xl font-bold tracking-tighter text-center mb-12 font-headline">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-center mb-12 font-headline">
           How HypeConnect Works
         </h2>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -86,7 +87,7 @@ function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
   return (
     <section className="w-full py-12 md:py-24 lg:py-32">
       <div className="container px-4 md:px-6">
-        <h2 className="text-3xl font-bold tracking-tighter text-center mb-12 font-headline">
+        <h2 className="text-3xl md:text-4xl font-bold tracking-tighter text-center mb-12 font-headline">
           Featured Hypemen
         </h2>
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
