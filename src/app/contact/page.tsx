@@ -73,7 +73,7 @@ export default function ContactPage() {
                   name="name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className='flex items-center gap-2'><User/> Name</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><User /> Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Your Name" {...field} />
                       </FormControl>
@@ -86,7 +86,7 @@ export default function ContactPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className='flex items-center gap-2'><Mail/> Email</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><Mail /> Email</FormLabel>
                       <FormControl>
                         <Input type="email" placeholder="your.email@example.com" {...field} />
                       </FormControl>
@@ -99,7 +99,7 @@ export default function ContactPage() {
                   name="message"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className='flex items-center gap-2'><MessageSquare/> Message</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><MessageSquare /> Message</FormLabel>
                       <FormControl>
                         <Textarea placeholder="How can we help?" {...field} />
                       </FormControl>
