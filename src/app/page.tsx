@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -182,10 +183,10 @@ export default function Home() {
                 favorite MCs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 mt-6">
-                <Button asChild size="lg" className="glowing-accent-btn">
+                <Button asChild size="lg" className="glowing-accent-btn px-10 py-6 text-lg">
                   <Link href="#events">Find Event</Link>
                 </Button>
-                 <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent">
+                 <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent px-10 py-6 text-lg">
                    <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
                 </Button>
               </div>
