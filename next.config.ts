@@ -3,9 +3,7 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    allowedDevOrigins: [
-      'https://6000-firebase-studio-1762199227866.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev',
-    ],
+    
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -41,6 +39,13 @@ const nextConfig: NextConfig = {
       }
     ],
   },
+  // The 'allowedDevOrigins' option has been moved out of 'experimental'
+  // as of Next.js 14.2 and is now a top-level configuration.
+  // This is necessary to allow cross-origin requests from the development
+  // environment and prevent security errors in the browser.
+  allowedDomains: [
+    '6000-firebase-studio-1762199227866.cluster-lu4mup47g5gm4rtyvhzpwbfadi.cloudworkstations.dev',
+  ]
 };
 
 export default nextConfig;
