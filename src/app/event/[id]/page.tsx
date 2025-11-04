@@ -14,6 +14,8 @@ import {
   Wallet,
   ArrowLeft,
   MapPin,
+  Download,
+  Loader2,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -44,6 +46,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { generateHypeBadgeAction } from './actions';
+import { ToastAction } from '@/components/ui/toast';
+
 
 const hypeFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -98,6 +103,8 @@ function Leaderboard({ tippers }: { tippers: Tipper[] }) {
 function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: Tipper[] }) {
   const { toast } = useToast();
   const router = useRouter();
+  const [isGeneratingBadge, setIsGeneratingBadge] = React.useState(false);
+
   const form = useForm<HypeFormValues>({
     resolver: zodResolver(hypeFormSchema),
     defaultValues: {
@@ -109,7 +116,16 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   const selectedAmount = form.watch('amount');
   const [customAmountActive, setCustomAmountActive] = React.useState(false);
 
-  function onSubmit(data: HypeFormValues) {
+  const handleDownload = (imageUrl: string, senderName: string) => {
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `hype-badge-${senderName}.svg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  async function onSubmit(data: HypeFormValues) {
     if (!event) return;
     
     // Simulate API call and data update
@@ -120,10 +136,46 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
       amount: data.amount,
     });
 
-    toast({
+    const { id: toastId } = toast({
       title: 'Hype Sent! 🎉',
-      description: `Your message and ₦${data.amount.toLocaleString()} have been sent to ${event.hypeman.name}.`,
+      description: `Your message and ₦${data.amount.toLocaleString()} have been sent. Generating your badge...`,
     });
+
+    setIsGeneratingBadge(true);
+
+    const badgeResult = await generateHypeBadgeAction({
+      senderName: data.name,
+      eventName: event.clubName,
+      hypemanName: event.hypeman.name,
+      amount: data.amount,
+    });
+    
+    setIsGeneratingBadge(false);
+
+    if (badgeResult.success && badgeResult.imageUrl) {
+        toast({
+            id: toastId,
+            title: 'Hype Sent & Badge Ready!',
+            description: 'Your digital collectible is ready for download.',
+            action: (
+                <ToastAction
+                    altText="Download Badge"
+                    onClick={() => handleDownload(badgeResult.imageUrl!, data.name)}
+                >
+                    <Download className="mr-2" />
+                    Download
+                </ToastAction>
+            ),
+        });
+    } else {
+        toast({
+            id: toastId,
+            variant: "destructive",
+            title: 'Hype Sent, Badge Failed',
+            description: "Your hype was sent, but we couldn't create your badge right now.",
+        });
+    }
+
     form.reset();
     setCustomAmountActive(false);
   }
@@ -295,8 +347,15 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" size="lg" className="w-full glowing-accent-btn">
-                    Send Hype
+                  <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isGeneratingBadge}>
+                    {isGeneratingBadge ? (
+                        <>
+                            <Loader2 className="animate-spin mr-2" />
+                            Sending Hype...
+                        </>
+                    ) : (
+                        'Send Hype'
+                    )}
                   </Button>
                 </form>
               </Form>
