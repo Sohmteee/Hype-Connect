@@ -29,9 +29,11 @@ import { Header } from '@/components/layout/Header';
 import { useToast } from '@/hooks/use-toast';
 import { HypeConnectLogo } from '@/components/icons';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { initiateEmailSignUp } from '@/firebase/non-blocking-login';
-import { useAuth } from '@/firebase';
-import { Eye, EyeOff } from 'lucide-react';
+import { useAuth, useFirebase } from '@/firebase';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import { createUserWithEmailAndPassword, updateProfile, fetchSignInMethodsForEmail, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+
 
 const signupFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -48,7 +50,9 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const { firestore } = useFirebase();
   const [showPassword, setShowPassword] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
@@ -60,24 +64,57 @@ export default function SignupPage() {
     },
   });
 
-  function onSubmit(data: SignupFormValues) {
-    // This function is now non-blocking
-    initiateEmailSignUp(auth, data.email, data.password, data.name, data.accountType);
-    
-    toast({
-      title: 'Account Created! 🎉',
-      description: `Welcome, ${data.name}! Redirecting you now...`,
-    });
-    
-    // The redirection will be handled by the listener in the header
-    // but we can optimistically push them to a loading or home page.
-    setTimeout(() => {
-      if (data.accountType === 'hypeman') {
-        router.push('/dashboard');
-      } else {
-        router.push('/dashboard/user');
-      }
-    }, 1500); // Give a bit of time for auth state to propagate
+  async function onSubmit(data: SignupFormValues) {
+    setIsSubmitting(true);
+    try {
+        const methods = await fetchSignInMethodsForEmail(auth, data.email);
+        if (methods.length > 0) {
+            // Email exists, sign in and update role
+            const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+            const user = userCredential.user;
+            const userRef = doc(firestore, 'users', user.uid);
+            await updateDoc(userRef, {
+                roles: arrayUnion(data.accountType)
+            });
+            toast({
+                title: 'Account Updated!',
+                description: `Welcome back, ${user.displayName}! Your new role has been added.`
+            });
+        } else {
+            // New user, create account
+            const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+            const user = userCredential.user;
+            await updateProfile(user, { displayName: data.name });
+
+            const userRef = doc(firestore, 'users', user.uid);
+            await setDoc(userRef, {
+                id: user.uid,
+                name: data.name,
+                email: user.email,
+                roles: [data.accountType],
+            });
+            toast({
+                title: 'Account Created! 🎉',
+                description: `Welcome, ${data.name}! Redirecting you now...`,
+            });
+        }
+
+        // Redirect after successful sign-up or update
+        if (data.accountType === 'hypeman') {
+            router.push('/dashboard');
+        } else {
+            router.push('/dashboard/user');
+        }
+
+    } catch (error: any) {
+        console.error("Signup/Update Error:", error);
+        toast({
+            variant: "destructive",
+            title: "Something went wrong",
+            description: error.message || "Could not create or update your account.",
+        });
+        setIsSubmitting(false);
+    }
   }
 
   return (
@@ -190,8 +227,15 @@ export default function SignupPage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" size="lg" className="w-full glowing-accent-btn">
-                  Create Account
+                <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
+                   {isSubmitting ? (
+                        <>
+                            <Loader2 className="animate-spin mr-2" />
+                            Creating Account...
+                        </>
+                    ) : (
+                        'Create Account'
+                    )}
                 </Button>
               </form>
             </Form>

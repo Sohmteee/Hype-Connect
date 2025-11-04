@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -83,6 +84,11 @@ export default function BookVideoHypePage() {
 
   React.useEffect(() => {
     if (!isUserLoading && !user) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please log in to book a video hype.',
+        variant: 'destructive',
+      });
       router.push('/login?redirect=/book-video-hype');
     }
     // Pre-fill form if user data becomes available
@@ -90,9 +96,12 @@ export default function BookVideoHypePage() {
         form.reset({
             name: user.displayName || '',
             email: user.email || '',
+            hypemanId: undefined,
+            occasion: undefined,
+            videoDetails: '',
         });
     }
-  }, [user, isUserLoading, router, form]);
+  }, [user, isUserLoading, router, form, toast]);
 
 
   function onSubmit(data: BookingFormValues) {

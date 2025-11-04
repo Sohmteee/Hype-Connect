@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,10 +28,10 @@ import { Input } from '@/components/ui/input';
 import { Header } from '@/components/layout/Header';
 import { useToast } from '@/hooks/use-toast';
 import { HypeConnectLogo } from '@/components/icons';
-import { initiateEmailSignIn } from '@/firebase/non-blocking-login';
 import { useAuth, useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { doc } from 'firebase/firestore';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
@@ -42,6 +42,7 @@ type LoginFormValues = z.infer<typeof loginFormSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -66,34 +67,29 @@ export default function LoginPage() {
   
   React.useEffect(() => {
     if (!isUserLoading && user && userProfile) {
-      // If user has 'hypeman' role, go to hypeman dashboard, otherwise user dash.
-      if (userProfile.roles?.includes('hypeman')) {
-        router.push('/dashboard');
-      } else {
-        router.push('/dashboard/user');
-      }
+      const redirectUrl = searchParams.get('redirect') || (userProfile.roles?.includes('hypeman') ? '/dashboard' : '/dashboard/user');
+      router.push(redirectUrl);
     }
-  }, [user, userProfile, isUserLoading, router]);
+  }, [user, userProfile, isUserLoading, router, searchParams]);
 
-  function onSubmit(data: LoginFormValues) {
+  async function onSubmit(data: LoginFormValues) {
     setIsSubmitting(true);
-    initiateEmailSignIn(auth, data.email, data.password);
-    
-    toast({
-      title: 'Logging In...',
-      description: 'Please wait while we check your credentials.',
-    });
-    
-    setTimeout(() => {
-      if(!user) { // If user is still not logged in after 3s
-        setIsSubmitting(false);
+    try {
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+        toast({
+            title: 'Login Successful!',
+            description: 'Redirecting you to your dashboard...',
+        });
+        // The useEffect will handle redirection
+    } catch (error: any) {
+        console.error('Login Error:', error);
         toast({
             variant: "destructive",
             title: "Login Failed",
-            description: "Please check your email and password.",
-        })
-      }
-    }, 3000)
+            description: error.message || "Please check your email and password.",
+        });
+        setIsSubmitting(false);
+    }
   }
 
   if (isUserLoading || (user && !userProfile)) {
@@ -194,5 +190,3 @@ export default function LoginPage() {
     </>
   );
 }
-
-    
