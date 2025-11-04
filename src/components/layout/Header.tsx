@@ -1,11 +1,10 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, Info, Mail, Video, User } from 'lucide-react';
+import { LayoutDashboard, Info, Mail, Video, User, LogIn, LogOut, UserPlus, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -15,20 +14,48 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
+import { useUser } from '@/firebase';
+import { signOutUser } from '@/lib/auth';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { toast } = useToast();
+  const { user, isUserLoading } = useUser();
+
+  const handleLogout = async () => {
+    await signOutUser();
+    toast({
+      title: 'Logged Out',
+      description: 'You have been successfully logged out.',
+    });
+    router.push('/');
+    router.refresh();
+  };
   
-  const navLinks = [
-    { href: "/about", label: "About", icon: Info },
-    { href: "/contact", label: "Contact", icon: Mail },
-    { href: "/book-video-hype", label: "Book a Video", icon: Video },
+  const mainNavLinks = [
+    { href: "/#events", label: "Events"},
+    { href: "/about", label: "About"},
+    { href: "/contact", label: "Contact"},
+    { href: "/book-video-hype", label: "Book a Video"},
   ];
 
-  const dashboardLinks = [
-      { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/user", label: "User Dashboard", icon: User },
+  const mobileNavLinks = [
+    { href: "/", label: "Home", icon: Home },
+    ...mainNavLinks.map(link => ({...link, icon: Info})), // Placeholder icons
+    { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/user", label: "User Dashboard", icon: User },
   ]
   
 
@@ -49,28 +76,66 @@ export function Header({ className }: { className?: string }) {
           </Link>
         </div>
          <nav className="hidden md:flex items-center gap-2">
-             {navLinks.map(link => (
+             {mainNavLinks.map(link => (
                  <Button key={link.href} variant="ghost" asChild className={navItemClasses}>
                     <Link href={link.href}>
-                        <link.icon className="mr-2 h-4 w-4" />
                         {link.label}
                     </Link>
                 </Button>
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-            <Button variant="ghost" asChild>
-                <Link href="/dashboard">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Hypeman
-                </Link>
-            </Button>
-             <Button asChild className='glowing-btn'>
-                <Link href="/dashboard/user">
-                    <User className="mr-2 h-4 w-4" />
-                    Spotlight
-                </Link>
-            </Button>
+          {isUserLoading ? (
+            <div className='h-10 w-24 bg-muted/50 animate-pulse rounded-md' />
+          ) : user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || 'User'} />
+                    <AvatarFallback>{user.displayName?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                    <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push('/dashboard/user')}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Spotlight</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  <span>Hypeman</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+             <>
+                <Button variant="ghost" asChild className={cn(navItemClasses, 'hidden sm:flex')}>
+                  <Link href="/login">
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Login
+                  </Link>
+                </Button>
+                <Button asChild className='glowing-btn'>
+                  <Link href="/signup">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Sign Up
+                  </Link>
+                </Button>
+            </>
+          )}
 
           <Sheet>
             <SheetTrigger asChild>
@@ -91,7 +156,7 @@ export function Header({ className }: { className?: string }) {
 
                 <div className="flex flex-col h-full">
                   <div className="flex-1 space-y-4">
-                      {[...navLinks, ...dashboardLinks].map(link => (
+                      {mobileNavLinks.map(link => (
                         <Link key={link.href} href={link.href} className="flex items-center gap-4 rounded-lg px-4 py-4 text-xl font-medium text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
                           <link.icon className="h-7 w-7" />
                           <span>{link.label}</span>
