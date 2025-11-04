@@ -52,3 +52,20 @@ export async function createProfile(
 
   return newProfileDoc.id;
 }
+
+/**
+ * Switches the user's default profile.
+ * @param db The Firestore instance.
+ * @param user The Firebase user object.
+ * @param profileId The ID of the profile to set as the default.
+ */
+export async function switchProfile(db: Firestore, user: User, profileId: string) {
+    if (!user) {
+        throw new Error('User must be authenticated to switch profiles.');
+    }
+
+    const userDocRef = doc(db, 'users', user.uid);
+    await setDoc(userDocRef, {
+        defaultProfileId: profileId
+    }, { merge: true });
+}
