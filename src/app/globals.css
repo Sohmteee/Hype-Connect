@@ -60,6 +60,22 @@ body {
   .animate-bounce {
     animation: bounce 1s infinite;
   }
+  @keyframes money-flow {
+    0% {
+      transform: translateY(100vh) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(-10vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
+  .animate-money-flow {
+    animation: money-flow linear infinite;
+  }
 }
 
 @layer components {

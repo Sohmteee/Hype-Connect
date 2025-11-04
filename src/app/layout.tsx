@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Footer } from '@/components/layout/Footer';
 import { Suspense } from 'react';
 import Loading from './loading';
+import { BackgroundMoneyWave } from '@/components/BackgroundMoneyWave';
 
 export const metadata: Metadata = {
   title: 'HypeConnect',
@@ -26,7 +27,8 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-          <div className='flex-1'>
+          <BackgroundMoneyWave />
+          <div className='flex-1 relative z-10'>
             <Suspense fallback={<Loading />}>
               {children}
             </Suspense>
