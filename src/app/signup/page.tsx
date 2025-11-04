@@ -68,17 +68,23 @@ export default function SignupPage() {
     setIsSubmitting(true);
     try {
         const methods = await fetchSignInMethodsForEmail(auth, data.email);
+        
         if (methods.length > 0) {
             // Email exists, sign in and update role
             const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
             const user = userCredential.user;
+
+            await updateProfile(user, { displayName: data.name });
+
             const userRef = doc(firestore, 'users', user.uid);
             await updateDoc(userRef, {
-                roles: arrayUnion(data.accountType)
+                roles: arrayUnion(data.accountType),
+                name: data.name // Update name in firestore as well
             });
+
             toast({
                 title: 'Account Updated!',
-                description: `Welcome back, ${user.displayName}! Your new role has been added.`
+                description: `Welcome back, ${data.name}! Your new role has been added.`
             });
         } else {
             // New user, create account
@@ -108,11 +114,19 @@ export default function SignupPage() {
 
     } catch (error: any) {
         console.error("Signup/Update Error:", error);
+        let description = "Could not create or update your account.";
+        if (error.code === 'auth/wrong-password') {
+            description = "The password you entered is incorrect. Please try again."
+        } else if (error.code === 'auth/email-already-in-use' && methods.length === 0) {
+            description = "This email is already in use with a different sign-in method."
+        }
+        
         toast({
             variant: "destructive",
             title: "Something went wrong",
-            description: error.message || "Could not create or update your account.",
+            description: description,
         });
+    } finally {
         setIsSubmitting(false);
     }
   }
