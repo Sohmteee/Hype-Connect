@@ -1,12 +1,11 @@
+
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useUser } from '@/firebase';
 import { Header } from '@/components/layout/Header';
-import { Loader2, Video, Calendar, Download, Mic, ArrowLeft } from 'lucide-react';
+import { Video, Calendar, Download, Mic, ArrowLeft } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -37,29 +36,12 @@ const mockBookings = [
         bookingDate: new Date(),
         status: 'pending',
         videoUrl: null,
-        imageUrl: 'https://images.unsplash.com/photo-1631786083436-02d4b1c98207?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwZGp8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib=rb-4.1.0&q=80&w=1080',
+        imageUrl: 'https://images.unsplash.com/photo-1631786083436-02d4b1c98207?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwZGp8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib-rb-4.1.0&q=80&w=1080',
     }
 ];
 
 export default function UserDashboardPage() {
-  const router = useRouter();
-  const { user, isUserLoading } = useUser();
-
-  React.useEffect(() => {
-    if (!isUserLoading && !user) {
-      router.push('/login?redirect=/dashboard/user');
-    }
-  }, [user, isUserLoading, router]);
-
-  if (isUserLoading || !user) {
-    return (
-      <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="mt-4 text-lg text-muted-foreground">Loading Your Dashboard...</p>
-      </div>
-    );
-  }
-
+  
   return (
     <>
       <Header />

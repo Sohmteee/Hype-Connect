@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, LogIn, Info, Mail, Video, LogOut } from 'lucide-react';
+import { LayoutDashboard, Info, Mail, Video, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -15,56 +15,22 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
-import { useAuth, useDoc, useFirebase, useMemoFirebase, useUser } from '@/firebase';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { doc } from 'firebase/firestore';
-
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
   const router = useRouter();
-  const auth = useAuth();
-  const { user } = useUser();
-  const { firestore } = useFirebase();
-
-  const userDocRef = useMemoFirebase(() => {
-    if (!user || !firestore) return null;
-    return doc(firestore, 'users', user.uid);
-  }, [user, firestore]);
-
-  const { data: userProfile } = useDoc<{ roles: ('hypeman' | 'spotlight')[] }>(userDocRef);
-
+  
   const navLinks = [
     { href: "/about", label: "About", icon: Info },
     { href: "/contact", label: "Contact", icon: Mail },
     { href: "/book-video-hype", label: "Book a Video", icon: Video },
   ];
-  
-  const handleLoginClick = () => {
-    router.push('/login');
-  }
 
-  const handleLogout = () => {
-    auth.signOut();
-    router.push('/');
-  }
+  const dashboardLinks = [
+      { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/user", label: "User Dashboard", icon: User },
+  ]
   
-  const handleDashboardClick = () => {
-    if (userProfile?.roles?.includes('hypeman')) {
-        router.push('/dashboard');
-    } else {
-        router.push('/dashboard/user');
-    }
-  }
-
 
   const isHomePage = pathname === '/';
   const headerClasses = isHomePage
@@ -93,49 +59,18 @@ export function Header({ className }: { className?: string }) {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
-           {user ? (
-              <>
-                <Button onClick={handleDashboardClick} className="glowing-btn hidden sm:flex">
+            <Button variant="ghost" asChild>
+                <Link href="/dashboard">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.photoURL || ''} alt={user.displayName || user.email || ''} data-ai-hint="person portrait" />
-                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.displayName || 'Hype User'}</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleDashboardClick}>
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      <span>Dashboard</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-                <Button onClick={handleLoginClick} className="glowing-btn hidden sm:flex">
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Login
-                </Button>
-            )}
+                    Hypeman
+                </Link>
+            </Button>
+             <Button asChild className='glowing-btn'>
+                <Link href="/dashboard/user">
+                    <User className="mr-2 h-4 w-4" />
+                    Spotlight
+                </Link>
+            </Button>
 
           <Sheet>
             <SheetTrigger asChild>
@@ -156,30 +91,12 @@ export function Header({ className }: { className?: string }) {
 
                 <div className="flex flex-col h-full">
                   <div className="flex-1 space-y-4">
-                      {[...navLinks, { href: "/dashboard/user", label: "Dashboard", icon: LayoutDashboard }].map(link => (
+                      {[...navLinks, ...dashboardLinks].map(link => (
                         <Link key={link.href} href={link.href} className="flex items-center gap-4 rounded-lg px-4 py-4 text-xl font-medium text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground">
                           <link.icon className="h-7 w-7" />
                           <span>{link.label}</span>
                         </Link>
                       ))}
-                  </div>
-                  <div className="mt-16 flex flex-col gap-4">
-                    {user ? (
-                       <Button size="lg" variant="ghost" onClick={handleLogout} className="w-full text-lg py-6">
-                            <LogOut className="mr-2 h-6 w-6" />
-                            Log Out
-                        </Button>
-                    ) : (
-                        <>
-                            <Button size="lg" className="glowing-btn w-full text-lg py-6" onClick={handleLoginClick}>
-                                <LogIn className="mr-2 h-6 w-6" />
-                                Login
-                            </Button>
-                            <Button size="lg" variant="outline" className="w-full text-lg py-6" asChild>
-                                <Link href="/signup">Sign Up</Link>
-                            </Button>
-                        </>
-                    )}
                   </div>
                 </div>
               </div>
@@ -190,5 +107,3 @@ export function Header({ className }: { className?: string }) {
     </header>
   );
 }
-
-    
