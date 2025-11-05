@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { initializeFirebase } from '@/firebase';
@@ -20,6 +20,16 @@ export default function RegisterPage() {
     confirmPassword: '',
     displayName: '',
   });
+
+  // Initialize Firebase on component mount
+  useEffect(() => {
+    try {
+      initializeFirebase();
+    } catch (err) {
+      console.error('Firebase init error:', err);
+      setError('Failed to initialize Firebase');
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
