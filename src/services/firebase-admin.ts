@@ -20,7 +20,10 @@ export function initializeFirebaseAdmin() {
       throw new Error("FIREBASE_ADMIN_PRIVATE_KEY is not set");
     }
 
-    console.log("Initializing Firebase Admin with project:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+    console.log(
+      "Initializing Firebase Admin with project:",
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    );
 
     const serviceAccount = {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,

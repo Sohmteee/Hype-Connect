@@ -17,10 +17,7 @@ export async function POST(request: NextRequest) {
     // Validate webhook signature
     const isValid = PaystackService.validateWebhookSignature(body, signature);
     if (!isValid) {
-      return NextResponse.json(
-        { error: "Invalid signature" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
     }
 
     const event = JSON.parse(body);

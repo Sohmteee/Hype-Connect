@@ -45,6 +45,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { submitHypeAction } from '@/app/dashboard/actions';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { initializeFirebase } from '@/firebase';
 
 const hypeFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -53,13 +56,11 @@ const hypeFormSchema = z.object({
     .min(5, { message: 'Message must be at least 5 characters.' })
     .max(140, { message: 'Message must not be longer than 140 characters.' }),
   amount: z.coerce.number().min(1, { message: 'Please select or enter an amount.'}),
-  paymentMethod: z.string({ required_error: 'Please select a payment method.' }),
 });
 
 type HypeFormValues = z.infer<typeof hypeFormSchema>;
 
 const amounts = [1000, 2000, 5000, 10000];
-const paymentMethods = ['Paystack', 'Flutterwave', 'Stripe'];
 
 function Leaderboard({ tippers }: { tippers: Tipper[] }) {
   return (
@@ -100,6 +101,8 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { auth } = initializeFirebase();
+  const [user] = useAuthState(auth);
 
   const form = useForm<HypeFormValues>({
     resolver: zodResolver(hypeFormSchema),
@@ -113,26 +116,56 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
   const [customAmountActive, setCustomAmountActive] = React.useState(false);
 
   async function onSubmit(data: HypeFormValues) {
-    if (!event) return;
+    if (!event || !user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to send hype',
+        variant: 'destructive',
+      });
+      router.push('/auth/login');
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate API call and data update
-    addHype({
-      eventId: event.id,
-      senderName: data.name,
-      message: data.message,
-      amount: data.amount,
-    });
+    try {
+      // Call the real Paystack payment action
+      const result = await submitHypeAction(user.uid, event.id, {
+        message: data.message,
+        amount: data.amount,
+        senderName: data.name,
+        email: user.email || '',
+      });
 
-    toast({
-      title: 'Hype Sent! 🎉',
-      description: `Thank you for sending ₦${data.amount.toLocaleString()}!`,
-      duration: 5000,
-    });
-    
-    setIsSubmitting(false);
-    form.reset();
-    setCustomAmountActive(false);
+      if (!result.success) {
+        toast({
+          title: 'Error',
+          description: result.error || 'Failed to send hype',
+          variant: 'destructive',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Redirect to Paystack payment page
+      if (result.data?.paymentUrl) {
+        window.location.href = result.data.paymentUrl;
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to get payment URL',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Submit hype error:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        variant: 'destructive',
+      });
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -272,32 +305,6 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                             />
                           </FormControl>
                         )}
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="paymentMethod"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                          <FormLabel className="flex items-center gap-2"><Wallet /> Payment Method</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            className="flex flex-col space-y-1"
-                          >
-                            {paymentMethods.map((method) => (
-                              <FormItem key={method} className="flex items-center space-x-3 space-y-0">
-                                <FormControl>
-                                  <RadioGroupItem value={method} />
-                                </FormControl>
-                                <FormLabel className="font-normal">{method}</FormLabel>
-                              </FormItem>
-                            ))}
-                          </RadioGroup>
-                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
