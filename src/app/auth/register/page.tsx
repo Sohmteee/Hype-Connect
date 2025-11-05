@@ -54,24 +54,43 @@ export default function RegisterPage() {
         return;
       }
 
-      // Register via server action
+      // 1. Register with Firebase Auth (client-side)
+      const { auth } = initializeFirebase();
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
+
+      const uid = userCredential.user.uid;
+
+      // 2. Create user profile in Firestore (server action)
       const result = await registerAction({
+        uid,
         email: formData.email,
-        password: formData.password,
         displayName: formData.displayName,
       });
 
       if (!result.success) {
-        setError(result.error || 'Registration failed');
+        setError(result.error || 'Failed to create profile');
         setLoading(false);
         return;
       }
 
-      // Redirect to login
-      router.push('/auth/login?registered=true');
-    } catch (err) {
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err: any) {
       console.error('Registration error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Email already registered');
+      } else if (err.code === 'auth/invalid-email') {
+        setError('Invalid email address');
+      } else if (err.code === 'auth/weak-password') {
+        setError('Password is too weak');
+      } else {
+        setError(err.message || 'An error occurred');
+      }
       setLoading(false);
     }
   };

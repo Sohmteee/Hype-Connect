@@ -1,62 +1,33 @@
 "use server";
 
-import { registerSchema, loginSchema } from "@/lib/schemas";
-import { createUser, createProfile, getUser } from "@/services/firestore/users";
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { firebaseConfig } from "@/firebase/config";
-
-// Client-side Firebase Auth for registration (no Admin SDK needed)
-function getClientAuth() {
-  const app = initializeApp(firebaseConfig);
-  return getAuth(app);
-}
+import { createUser, createProfile, getUser, updateUser } from "@/services/firestore/users";
 
 export async function registerAction(formData: unknown) {
   try {
-    const validatedData = registerSchema.parse(formData);
+    // Parse incoming data - just needs uid, email, displayName
+    const data = formData as { uid: string; email: string; displayName: string };
 
-    const auth = getClientAuth();
-
-    // Create Firebase Auth user using client SDK
-    let userCredential;
-    try {
-      userCredential = await createUserWithEmailAndPassword(
-        auth,
-        validatedData.email,
-        validatedData.password
-      );
-    } catch (authError: any) {
-      if (authError.code === "auth/email-already-in-use") {
-        return { success: false, error: "Email already registered" };
-      }
-      throw authError;
+    if (!data.uid || !data.email || !data.displayName) {
+      return { success: false, error: "Missing required fields" };
     }
 
-    const user = userCredential.user;
-
     // Create user document in Firestore
-    await createUser(user.uid, {
-      email: validatedData.email,
-      displayName: validatedData.displayName,
+    await createUser(data.uid, {
+      email: data.email,
+      displayName: data.displayName,
       roles: ["spotlight"],
     });
 
     // Create default profile
-    await createProfile(user.uid, {
+    await createProfile(data.uid, {
       type: "spotlight",
-      displayName: validatedData.displayName,
+      displayName: data.displayName,
       visibility: "public",
     });
 
     return {
       success: true,
-      message: "Registration successful",
-      user: {
-        uid: user.uid,
-        email: user.email,
-        displayName: validatedData.displayName,
-      },
+      message: "Profile created successfully",
     };
   } catch (error) {
     console.error("Registration error:", error);
