@@ -1,37 +1,11 @@
-import { getFirestore } from "firebase-admin/firestore";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
+import { getAdminFirestore, getAdminAuth } from "@/services/firebase-admin";
 
 function getDb() {
-  if (getApps().length === 0) {
-    const serviceAccount = {
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    };
-
-    initializeApp({
-      credential: cert(serviceAccount as any),
-    });
-  }
-
-  return getFirestore();
+  return getAdminFirestore();
 }
 
 function getAuthService() {
-  if (getApps().length === 0) {
-    const serviceAccount = {
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-    };
-
-    initializeApp({
-      credential: cert(serviceAccount as any),
-    });
-  }
-
-  return getAuth();
+  return getAdminAuth();
 }
 
 interface UserData {
