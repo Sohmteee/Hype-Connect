@@ -1,11 +1,13 @@
 "use server";
 
 import { getAuth } from "firebase-admin/auth";
-import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { initializeApp, getApps, cert, getApp } from "firebase-admin/app";
 import { registerSchema, loginSchema } from "@/lib/schemas";
 import { createUser, createProfile, getUser } from "@/services/firestore/users";
 
 function getAuthService() {
+  let app;
+
   if (getApps().length === 0) {
     const serviceAccount = {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -13,12 +15,14 @@ function getAuthService() {
       privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     };
 
-    initializeApp({
+    app = initializeApp({
       credential: cert(serviceAccount as any),
     });
+  } else {
+    app = getApp();
   }
 
-  return getAuth();
+  return getAuth(app);
 }
 
 export async function registerAction(formData: unknown) {
@@ -100,7 +104,8 @@ export async function updateUserRoleAction(
     await auth.setCustomUserClaims(userId, { role });
 
     // Update Firestore
-    const db = (await import("firebase-admin/firestore")).getFirestore();
+    const { getFirestore } = await import("firebase-admin/firestore");
+    const db = getFirestore(getApp());
     await db.collection("users").doc(userId).update({ roles: newRoles });
 
     return {
