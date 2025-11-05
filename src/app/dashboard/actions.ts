@@ -1,37 +1,37 @@
-'use server';
+"use server";
 
-import { generateHypemanContentSuggestions } from '@/ai/flows/hypeman-content-suggestions';
+import { generateHypemanContentSuggestions } from "@/ai/flows/hypeman-content-suggestions";
 import {
   createEventSchema,
   updateProfileSchema,
   createHypeMessageSchema,
   withdrawalSchema,
-} from '@/lib/schemas';
+} from "@/lib/schemas";
 import {
   createEvent,
   getEvent,
   getActiveEvents,
   updateEvent,
   deactivateEvent,
-} from '@/services/firestore/events';
+} from "@/services/firestore/events";
 import {
   createProfile,
   getProfile,
   getUserProfiles,
   updateProfile,
-} from '@/services/firestore/users';
+} from "@/services/firestore/users";
 import {
   createHypeMessage,
   getHypeMessages,
   updateHypeStatus,
   getLeaderboard,
-} from '@/services/firestore/hypes';
+} from "@/services/firestore/hypes";
 import {
   getEarnings,
   createWithdrawal,
   getWithdrawalHistory,
-} from '@/services/firestore/earnings';
-import { PaystackService } from '@/services/payment/paystack';
+} from "@/services/firestore/earnings";
+import { PaystackService } from "@/services/payment/paystack";
 
 // ==================== AI Actions ====================
 
@@ -40,18 +40,21 @@ export async function getAiSuggestionsAction(
   currentActivity: string
 ) {
   if (messages.length === 0) {
-    return { success: false, error: 'No messages selected.' };
+    return { success: false, error: "No messages selected." };
   }
 
   try {
     const response = await generateHypemanContentSuggestions({
-      messages: messages.join('\n- '),
+      messages: messages.join("\n- "),
       currentActivity: currentActivity,
     });
     return { success: true, suggestions: response.suggestions };
   } catch (error) {
-    console.error('AI Suggestion Error:', error);
-    return { success: false, error: 'Failed to generate suggestions. Please try again.' };
+    console.error("AI Suggestion Error:", error);
+    return {
+      success: false,
+      error: "Failed to generate suggestions. Please try again.",
+    };
   }
 }
 
@@ -67,11 +70,11 @@ export async function createEventAction(userId: string, formData: unknown) {
     const event = await createEvent(userId, eventData);
     return { success: true, data: event };
   } catch (error) {
-    console.error('Create event error:', error);
+    console.error("Create event error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to create event' };
+    return { success: false, error: "Failed to create event" };
   }
 }
 
@@ -80,8 +83,8 @@ export async function getEventsAction(limit: number = 20, offset: number = 0) {
     const events = await getActiveEvents(limit, offset);
     return { success: true, data: events };
   } catch (error) {
-    console.error('Get events error:', error);
-    return { success: false, error: 'Failed to fetch events' };
+    console.error("Get events error:", error);
+    return { success: false, error: "Failed to fetch events" };
   }
 }
 
@@ -89,26 +92,30 @@ export async function getEventAction(eventId: string) {
   try {
     const event = await getEvent(eventId);
     if (!event) {
-      return { success: false, error: 'Event not found' };
+      return { success: false, error: "Event not found" };
     }
     return { success: true, data: event };
   } catch (error) {
-    console.error('Get event error:', error);
-    return { success: false, error: 'Failed to fetch event' };
+    console.error("Get event error:", error);
+    return { success: false, error: "Failed to fetch event" };
   }
 }
 
-export async function updateEventAction(userId: string, eventId: string, formData: unknown) {
+export async function updateEventAction(
+  userId: string,
+  eventId: string,
+  formData: unknown
+) {
   try {
     const updates = formData as Record<string, any>;
     const event = await updateEvent(eventId, userId, updates);
     return { success: true, data: event };
   } catch (error) {
-    console.error('Update event error:', error);
+    console.error("Update event error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to update event' };
+    return { success: false, error: "Failed to update event" };
   }
 }
 
@@ -117,11 +124,11 @@ export async function deactivateEventAction(userId: string, eventId: string) {
     const event = await deactivateEvent(eventId, userId);
     return { success: true, data: event };
   } catch (error) {
-    console.error('Deactivate event error:', error);
+    console.error("Deactivate event error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to deactivate event' };
+    return { success: false, error: "Failed to deactivate event" };
   }
 }
 
@@ -133,11 +140,11 @@ export async function createProfileAction(userId: string, formData: unknown) {
     const profile = await createProfile(userId, validatedData as any);
     return { success: true, data: profile };
   } catch (error) {
-    console.error('Create profile error:', error);
+    console.error("Create profile error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to create profile' };
+    return { success: false, error: "Failed to create profile" };
   }
 }
 
@@ -146,8 +153,8 @@ export async function getProfilesAction(userId: string) {
     const profiles = await getUserProfiles(userId);
     return { success: true, data: profiles };
   } catch (error) {
-    console.error('Get profiles error:', error);
-    return { success: false, error: 'Failed to fetch profiles' };
+    console.error("Get profiles error:", error);
+    return { success: false, error: "Failed to fetch profiles" };
   }
 }
 
@@ -155,12 +162,12 @@ export async function getProfileAction(userId: string, profileId: string) {
   try {
     const profile = await getProfile(userId, profileId);
     if (!profile) {
-      return { success: false, error: 'Profile not found' };
+      return { success: false, error: "Profile not found" };
     }
     return { success: true, data: profile };
   } catch (error) {
-    console.error('Get profile error:', error);
-    return { success: false, error: 'Failed to fetch profile' };
+    console.error("Get profile error:", error);
+    return { success: false, error: "Failed to fetch profile" };
   }
 }
 
@@ -172,13 +179,13 @@ export async function updateProfileAction(
   try {
     const validatedData = updateProfileSchema.parse(formData);
     await updateProfile(userId, profileId, validatedData as any);
-    return { success: true, message: 'Profile updated' };
+    return { success: true, message: "Profile updated" };
   } catch (error) {
-    console.error('Update profile error:', error);
+    console.error("Update profile error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to update profile' };
+    return { success: false, error: "Failed to update profile" };
   }
 }
 
@@ -193,9 +200,9 @@ export async function submitHypeAction(
     const validatedData = createHypeMessageSchema.parse(formData);
 
     // Initialize Paystack payment
-    const email = formData instanceof Object ? (formData as any).email : '';
+    const email = formData instanceof Object ? (formData as any).email : "";
     if (!email) {
-      return { success: false, error: 'Email is required for payment' };
+      return { success: false, error: "Email is required for payment" };
     }
 
     const paymentInit = await PaystackService.initializePayment(
@@ -209,7 +216,7 @@ export async function submitHypeAction(
     );
 
     if (!paymentInit.status) {
-      return { success: false, error: 'Failed to initialize payment' };
+      return { success: false, error: "Failed to initialize payment" };
     }
 
     // Create hype message with pending status
@@ -233,21 +240,25 @@ export async function submitHypeAction(
       },
     };
   } catch (error) {
-    console.error('Submit hype error:', error);
+    console.error("Submit hype error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to submit hype' };
+    return { success: false, error: "Failed to submit hype" };
   }
 }
 
-export async function getHypesAction(eventId: string, limit: number = 50, offset: number = 0) {
+export async function getHypesAction(
+  eventId: string,
+  limit: number = 50,
+  offset: number = 0
+) {
   try {
     const hypes = await getHypeMessages(eventId, limit, offset);
     return { success: true, data: hypes };
   } catch (error) {
-    console.error('Get hypes error:', error);
-    return { success: false, error: 'Failed to fetch hypes' };
+    console.error("Get hypes error:", error);
+    return { success: false, error: "Failed to fetch hypes" };
   }
 }
 
@@ -260,27 +271,30 @@ export async function markHypeAsHypedAction(
     // Verify user owns the event before allowing status update
     const event = await getEvent(eventId);
     if (!event || event.hypemanProfileId !== userId) {
-      return { success: false, error: 'Unauthorized' };
+      return { success: false, error: "Unauthorized" };
     }
 
-    await updateHypeStatus(eventId, hypeId, 'hyped');
-    return { success: true, message: 'Hype marked as hyped' };
+    await updateHypeStatus(eventId, hypeId, "hyped");
+    return { success: true, message: "Hype marked as hyped" };
   } catch (error) {
-    console.error('Mark hype error:', error);
+    console.error("Mark hype error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to update hype' };
+    return { success: false, error: "Failed to update hype" };
   }
 }
 
-export async function getLeaderboardAction(eventId: string, limit: number = 20) {
+export async function getLeaderboardAction(
+  eventId: string,
+  limit: number = 20
+) {
   try {
     const leaderboard = await getLeaderboard(eventId, limit);
     return { success: true, data: leaderboard };
   } catch (error) {
-    console.error('Get leaderboard error:', error);
-    return { success: false, error: 'Failed to fetch leaderboard' };
+    console.error("Get leaderboard error:", error);
+    return { success: false, error: "Failed to fetch leaderboard" };
   }
 }
 
@@ -291,8 +305,8 @@ export async function getEarningsAction(userId: string, profileId: string) {
     const earnings = await getEarnings(userId, profileId);
     return { success: true, data: { earnings } };
   } catch (error) {
-    console.error('Get earnings error:', error);
-    return { success: false, error: 'Failed to fetch earnings' };
+    console.error("Get earnings error:", error);
+    return { success: false, error: "Failed to fetch earnings" };
   }
 }
 
@@ -306,11 +320,11 @@ export async function requestWithdrawalAction(
     const withdrawal = await createWithdrawal(userId, profileId, validatedData);
     return { success: true, data: withdrawal };
   } catch (error) {
-    console.error('Request withdrawal error:', error);
+    console.error("Request withdrawal error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to request withdrawal' };
+    return { success: false, error: "Failed to request withdrawal" };
   }
 }
 
@@ -323,7 +337,7 @@ export async function getWithdrawalHistoryAction(
     const history = await getWithdrawalHistory(userId, limit, offset);
     return { success: true, data: history };
   } catch (error) {
-    console.error('Get withdrawal history error:', error);
-    return { success: false, error: 'Failed to fetch withdrawal history' };
+    console.error("Get withdrawal history error:", error);
+    return { success: false, error: "Failed to fetch withdrawal history" };
   }
 }

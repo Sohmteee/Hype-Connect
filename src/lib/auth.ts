@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from "crypto";
 
 /**
  * Validate Paystack webhook signature
@@ -9,13 +9,13 @@ export function validatePaystackWebhook(
 ): boolean {
   try {
     const hash = crypto
-      .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY || '')
+      .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY || "")
       .update(body)
-      .digest('hex');
+      .digest("hex");
 
     return hash === signature;
   } catch (error) {
-    console.error('Webhook signature validation error:', error);
+    console.error("Webhook signature validation error:", error);
     return false;
   }
 }

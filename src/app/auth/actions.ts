@@ -1,16 +1,16 @@
-'use server';
+"use server";
 
-import { getAuth } from 'firebase-admin/auth';
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { registerSchema, loginSchema } from '@/lib/schemas';
-import { createUser, createProfile, getUser } from '@/services/firestore/users';
+import { getAuth } from "firebase-admin/auth";
+import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { registerSchema, loginSchema } from "@/lib/schemas";
+import { createUser, createProfile, getUser } from "@/services/firestore/users";
 
 function getAuthService() {
   if (getApps().length === 0) {
     const serviceAccount = {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n"),
     };
 
     initializeApp({
@@ -36,8 +36,8 @@ export async function registerAction(formData: unknown) {
         displayName: validatedData.displayName,
       });
     } catch (authError: any) {
-      if (authError.code === 'auth/email-already-exists') {
-        return { success: false, error: 'Email already registered' };
+      if (authError.code === "auth/email-already-exists") {
+        return { success: false, error: "Email already registered" };
       }
       throw authError;
     }
@@ -46,19 +46,19 @@ export async function registerAction(formData: unknown) {
     await createUser(userRecord.uid, {
       email: validatedData.email,
       displayName: validatedData.displayName,
-      roles: ['spotlight'],
+      roles: ["spotlight"],
     });
 
     // Create default profile
     await createProfile(userRecord.uid, {
-      type: 'spotlight',
+      type: "spotlight",
       displayName: validatedData.displayName,
-      visibility: 'public',
+      visibility: "public",
     });
 
     return {
       success: true,
-      message: 'Registration successful',
+      message: "Registration successful",
       user: {
         uid: userRecord.uid,
         email: userRecord.email,
@@ -66,25 +66,28 @@ export async function registerAction(formData: unknown) {
       },
     };
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error("Registration error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Registration failed' };
+    return { success: false, error: "Registration failed" };
   }
 }
 
-export async function updateUserRoleAction(userId: string, role: 'hypeman' | 'spotlight') {
+export async function updateUserRoleAction(
+  userId: string,
+  role: "hypeman" | "spotlight"
+) {
   try {
     if (!userId) {
-      return { success: false, error: 'User ID is required' };
+      return { success: false, error: "User ID is required" };
     }
 
     const auth = getAuthService();
     const user = await getUser(userId);
 
     if (!user) {
-      return { success: false, error: 'User not found' };
+      return { success: false, error: "User not found" };
     }
 
     // Update roles
@@ -97,18 +100,18 @@ export async function updateUserRoleAction(userId: string, role: 'hypeman' | 'sp
     await auth.setCustomUserClaims(userId, { role });
 
     // Update Firestore
-    const db = (await import('firebase-admin/firestore')).getFirestore();
-    await db.collection('users').doc(userId).update({ roles: newRoles });
+    const db = (await import("firebase-admin/firestore")).getFirestore();
+    await db.collection("users").doc(userId).update({ roles: newRoles });
 
     return {
       success: true,
       message: `User role updated to ${role}`,
     };
   } catch (error) {
-    console.error('Update user role error:', error);
+    console.error("Update user role error:", error);
     if (error instanceof Error) {
       return { success: false, error: error.message };
     }
-    return { success: false, error: 'Failed to update user role' };
+    return { success: false, error: "Failed to update user role" };
   }
 }
