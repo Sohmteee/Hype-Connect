@@ -1,58 +1,14 @@
 "use server";
 
-import { getAuth } from "firebase-admin/auth";
-import { initializeApp, getApps, cert, getApp } from "firebase-admin/app";
 import { registerSchema, loginSchema } from "@/lib/schemas";
 import { createUser, createProfile, getUser } from "@/services/firestore/users";
-
-function getAuthService() {
-  let app;
-
-  if (getApps().length === 0) {
-    try {
-      let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || "";
-      
-      // Remove surrounding quotes if present
-      if ((privateKey.startsWith('"') && privateKey.endsWith('"')) ||
-          (privateKey.startsWith("'") && privateKey.endsWith("'"))) {
-        privateKey = privateKey.slice(1, -1);
-      }
-      
-      // Replace escaped newlines with actual newlines
-      privateKey = privateKey.replace(/\\n/g, "\n");
-
-      if (!privateKey) {
-        throw new Error("FIREBASE_ADMIN_PRIVATE_KEY is not set or empty");
-      }
-
-      const serviceAccount = {
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-        privateKey: privateKey,
-      };
-
-      console.log("Initializing Firebase Admin with projectId:", serviceAccount.projectId);
-
-      app = initializeApp({
-        credential: cert(serviceAccount as any),
-        databaseURL: `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}.firebaseio.com`,
-      });
-    } catch (error) {
-      console.error("Firebase Admin initialization error:", error);
-      throw error;
-    }
-  } else {
-    app = getApp();
-  }
-
-  return getAuth(app);
-}
+import { getAdminAuth } from "@/services/firebase-admin";
 
 export async function registerAction(formData: unknown) {
   try {
     const validatedData = registerSchema.parse(formData);
 
-    const auth = getAuthService();
+    const auth = getAdminAuth();
 
     // Create Firebase Auth user
     let userRecord;
@@ -110,7 +66,7 @@ export async function updateUserRoleAction(
       return { success: false, error: "User ID is required" };
     }
 
-    const auth = getAuthService();
+    const auth = getAdminAuth();
     const user = await getUser(userId);
 
     if (!user) {
@@ -127,8 +83,8 @@ export async function updateUserRoleAction(
     await auth.setCustomUserClaims(userId, { role });
 
     // Update Firestore
-    const { getFirestore } = await import("firebase-admin/firestore");
-    const db = getFirestore(getApp());
+    const { getAdminFirestore } = await import("@/services/firebase-admin");
+    const db = getAdminFirestore();
     await db.collection("users").doc(userId).update({ roles: newRoles });
 
     return {
