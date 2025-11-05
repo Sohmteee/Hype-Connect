@@ -25,11 +25,24 @@ export function initializeFirebaseAdmin() {
       process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
     );
 
+    let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+    
+    // Handle both escaped and unescaped newlines
+    if (privateKey.includes("\\n")) {
+      privateKey = privateKey.replace(/\\n/g, "\n");
+    }
+
     const serviceAccount = {
       projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-      privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      privateKey: privateKey,
     };
+
+    console.log("Service Account Config:", {
+      projectId: serviceAccount.projectId,
+      clientEmail: serviceAccount.clientEmail,
+      privateKeyStart: serviceAccount.privateKey.substring(0, 50),
+    });
 
     app = initializeApp({
       credential: cert(serviceAccount),

@@ -2,38 +2,48 @@
 
 import { registerSchema, loginSchema } from "@/lib/schemas";
 import { createUser, createProfile, getUser } from "@/services/firestore/users";
-import { getAdminAuth } from "@/services/firebase-admin";
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { firebaseConfig } from "@/firebase/config";
+
+// Client-side Firebase Auth for registration (no Admin SDK needed)
+function getClientAuth() {
+  const app = initializeApp(firebaseConfig);
+  return getAuth(app);
+}
 
 export async function registerAction(formData: unknown) {
   try {
     const validatedData = registerSchema.parse(formData);
 
-    const auth = getAdminAuth();
+    const auth = getClientAuth();
 
-    // Create Firebase Auth user
-    let userRecord;
+    // Create Firebase Auth user using client SDK
+    let userCredential;
     try {
-      userRecord = await auth.createUser({
-        email: validatedData.email,
-        password: validatedData.password,
-        displayName: validatedData.displayName,
-      });
+      userCredential = await createUserWithEmailAndPassword(
+        auth,
+        validatedData.email,
+        validatedData.password
+      );
     } catch (authError: any) {
-      if (authError.code === "auth/email-already-exists") {
+      if (authError.code === "auth/email-already-in-use") {
         return { success: false, error: "Email already registered" };
       }
       throw authError;
     }
 
+    const user = userCredential.user;
+
     // Create user document in Firestore
-    await createUser(userRecord.uid, {
+    await createUser(user.uid, {
       email: validatedData.email,
       displayName: validatedData.displayName,
       roles: ["spotlight"],
     });
 
     // Create default profile
-    await createProfile(userRecord.uid, {
+    await createProfile(user.uid, {
       type: "spotlight",
       displayName: validatedData.displayName,
       visibility: "public",
@@ -43,9 +53,9 @@ export async function registerAction(formData: unknown) {
       success: true,
       message: "Registration successful",
       user: {
-        uid: userRecord.uid,
-        email: userRecord.email,
-        displayName: userRecord.displayName,
+        uid: user.uid,
+        email: user.email,
+        displayName: validatedData.displayName,
       },
     };
   } catch (error) {
@@ -66,26 +76,21 @@ export async function updateUserRoleAction(
       return { success: false, error: "User ID is required" };
     }
 
-    const auth = getAdminAuth();
     const user = await getUser(userId);
 
     if (!user) {
       return { success: false, error: "User not found" };
     }
 
-    // Update roles
+    // Update roles in Firestore
     const newRoles = Array.isArray(user.roles) ? [...user.roles] : [];
     if (!newRoles.includes(role)) {
       newRoles.push(role);
     }
 
-    // Set custom claims for Firebase Auth
-    await auth.setCustomUserClaims(userId, { role });
-
-    // Update Firestore
-    const { getAdminFirestore } = await import("@/services/firebase-admin");
-    const db = getAdminFirestore();
-    await db.collection("users").doc(userId).update({ roles: newRoles });
+    // Use updateUser to persist roles to Firestore
+    const { updateUser } = await import("@/services/firestore/users");
+    await updateUser(userId, { roles: newRoles });
 
     return {
       success: true,
