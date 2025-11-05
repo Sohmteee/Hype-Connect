@@ -53,24 +53,24 @@ export function Header({ className }: { className?: string }) {
 
 
   const mainNavLinks = [
-    { href: "/#events", label: "Events"},
-    { href: "/about", label: "About"},
-    { href: "/contact", label: "Contact"},
-    { href: "/book-video-hype", label: "Book a Video"},
+    { href: "/#events", label: "Events" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+    { href: "/book-video-hype", label: "Book a Video" },
   ];
 
   const mobileNavLinks = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/#events", label: "Events", icon: Info},
-    { href: "/about", label: "About", icon: Info},
-    { href: "/contact", label: "Contact", icon: Mail},
-    { href: "/book-video-hype", label: "Book a Video", icon: Video},
+    { href: "/#events", label: "Events", icon: Info },
+    { href: "/about", label: "About", icon: Info },
+    { href: "/contact", label: "Contact", icon: Mail },
+    { href: "/book-video-hype", label: "Book a Video", icon: Video },
     ...(user ? [
       { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
       { href: "/dashboard/user", label: "User Dashboard", icon: User },
     ] : []),
   ]
-  
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -80,7 +80,7 @@ export function Header({ className }: { className?: string }) {
   }, []);
 
   const isHomePage = pathname === '/';
-  
+
   const headerClasses = cn(
     "sticky top-0 z-50 w-full transition-all duration-300",
     {
@@ -101,29 +101,29 @@ export function Header({ className }: { className?: string }) {
             <span className={cn("font-bold text-xl font-headline", logoTextClasses)}>HypeConnect</span>
           </Link>
         </div>
-         <nav className="hidden md:flex items-center gap-2">
-             {mainNavLinks.map(link => (
-                 <Button key={link.href} variant="ghost" asChild className={navItemClasses}>
-                    <Link href={link.href}>
-                        {link.label}
-                    </Link>
-                </Button>
-            ))}
+        <nav className="hidden md:flex items-center gap-2">
+          {mainNavLinks.map(link => (
+            <Button key={link.href} variant="ghost" asChild className={navItemClasses}>
+              <Link href={link.href}>
+                {link.label}
+              </Link>
+            </Button>
+          ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-2">
             {!loading && !user ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  asChild 
+                <Button
+                  variant="ghost"
+                  asChild
                   className={navItemClasses}
                 >
                   <Link href="/auth/login">Log In</Link>
                 </Button>
-                <Button 
-                  asChild 
+                <Button
+                  asChild
                   className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/50"
                 >
                   <Link href="/auth/register">Sign Up</Link>
@@ -131,14 +131,14 @@ export function Header({ className }: { className?: string }) {
               </>
             ) : user ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  asChild 
+                <Button
+                  variant="ghost"
+                  asChild
                   className={navItemClasses}
                 >
                   <Link href="/dashboard/user">Dashboard</Link>
                 </Button>
-                <Button 
+                <Button
                   variant="ghost"
                   onClick={handleLogout}
                   className={navItemClasses}
@@ -159,75 +159,75 @@ export function Header({ className }: { className?: string }) {
               </Button>
             </SheetTrigger>
             <SheetContent side="right" className="w-[80vw] max-w-sm flex flex-col p-0">
-                <SheetHeader className="p-4 border-b">
-                    <SheetTitle className="flex items-center gap-2">
-                        <HypeConnectLogo className="h-8 w-8 text-primary neon-glow-primary" />
-                        <span className="font-bold text-xl font-headline text-foreground">HypeConnect Menu</span>
-                    </SheetTitle>
-                </SheetHeader>
-               <ScrollArea className="flex-1">
-                 <div className="p-4 space-y-2">
-                    {mobileNavLinks.map(link => (
-                      <Button
-                        key={link.href}
-                        variant={pathname === link.href ? 'secondary' : 'ghost'}
-                        asChild
-                        className="w-full justify-start text-lg h-auto p-4"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <Link href={link.href} className="flex items-center gap-4">
-                          <link.icon className="h-6 w-6" />
-                          <span>{link.label}</span>
-                        </Link>
-                      </Button>
-                    ))}
+              <SheetHeader className="p-4 border-b">
+                <SheetTitle className="flex items-center gap-2">
+                  <HypeConnectLogo className="h-8 w-8 text-primary neon-glow-primary" />
+                  <span className="font-bold text-xl font-headline text-foreground">HypeConnect Menu</span>
+                </SheetTitle>
+              </SheetHeader>
+              <ScrollArea className="flex-1">
+                <div className="p-4 space-y-2">
+                  {mobileNavLinks.map(link => (
+                    <Button
+                      key={link.href}
+                      variant={pathname === link.href ? 'secondary' : 'ghost'}
+                      asChild
+                      className="w-full justify-start text-lg h-auto p-4"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href={link.href} className="flex items-center gap-4">
+                        <link.icon className="h-6 w-6" />
+                        <span>{link.label}</span>
+                      </Link>
+                    </Button>
+                  ))}
                 </div>
-               </ScrollArea>
-               
-               {/* Mobile Auth Section */}
-               <div className="border-t p-4 space-y-2">
-                 {!loading && !user ? (
-                   <>
-                     <Button
-                       asChild
-                       variant="outline"
-                       className="w-full"
-                       onClick={() => setIsMenuOpen(false)}
-                     >
-                       <Link href="/auth/login">Log In</Link>
-                     </Button>
-                     <Button
-                       asChild
-                       className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                       onClick={() => setIsMenuOpen(false)}
-                     >
-                       <Link href="/auth/register">Sign Up</Link>
-                     </Button>
-                   </>
-                 ) : user ? (
-                   <>
-                     <Button
-                       asChild
-                       variant="outline"
-                       className="w-full"
-                       onClick={() => setIsMenuOpen(false)}
-                     >
-                       <Link href="/dashboard/user">Dashboard</Link>
-                     </Button>
-                     <Button
-                       variant="destructive"
-                       className="w-full"
-                       onClick={() => {
-                         handleLogout();
-                         setIsMenuOpen(false);
-                       }}
-                     >
-                       <LogOut className="h-4 w-4 mr-2" />
-                       Log Out
-                     </Button>
-                   </>
-                 ) : null}
-               </div>
+              </ScrollArea>
+
+              {/* Mobile Auth Section */}
+              <div className="border-t p-4 space-y-2">
+                {!loading && !user ? (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/auth/login">Log In</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/auth/register">Sign Up</Link>
+                    </Button>
+                  </>
+                ) : user ? (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/dashboard/user">Dashboard</Link>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => {
+                        handleLogout();
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log Out
+                    </Button>
+                  </>
+                ) : null}
+              </div>
             </SheetContent>
           </Sheet>
         </div>
