@@ -55,7 +55,7 @@ const hypeFormSchema = z.object({
     .string()
     .min(5, { message: 'Message must be at least 5 characters.' })
     .max(140, { message: 'Message must not be longer than 140 characters.' }),
-  amount: z.coerce.number().min(1, { message: 'Please select or enter an amount.'}),
+  amount: z.coerce.number().min(1, { message: 'Please select or enter an amount.' }),
 });
 
 type HypeFormValues = z.infer<typeof hypeFormSchema>;
@@ -127,7 +127,7 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Call the real Paystack payment action
       const result = await submitHypeAction(user.uid, event.id, {
@@ -193,16 +193,16 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
               </CardDescription>
             </CardHeader>
             <CardFooter className="flex-wrap gap-2">
-               <Button variant="outline" onClick={() => router.back()}>
-                    <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Go Back
-               </Button>
-               <Button variant="outline" asChild>
-                  <Link href={`/event/${event.id}/qr`}>
-                      <QrCode className="mr-2 h-4 w-4"/>
-                      Show Event QR Code
-                  </Link>
-               </Button>
+              <Button variant="outline" onClick={() => router.back()}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Go Back
+              </Button>
+              <Button variant="outline" asChild>
+                <Link href={`/event/${event.id}/qr`}>
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Show Event QR Code
+                </Link>
+              </Button>
             </CardFooter>
           </Card>
 
@@ -279,22 +279,22 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                                 </FormLabel>
                               </FormItem>
                             ))}
-                             <FormItem className="relative">
-                                <FormControl>
-                                   <RadioGroupItem value="other" id="amount-other" className="sr-only peer" />
-                                </FormControl>
-                                <FormLabel
-                                  htmlFor="amount-other"
-                                  className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
-                                    customAmountActive && "border-primary bg-primary text-primary-foreground"
-                                  )}
-                                >
-                                  Other
-                                </FormLabel>
-                              </FormItem>
+                            <FormItem className="relative">
+                              <FormControl>
+                                <RadioGroupItem value="other" id="amount-other" className="sr-only peer" />
+                              </FormControl>
+                              <FormLabel
+                                htmlFor="amount-other"
+                                className={cn("flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                                  customAmountActive && "border-primary bg-primary text-primary-foreground"
+                                )}
+                              >
+                                Other
+                              </FormLabel>
+                            </FormItem>
                           </RadioGroup>
                         </FormControl>
-                         {customAmountActive && (
+                        {customAmountActive && (
                           <FormControl>
                             <Input
                               type="number"
@@ -311,12 +311,12 @@ function EventDetails({ event, leaderboard }: { event: ClubEvent, leaderboard: T
                   />
                   <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
                     {isSubmitting ? (
-                        <>
-                            <Loader2 className="animate-spin mr-2" />
-                            Sending Hype...
-                        </>
+                      <>
+                        <Loader2 className="animate-spin mr-2" />
+                        Sending Hype...
+                      </>
                     ) : (
-                        'Send Hype'
+                      'Send Hype'
                     )}
                   </Button>
                 </form>
@@ -360,7 +360,7 @@ export default function EventPage() {
     // You can replace this with a proper loading skeleton component
     return <div>Loading...</div>;
   }
-  
+
   if (!event) {
     return null;
   }

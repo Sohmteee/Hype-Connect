@@ -1,11 +1,20 @@
 "use server";
 
-import { createUser, createProfile, getUser, updateUser } from "@/services/firestore/users";
+import {
+  createUser,
+  createProfile,
+  getUser,
+  updateUser,
+} from "@/services/firestore/users";
 
 export async function registerAction(formData: unknown) {
   try {
     // Parse incoming data - just needs uid, email, displayName
-    const data = formData as { uid: string; email: string; displayName: string };
+    const data = formData as {
+      uid: string;
+      email: string;
+      displayName: string;
+    };
 
     if (!data.uid || !data.email || !data.displayName) {
       return { success: false, error: "Missing required fields" };

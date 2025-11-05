@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
-import { registerAction } from '../actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,16 +20,6 @@ export default function RegisterPage() {
     confirmPassword: '',
     displayName: '',
   });
-
-  // Initialize Firebase on component mount
-  useEffect(() => {
-    try {
-      initializeFirebase();
-    } catch (err) {
-      console.error('Firebase init error:', err);
-      setError('Failed to initialize Firebase');
-    }
-  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,60 +37,68 @@ export default function RegisterPage() {
     try {
       // Validate form
       if (!formData.email || !formData.password || !formData.displayName) {
-        setError('Please fill in all fields');
-        setLoading(false);
-        return;
+        throw new Error('Please fill in all fields');
       }
 
       if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
-        return;
+        throw new Error('Passwords do not match');
       }
 
       if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters');
-        setLoading(false);
-        return;
+        throw new Error('Password must be at least 6 characters');
       }
 
-      // 1. Register with Firebase Auth (client-side)
-      const { auth } = initializeFirebase();
+      // Initialize Firebase
+      const { auth, firestore } = initializeFirebase();
+
+      // Create user with Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
         formData.password
       );
 
-      const uid = userCredential.user.uid;
+      const user = userCredential.user;
 
-      // 2. Create user profile in Firestore (server action)
-      const result = await registerAction({
-        uid,
-        email: formData.email,
+      // Update user profile with display name
+      await updateProfile(user, {
         displayName: formData.displayName,
       });
 
-      if (!result.success) {
-        setError(result.error || 'Failed to create profile');
-        setLoading(false);
-        return;
-      }
+      // Create user document in Firestore
+      await setDoc(doc(firestore, 'users', user.uid), {
+        email: formData.email,
+        displayName: formData.displayName,
+        roles: ['spotlight'],
+        createdAt: new Date().toISOString(),
+      });
 
-      // Redirect to dashboard
+      // Create default profile
+      await setDoc(doc(firestore, 'users', user.uid, 'profiles', 'default'), {
+        type: 'spotlight',
+        displayName: formData.displayName,
+        visibility: 'public',
+        createdAt: new Date().toISOString(),
+      });
+
+      // Success! Redirect to dashboard
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Registration error:', err);
       
+      // Handle specific Firebase errors
       if (err.code === 'auth/email-already-in-use') {
         setError('Email already registered');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address');
       } else if (err.code === 'auth/weak-password') {
         setError('Password is too weak');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection.');
       } else {
-        setError(err.message || 'An error occurred');
+        setError(err.message || 'Registration failed. Please try again.');
       }
+    } finally {
       setLoading(false);
     }
   };

@@ -36,29 +36,33 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Validate form
       if (!formData.email || !formData.password) {
-        setError('Please fill in all fields');
-        setLoading(false);
-        return;
+        throw new Error('Please fill in all fields');
       }
 
+      // Initialize Firebase and sign in
       const { auth } = initializeFirebase();
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
-      // Redirect to dashboard
+      // Success! Redirect to dashboard
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
 
-      if (err.code === 'auth/user-not-found') {
-        setError('No account found with this email');
-      } else if (err.code === 'auth/wrong-password') {
-        setError('Incorrect password');
+      // Handle specific Firebase errors
+      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setError('Invalid email or password');
       } else if (err.code === 'auth/invalid-email') {
         setError('Invalid email address');
+      } else if (err.code === 'auth/too-many-requests') {
+        setError('Too many attempts. Please try again later.');
+      } else if (err.code === 'auth/network-request-failed') {
+        setError('Network error. Please check your connection.');
       } else {
-        setError(err.message || 'Login failed');
+        setError(err.message || 'Login failed. Please try again.');
       }
+    } finally {
       setLoading(false);
     }
   };
