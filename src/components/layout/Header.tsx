@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { HypeConnectLogo } from '@/components/icons';
-import { LayoutDashboard, Info, Mail, Video, User, Home } from 'lucide-react';
+import { LayoutDashboard, Info, Mail, Video, User, Home, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
@@ -16,11 +16,40 @@ import {
 import { Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { initializeFirebase } from '@/firebase';
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check auth state
+  useEffect(() => {
+    try {
+      const { auth } = initializeFirebase();
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+        setLoading(false);
+      });
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Auth state error:', error);
+      setLoading(false);
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      const { auth } = initializeFirebase();
+      await signOut(auth);
+      setIsMenuOpen(false);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
 
   const mainNavLinks = [
@@ -28,8 +57,6 @@ export function Header({ className }: { className?: string }) {
     { href: "/about", label: "About"},
     { href: "/contact", label: "Contact"},
     { href: "/book-video-hype", label: "Book a Video"},
-    { href: "/dashboard", label: "Hypeman Dashboard"},
-    { href: "/dashboard/user", label: "User Dashboard"},
   ];
 
   const mobileNavLinks = [
@@ -38,8 +65,10 @@ export function Header({ className }: { className?: string }) {
     { href: "/about", label: "About", icon: Info},
     { href: "/contact", label: "Contact", icon: Mail},
     { href: "/book-video-hype", label: "Book a Video", icon: Video},
-    { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/user", label: "User Dashboard", icon: User },
+    ...(user ? [
+      { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
+      { href: "/dashboard/user", label: "User Dashboard", icon: User },
+    ] : []),
   ]
   
   useEffect(() => {
@@ -82,6 +111,46 @@ export function Header({ className }: { className?: string }) {
             ))}
         </nav>
         <div className="flex flex-1 items-center justify-end space-x-2">
+          {/* Desktop Auth Buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            {!loading && !user ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className={navItemClasses}
+                >
+                  <Link href="/auth/login">Log In</Link>
+                </Button>
+                <Button 
+                  asChild 
+                  className="bg-gradient-to-r from-[#9400D3] to-[#FFD700] text-white hover:shadow-lg hover:shadow-[#9400D3]/50"
+                >
+                  <Link href="/auth/register">Sign Up</Link>
+                </Button>
+              </>
+            ) : user ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  asChild 
+                  className={navItemClasses}
+                >
+                  <Link href="/dashboard/user">Dashboard</Link>
+                </Button>
+                <Button 
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className={navItemClasses}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log Out
+                </Button>
+              </>
+            ) : null}
+          </div>
+
+          {/* Mobile Menu */}
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className={cn("md:hidden p-2 h-12 w-12", navItemClasses)}>
@@ -114,6 +183,51 @@ export function Header({ className }: { className?: string }) {
                     ))}
                 </div>
                </ScrollArea>
+               
+               {/* Mobile Auth Section */}
+               <div className="border-t p-4 space-y-2">
+                 {!loading && !user ? (
+                   <>
+                     <Button
+                       asChild
+                       variant="outline"
+                       className="w-full"
+                       onClick={() => setIsMenuOpen(false)}
+                     >
+                       <Link href="/auth/login">Log In</Link>
+                     </Button>
+                     <Button
+                       asChild
+                       className="w-full bg-gradient-to-r from-[#9400D3] to-[#FFD700] text-white"
+                       onClick={() => setIsMenuOpen(false)}
+                     >
+                       <Link href="/auth/register">Sign Up</Link>
+                     </Button>
+                   </>
+                 ) : user ? (
+                   <>
+                     <Button
+                       asChild
+                       variant="outline"
+                       className="w-full"
+                       onClick={() => setIsMenuOpen(false)}
+                     >
+                       <Link href="/dashboard/user">Dashboard</Link>
+                     </Button>
+                     <Button
+                       variant="destructive"
+                       className="w-full"
+                       onClick={() => {
+                         handleLogout();
+                         setIsMenuOpen(false);
+                       }}
+                     >
+                       <LogOut className="h-4 w-4 mr-2" />
+                       Log Out
+                     </Button>
+                   </>
+                 ) : null}
+               </div>
             </SheetContent>
           </Sheet>
         </div>
