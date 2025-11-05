@@ -85,7 +85,7 @@ export default function RegisterPage() {
       router.push('/dashboard');
     } catch (err: any) {
       console.error('Registration error:', err);
-      
+
       // Handle specific Firebase errors
       if (err.code === 'auth/email-already-in-use') {
         setError('Email already registered');
