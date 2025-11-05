@@ -124,7 +124,7 @@ export function Header({ className }: { className?: string }) {
                 </Button>
                 <Button 
                   asChild 
-                  className="bg-gradient-to-r from-[#9400D3] to-[#FFD700] text-white hover:shadow-lg hover:shadow-[#9400D3]/50"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/50"
                 >
                   <Link href="/auth/register">Sign Up</Link>
                 </Button>
@@ -198,7 +198,7 @@ export function Header({ className }: { className?: string }) {
                      </Button>
                      <Button
                        asChild
-                       className="w-full bg-gradient-to-r from-[#9400D3] to-[#FFD700] text-white"
+                       className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                        onClick={() => setIsMenuOpen(false)}
                      >
                        <Link href="/auth/register">Sign Up</Link>
