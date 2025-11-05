@@ -8,19 +8,23 @@ function initializeFirebaseAdmin() {
   // Check if already initialized
   const existingApps = getApps();
   if (existingApps.length > 0) {
-    const app = existingApps.find(a => a.name === FIREBASE_APP_NAME);
+    const app = existingApps.find((a) => a.name === FIREBASE_APP_NAME);
     if (app) {
       console.log("[Firebase Admin] Already initialized");
-      return;
+      return app;
     }
   }
 
   try {
     let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY || "";
 
-    console.log("[Firebase Admin] Private key length:", privateKey.length);
+    console.log("[Firebase Admin] Raw private key length:", privateKey.length);
+    console.log(
+      "[Firebase Admin] Raw private key starts with:",
+      privateKey.substring(0, 50)
+    );
 
-    // Remove surrounding quotes if present
+    // First, handle the case where entire string is quoted
     if (
       (privateKey.startsWith('"') && privateKey.endsWith('"')) ||
       (privateKey.startsWith("'") && privateKey.endsWith("'"))
@@ -28,10 +32,25 @@ function initializeFirebaseAdmin() {
       privateKey = privateKey.slice(1, -1);
     }
 
-    // Replace escaped newlines with actual newlines (handles both \n and literal newlines)
-    privateKey = privateKey.replace(/\\n/g, "\n");
+    console.log(
+      "[Firebase Admin] After quote removal:",
+      privateKey.substring(0, 50)
+    );
+
+    // Handle escaped newlines: convert \\n to actual \n
+    // This handles both the escaped form and double-escaped form
+    privateKey = privateKey.replace(/\\\\n/g, "\n"); // First pass: \\n -> \n
+    privateKey = privateKey.replace(/\\n/g, "\n"); // Second pass: \n -> newline
+
+    console.log(
+      "[Firebase Admin] After newline conversion:",
+      privateKey.substring(0, 100)
+    );
 
     if (!privateKey || !privateKey.includes("BEGIN PRIVATE KEY")) {
+      console.error(
+        "[Firebase Admin] Invalid private key - missing BEGIN PRIVATE KEY marker"
+      );
       throw new Error(
         "FIREBASE_ADMIN_PRIVATE_KEY is not configured or invalid"
       );
@@ -56,6 +75,10 @@ function initializeFirebaseAdmin() {
     console.log("  - projectId:", projectId);
     console.log("  - clientEmail:", clientEmail);
     console.log("  - privateKey: [" + privateKey.length + " chars]");
+    console.log(
+      "  - privateKey valid: ",
+      privateKey.includes("BEGIN") && privateKey.includes("END")
+    );
 
     const app = initializeApp(
       {
