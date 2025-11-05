@@ -15,11 +15,11 @@ function initializeFirebaseAdmin() {
         privateKey = privateKey.slice(1, -1);
       }
 
-      // Replace escaped newlines with actual newlines
+      // Replace escaped newlines with actual newlines (handles both \n and literal newlines)
       privateKey = privateKey.replace(/\\n/g, "\n");
 
-      if (!privateKey) {
-        throw new Error("FIREBASE_ADMIN_PRIVATE_KEY is not configured");
+      if (!privateKey || !privateKey.includes("BEGIN PRIVATE KEY")) {
+        throw new Error("FIREBASE_ADMIN_PRIVATE_KEY is not configured or invalid");
       }
 
       const serviceAccount = {
