@@ -102,7 +102,7 @@ export default function RegisterPage() {
         description: 'Your account has been created successfully. Redirecting to login...',
         variant: 'default',
       });
-      
+
       setTimeout(() => {
         router.push('/auth/login?registered=true');
       }, 500);
@@ -111,7 +111,7 @@ export default function RegisterPage() {
 
       // Handle specific Firebase errors with user-friendly messages
       let userMessage = 'An error occurred during registration. Please try again.';
-      
+
       if (err.code === 'auth/email-already-in-use') {
         userMessage = 'This email is already registered. Please use a different email or try logging in.';
       } else if (err.code === 'auth/invalid-email') {
@@ -121,7 +121,7 @@ export default function RegisterPage() {
       } else if (err.code === 'auth/network-request-failed') {
         userMessage = 'Network connection failed. Please check your internet and try again.';
       }
-      
+
       toast({
         title: 'Registration Failed',
         description: userMessage,

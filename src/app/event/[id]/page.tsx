@@ -373,7 +373,7 @@ function EventDetails({ event, leaderboard, isLeaderboardLoading }: { event: Eve
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting || !user}>
+                  <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
                     {isSubmitting ? (
                       <>
                         <Loader2 className="animate-spin mr-2" />

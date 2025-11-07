@@ -11,10 +11,14 @@ export function getBaseUrl(headers?: any): string {
 
   // Server-side: try to get from headers first
   if (headers) {
-    const forwardedProto = headers.get?.("x-forwarded-proto") || headers["x-forwarded-proto"] || "https";
-    const forwardedHost = headers.get?.("x-forwarded-host") || headers["x-forwarded-host"];
+    const forwardedProto =
+      headers.get?.("x-forwarded-proto") ||
+      headers["x-forwarded-proto"] ||
+      "https";
+    const forwardedHost =
+      headers.get?.("x-forwarded-host") || headers["x-forwarded-host"];
     const host = headers.get?.("host") || headers["host"];
-    
+
     if (forwardedHost) {
       return `${forwardedProto}://${forwardedHost}`;
     }
@@ -31,4 +35,3 @@ export function getBaseUrl(headers?: any): string {
   // Final fallback
   return "http://localhost:3000";
 }
-

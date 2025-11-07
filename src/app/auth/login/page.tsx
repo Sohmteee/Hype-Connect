@@ -56,7 +56,7 @@ export default function LoginPage() {
         description: 'You have been logged in successfully.',
         variant: 'default',
       });
-      
+
       setTimeout(() => {
         // If there's a redirect parameter (e.g., from event page), go there
         // Otherwise, go to home page
@@ -68,7 +68,7 @@ export default function LoginPage() {
 
       // Handle specific Firebase errors with user-friendly messages
       let userMessage = 'An error occurred. Please try again.';
-      
+
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
         userMessage = 'The email or password you entered is incorrect.';
       } else if (err.code === 'auth/invalid-email') {
@@ -80,7 +80,7 @@ export default function LoginPage() {
       } else if (err.code === 'auth/invalid-credential') {
         userMessage = 'The email or password you entered is incorrect.';
       }
-      
+
       toast({
         title: 'Login Failed',
         description: userMessage,
