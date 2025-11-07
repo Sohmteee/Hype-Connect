@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { getBaseUrl } from "@/lib/get-base-url";
 
 interface PaystackInitializeResponse {
   status: boolean;
@@ -49,7 +50,7 @@ export class PaystackService {
     metadata?: Record<string, any>
   ): Promise<PaystackInitializeResponse> {
     try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const appUrl = getBaseUrl();
       const callbackUrl = `${appUrl}/payment/callback`;
 
       const response = await fetch(

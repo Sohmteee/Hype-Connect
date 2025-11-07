@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getBaseUrl } from "@/lib/get-base-url";
 
 export async function GET(
   request: NextRequest,
@@ -6,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id: eventId } = await params;
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const appUrl = getBaseUrl();
     const eventUrl = `${appUrl}/event/${eventId}`;
 
     // Using external QRServer API instead
