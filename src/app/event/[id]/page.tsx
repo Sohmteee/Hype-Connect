@@ -138,11 +138,13 @@ function EventDetails({ event, leaderboard, isLeaderboardLoading }: { event: Eve
   async function onSubmit(data: HypeFormValues) {
     if (!event || !user) {
       toast({
-        title: 'Error',
-        description: 'You must be logged in to send hype',
+        title: 'Sign in required',
+        description: 'Please log in to send hype to this event.',
         variant: 'destructive',
       });
-      router.push('/auth/login');
+      // Redirect to login with the current event page as the redirect destination
+      const currentEventPath = `/event/${event?.id || ''}`;
+      router.push(`/auth/login?redirect=${encodeURIComponent(currentEventPath)}`);
       return;
     }
 

@@ -16,6 +16,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
   const registered = searchParams.get('registered');
+  const redirectTo = searchParams.get('redirect');
 
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -57,7 +58,10 @@ export default function LoginPage() {
       });
       
       setTimeout(() => {
-        router.push('/');
+        // If there's a redirect parameter (e.g., from event page), go there
+        // Otherwise, go to home page
+        const destination = redirectTo || '/';
+        router.push(destination);
       }, 500);
     } catch (err: any) {
       console.error('Login error:', err);
