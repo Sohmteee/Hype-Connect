@@ -17,6 +17,8 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { getEvents } from '@/lib/data';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -66,33 +68,83 @@ export default function BookVideoHypePage() {
   const { toast } = useToast();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
-  
+  const [user] = useAuthState(auth);
+  const [hypemen, setHypemen] = React.useState<Array<any>>([]);
+  const [search, setSearch] = React.useState('');
+
   const allEvents = getEvents();
-   const hypemen = Array.from(
+  // fallback: derived hypemen from local events
+  const fallbackHypemen = Array.from(
     new Map(allEvents.map((event) => [event.hypeman.id, event.hypeman])).values()
   );
 
   const form = useForm<BookingFormValues>({
     resolver: zodResolver(bookingFormSchema),
     defaultValues: {
-      name: '',
-      email: '',
+      name: user?.displayName || '',
+      email: user?.email || '',
     },
   });
 
+  // Fetch public hypemen from backend
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/hypemen');
+        const json = await res.json();
+        if (mounted && json?.success) {
+          setHypemen(json.data || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch hypemen:', err);
+        setHypemen(fallbackHypemen);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   function onSubmit(data: BookingFormValues) {
+    if (!user) {
+      toast({ title: 'Sign in required', description: 'Please log in to book a video.', variant: 'destructive' });
+      router.push(`/auth/login?redirect=${encodeURIComponent('/book-video-hype')}`);
+      return;
+    }
+
     setIsSubmitting(true);
-    console.log('Video Hype Booking:', data);
-    
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: 'Booking Confirmed! 🎬',
-        description: `Your request has been sent. You can check its status on your dashboard.`,
-      });
-      setIsSubmitting(false);
-      router.push('/dashboard/user');
-    }, 2000);
+
+    (async () => {
+      try {
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (!json.success) {
+          toast({ title: 'Booking Failed', description: json.error || 'Failed to create booking', variant: 'destructive' });
+          setIsSubmitting(false);
+          return;
+        }
+
+        // Redirect to payment
+        const paymentUrl = json.data?.paymentUrl;
+        if (paymentUrl) {
+          // Save pending booking info in sessionStorage so callback can resume
+          sessionStorage.setItem('pendingBooking', JSON.stringify({ name: data.name, email: data.email, hypemanId: data.hypemanId }));
+          window.location.href = paymentUrl;
+          return;
+        }
+
+        toast({ title: 'Success', description: 'Your booking was created.', });
+        router.push('/dashboard/user');
+      } catch (error) {
+        console.error('Booking error:', error);
+        toast({ title: 'Error', description: 'An unexpected error occurred.', variant: 'destructive' });
+      } finally {
+        setIsSubmitting(false);
+      }
+    })();
   }
 
   return (
@@ -148,7 +200,39 @@ export default function BookVideoHypePage() {
                   />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-6">
-                 <FormField
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-foreground mb-2 block">Search Hypeman</label>
+                  <Input placeholder="Search hypeman by name" value={search} onChange={(e) => setSearch(e.target.value)} />
+                </div>
+
+                <div className="mb-6">
+                  <Card className="p-4 mb-4">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Available Hypemen</CardTitle>
+                      <CardDescription className="text-sm">Choose from our verified hypemen.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {hypemen.length === 0 ? (
+                        <div className="py-4 text-center text-sm text-muted-foreground">No hypemen available yet.</div>
+                      ) : (
+                        <ul className="space-y-2">
+                          {(hypemen || fallbackHypemen)
+                            .filter(h => h.displayName.toLowerCase().includes(search.toLowerCase()))
+                            .map(h => (
+                              <li key={h.profileId} className="flex items-center justify-between">
+                                <div>
+                                  <div className="font-semibold">{h.displayName}</div>
+                                  <div className="text-sm text-muted-foreground">{h.publicBio}</div>
+                                </div>
+                              </li>
+                          ))}
+                        </ul>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <FormField
                     control={form.control}
                     name="hypemanId"
                     render={({ field }) => (
@@ -164,9 +248,9 @@ export default function BookVideoHypePage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {hypemen.map((hypeman) => (
-                              <SelectItem key={hypeman.id} value={hypeman.id}>
-                                {hypeman.name}
+                            {(hypemen.length > 0 ? hypemen : fallbackHypemen).map((hypeman: any) => (
+                              <SelectItem key={hypeman.profileId || hypeman.id} value={hypeman.profileId || hypeman.id}>
+                                {hypeman.displayName || hypeman.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
