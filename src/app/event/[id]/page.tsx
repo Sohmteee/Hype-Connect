@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, notFound, useParams } from 'next/navigation';
+import { useRouter, notFound, useParams, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -121,6 +121,7 @@ interface Event {
 function EventDetails({ event, leaderboard, isLeaderboardLoading }: { event: Event, leaderboard: LeaderboardItem[], isLeaderboardLoading: boolean }) {
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [user] = useAuthState(auth);
 
@@ -288,7 +289,10 @@ function EventDetails({ event, leaderboard, isLeaderboardLoading }: { event: Eve
                 <div className="mb-6 p-4 bg-accent/10 border border-accent rounded-md">
                   <p className="text-sm text-accent mb-3">You must be logged in to send hype.</p>
                   <Button asChild className="w-full">
-                    <Link href="/auth/login">Log In to Continue</Link>
+                    {/* Preserve the current page so user returns after login */}
+                    <Link href={`/auth/login?redirect=${encodeURIComponent(pathname || `/event/${event.id}`)}`}>
+                      Log In to Continue
+                    </Link>
                   </Button>
                 </div>
               )}

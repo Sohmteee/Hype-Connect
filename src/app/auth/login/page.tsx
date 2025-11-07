@@ -44,6 +44,7 @@ export default function LoginPage() {
           description: 'Please enter both email and password.',
           variant: 'destructive',
         });
+        setLoading(false);
         return;
       }
 
@@ -58,9 +59,8 @@ export default function LoginPage() {
       });
 
       setTimeout(() => {
-        // If there's a redirect parameter (e.g., from event page), go there
-        // Otherwise, go to home page
-        const destination = redirectTo || '/';
+        // Validate redirect to avoid open-redirects. Only allow internal paths.
+        const destination = redirectTo && redirectTo.startsWith('/') ? redirectTo : '/';
         router.push(destination);
       }, 500);
     } catch (err: any) {
