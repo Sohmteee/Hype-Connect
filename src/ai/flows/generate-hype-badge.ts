@@ -1,36 +1,39 @@
-
-'use server';
+"use server";
 /**
  * @fileOverview Generates a personalized "Hype Badge" for a user after they send a hype.
- * 
+ *
  * - generateHypeBadge - A function that generates the badge image.
  * - GenerateHypeBadgeInput - The input type for the generateHypeBadge function.
  * - GenerateHypeBadgeOutput - The return type for the generateHypeBadge function.
  */
 
-import { ai } from '@/ai/genkit';
-import { z } from 'genkit';
+import { ai } from "@/ai/genkit";
+import { z } from "genkit";
 
 const GenerateHypeBadgeInputSchema = z.object({
-  senderName: z.string().describe('The name of the person who sent the hype.'),
-  eventName: z.string().describe('The name of the event.'),
-  hypemanName: z.string().describe('The name of the hypeman.'),
-  amount: z.number().describe('The amount of the hype.'),
+  senderName: z.string().describe("The name of the person who sent the hype."),
+  eventName: z.string().describe("The name of the event."),
+  hypemanName: z.string().describe("The name of the hypeman."),
+  amount: z.number().describe("The amount of the hype."),
 });
 
-export type GenerateHypeBadgeInput = z.infer<typeof GenerateHypeBadgeInputSchema>;
+export type GenerateHypeBadgeInput = z.infer<
+  typeof GenerateHypeBadgeInputSchema
+>;
 
 const GenerateHypeBadgeOutputSchema = z.object({
-  imageUrl: z.string().describe('The data URI of the generated badge image.'),
+  imageUrl: z.string().describe("The data URI of the generated badge image."),
 });
 
-export type GenerateHypeBadgeOutput = z.infer<typeof GenerateHypeBadgeOutputSchema>;
+export type GenerateHypeBadgeOutput = z.infer<
+  typeof GenerateHypeBadgeOutputSchema
+>;
 
 function createHypeBadgeSvg(input: GenerateHypeBadgeInput): string {
-    const { senderName, eventName, hypemanName, amount } = input;
-    const formattedAmount = `₦${amount.toLocaleString()}`;
+  const { senderName, eventName, hypemanName, amount } = input;
+  const formattedAmount = `₦${amount.toLocaleString()}`;
 
-    const HypeConnectLogoString = `
+  const HypeSonoveaLogoString = `
       <g transform="translate(20, 20)">
           <g transform="scale(1.2)">
               <svg
@@ -48,12 +51,12 @@ function createHypeBadgeSvg(input: GenerateHypeBadgeInput): string {
               </svg>
           </g>
           <text x="35" y="22" fill="#D1B0FF" font-size="16" font-weight="700">
-              HypeConnect
+              HypeSonovea
           </text>
       </g>
     `;
 
-    const svgString = `
+  const svgString = `
         <svg
             width="400"
             height="200"
@@ -80,7 +83,7 @@ function createHypeBadgeSvg(input: GenerateHypeBadgeInput): string {
 
             <rect width="400" height="200" rx="10" fill="url(#backgroundGradient)" stroke="#4a1a7a" stroke-width="2" />
 
-            ${HypeConnectLogoString}
+            ${HypeSonoveaLogoString}
 
             <text x="200" y="75" text-anchor="middle" fill="white" font-size="24" font-weight="700">
                 ${senderName}
@@ -103,28 +106,28 @@ function createHypeBadgeSvg(input: GenerateHypeBadgeInput): string {
             </text>
         </svg>
     `;
-    return svgString;
+  return svgString;
 }
 
-
-export async function generateHypeBadge(input: GenerateHypeBadgeInput): Promise<GenerateHypeBadgeOutput> {
+export async function generateHypeBadge(
+  input: GenerateHypeBadgeInput
+): Promise<GenerateHypeBadgeOutput> {
   return generateHypeBadgeFlow(input);
 }
 
-
 const generateHypeBadgeFlow = ai.defineFlow(
   {
-    name: 'generateHypeBadgeFlow',
+    name: "generateHypeBadgeFlow",
     inputSchema: GenerateHypeBadgeInputSchema,
     outputSchema: GenerateHypeBadgeOutputSchema,
   },
   async (input) => {
     // Generate SVG string directly
     const svgString = createHypeBadgeSvg(input);
-    
+
     // Base64 encode the SVG string
-    const base64Svg = Buffer.from(svgString).toString('base64');
-    
+    const base64Svg = Buffer.from(svgString).toString("base64");
+
     // Create a data URI
     const imageUrl = `data:image/svg+xml;base64,${base64Svg}`;
 

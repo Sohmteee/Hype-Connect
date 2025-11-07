@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { HypeConnectLogo } from '@/components/icons';
+import { HypeSonoveaLogo } from '@/components/icons';
 import { Twitter, Instagram, Facebook, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -11,8 +11,8 @@ export function Footer() {
         <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-4">
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-2">
-              <HypeConnectLogo className="h-8 w-8 text-primary neon-glow-primary" />
-              <span className="font-bold text-xl font-headline">HypeConnect</span>
+              <HypeSonoveaLogo className="h-8 w-8 text-primary neon-glow-primary" />
+              <span className="font-bold text-xl font-headline">HypeSonovea</span>
             </Link>
             <p className="text-sm text-muted-foreground">
               Connecting the crowd to the stage, one hype at a time.
@@ -33,7 +33,7 @@ export function Footer() {
             <ul className="space-y-2 text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:info@hypeconnect.com" className="hover:text-primary">info@hypeconnect.com</a>
+                <a href="mailto:info@hypesonovea.com" className="hover:text-primary">info@hypesonovea.com</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
@@ -41,7 +41,7 @@ export function Footer() {
               </li>
             </ul>
           </div>
-           <div className="space-y-2">
+          <div className="space-y-2">
             <h4 className="font-semibold text-foreground">Follow Us</h4>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="icon" asChild>
@@ -58,7 +58,7 @@ export function Footer() {
         </div>
         <Separator className="my-8" />
         <div className="text-center text-sm text-muted-foreground">
-          © {new Date().getFullYear()} HypeConnect. All Rights Reserved.
+          © {new Date().getFullYear()} HypeSonovea. All Rights Reserved.
         </div>
       </div>
     </footer>

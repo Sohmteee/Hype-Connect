@@ -49,6 +49,9 @@ export class PaystackService {
     metadata?: Record<string, any>
   ): Promise<PaystackInitializeResponse> {
     try {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      const callbackUrl = `${appUrl}/payment/callback`;
+
       const response = await fetch(
         `${PAYSTACK_BASE_URL}/transaction/initialize`,
         {
@@ -61,6 +64,7 @@ export class PaystackService {
             email,
             amount: amount * 100, // Paystack expects amount in kobo
             metadata,
+            callback_url: callbackUrl,
           }),
         }
       );
@@ -226,8 +230,51 @@ export class PaystackService {
     bankCode: string
   ): Promise<any> {
     try {
+      const url = `${PAYSTACK_BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`;
+      console.log(
+        `[Paystack] Resolving account: ${accountNumber} with bank code: ${bankCode}`
+      );
+
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+      console.log(
+        `[Paystack] Resolve response status: ${response.status}`,
+        data
+      );
+
+      if (!response.ok) {
+        console.error(
+          `[Paystack] API error - Status: ${response.status}, Message: ${
+            data?.message || response.statusText
+          }`
+        );
+        throw new Error(
+          `Paystack API error: ${data?.message || response.statusText}`
+        );
+      }
+
+      return data;
+    } catch (error) {
+      console.error("Paystack resolve account error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of banks from Paystack
+   * Use this to get correct bank codes for account resolution
+   */
+  static async getBanks(): Promise<any[]> {
+    try {
       const response = await fetch(
-        `${PAYSTACK_BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+        `${PAYSTACK_BASE_URL}/bank?currency=NGN&perPage=100`,
         {
           method: "GET",
           headers: {
@@ -237,14 +284,24 @@ export class PaystackService {
         }
       );
 
+      const data = await response.json();
+      console.log(
+        `[Paystack] Got ${data.data?.length || 0} banks from Paystack`
+      );
+
       if (!response.ok) {
-        throw new Error(`Paystack API error: ${response.statusText}`);
+        throw new Error(
+          `Paystack API error: ${data?.message || response.statusText}`
+        );
       }
 
-      return await response.json();
+      // Sort by name and return
+      return (data.data || []).sort((a: any, b: any) =>
+        a.name.localeCompare(b.name)
+      );
     } catch (error) {
-      console.error("Paystack resolve account error:", error);
-      throw new Error("Failed to resolve account");
+      console.error("Paystack get banks error:", error);
+      throw error;
     }
   }
 }

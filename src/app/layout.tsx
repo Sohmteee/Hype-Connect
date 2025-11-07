@@ -7,7 +7,7 @@ import Loading from './loading';
 import { BackgroundMoneyWave } from '@/components/BackgroundMoneyWave';
 
 export const metadata: Metadata = {
-  title: 'HypeConnect',
+  title: 'HypeSonovea',
   description: 'Send hype to your favorite MCs in real-time!',
 };
 
@@ -27,14 +27,14 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased min-h-screen flex flex-col">
-          <BackgroundMoneyWave />
-          <div className='flex-1 relative z-10'>
-            <Suspense fallback={<Loading />}>
-              {children}
-            </Suspense>
-          </div>
-          <Footer />
-          <Toaster />
+        <BackgroundMoneyWave />
+        <div className='flex-1 relative z-10'>
+          <Suspense fallback={<Loading />}>
+            {children}
+          </Suspense>
+        </div>
+        <Footer />
+        <Toaster />
       </body>
     </html>
   );

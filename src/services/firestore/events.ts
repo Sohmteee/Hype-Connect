@@ -9,6 +9,8 @@ interface EventData {
   name: string;
   location: string;
   hypemanProfileId: string;
+  hypemanName?: string;
+  imageUrl?: string;
 }
 
 export async function createEvent(hypemanUserId: string, eventData: EventData) {
@@ -19,8 +21,10 @@ export async function createEvent(hypemanUserId: string, eventData: EventData) {
     const event = {
       eventId,
       hypemanProfileId: hypemanUserId,
+      hypemanName: eventData.hypemanName || "Hypeman",
       name: eventData.name,
       location: eventData.location,
+      imageUrl: eventData.imageUrl || null,
       isActive: true,
       createdAt: new Date().toISOString(),
     };
@@ -53,6 +57,22 @@ export async function getEvent(eventId: string) {
 export async function getActiveEvents(limit: number = 20, offset: number = 0) {
   try {
     const db = getDb();
+    console.log("[getActiveEvents] Querying for active events");
+
+    // First, let's check if ANY events exist
+    const allEventsSnapshot = await db.collection("events").get();
+    console.log(
+      "[getActiveEvents] Total events in collection:",
+      allEventsSnapshot.docs.length
+    );
+    if (allEventsSnapshot.docs.length > 0) {
+      console.log(
+        "[getActiveEvents] First event data:",
+        allEventsSnapshot.docs[0].data()
+      );
+    }
+
+    // Now try the filtered query
     const snapshot = await db
       .collection("events")
       .where("isActive", "==", true)
@@ -61,7 +81,14 @@ export async function getActiveEvents(limit: number = 20, offset: number = 0) {
       .offset(offset)
       .get();
 
-    return snapshot.docs.map((doc: any) => doc.data());
+    console.log(
+      "[getActiveEvents] Query returned",
+      snapshot.docs.length,
+      "documents"
+    );
+    const events = snapshot.docs.map((doc: any) => doc.data());
+    console.log("[getActiveEvents] Mapped to", events.length, "events");
+    return events;
   } catch (error) {
     console.error("Get active events error:", error);
     throw new Error("Failed to get active events");

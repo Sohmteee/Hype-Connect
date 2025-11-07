@@ -32,12 +32,39 @@ function initializeFirebaseAdmin(): App {
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID
   );
 
+  // Debug: Check all env vars
+  console.log("[DEBUG] Environment variables check:");
+  console.log(
+    "  - NEXT_PUBLIC_FIREBASE_PROJECT_ID:",
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ? "✓" : "✗"
+  );
+  console.log(
+    "  - FIREBASE_ADMIN_CLIENT_EMAIL:",
+    process.env.FIREBASE_ADMIN_CLIENT_EMAIL ? "✓" : "✗"
+  );
+  console.log(
+    "  - FIREBASE_ADMIN_PRIVATE_KEY:",
+    process.env.FIREBASE_ADMIN_PRIVATE_KEY
+      ? `✓ (${process.env.FIREBASE_ADMIN_PRIVATE_KEY.length} chars)`
+      : "✗"
+  );
+
   let privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
 
-  // Handle both escaped and unescaped newlines
-  if (privateKey.includes("\\n")) {
-    privateKey = privateKey.replace(/\\n/g, "\n");
+  // CRITICAL: Convert escaped newlines to actual newlines
+  // This is necessary because env vars with multiline strings get stored with literal \n
+  if (privateKey.indexOf("\\n") !== -1) {
+    privateKey = privateKey.split("\\n").join("\n");
   }
+
+  console.log("Private key validation:");
+  console.log(
+    "  - Starts with 'BEGIN':",
+    privateKey.includes("BEGIN PRIVATE KEY")
+  );
+  console.log("  - Ends with 'END':", privateKey.includes("END PRIVATE KEY"));
+  console.log("  - Has newlines:", privateKey.split("\n").length > 1);
+  console.log("  - Total lines:", privateKey.split("\n").length);
 
   const serviceAccount = {
     projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
@@ -49,14 +76,28 @@ function initializeFirebaseAdmin(): App {
     projectId: serviceAccount.projectId,
     clientEmail: serviceAccount.clientEmail,
     privateKeyStart: serviceAccount.privateKey.substring(0, 50),
+    privateKeyEnd: serviceAccount.privateKey.substring(
+      serviceAccount.privateKey.length - 50
+    ),
   });
 
-  const app = initializeApp({
-    credential: cert(serviceAccount),
-  });
+  try {
+    console.log("[DEBUG] About to initialize app with cert()...");
+    const credentialObj = cert(serviceAccount);
+    console.log("[DEBUG] cert() succeeded, creating app...");
 
-  console.log("Firebase Admin initialized successfully");
-  return app;
+    const app = initializeApp({
+      credential: credentialObj,
+      projectId: serviceAccount.projectId,
+    });
+
+    console.log("Firebase Admin initialized successfully");
+    console.log("[DEBUG] App successfully initialized with name:", app.name);
+    return app;
+  } catch (error) {
+    console.error("Failed to initialize Firebase Admin:", error);
+    throw error;
+  }
 }
 
 export function getAdminApp(): App {
@@ -76,8 +117,44 @@ export function getAdminAuth(): Auth {
 
 export function getAdminFirestore(): Firestore {
   if (!cachedFirestore) {
+    console.log("[getAdminFirestore] Cache miss, initializing...");
     const app = getAdminApp();
+    console.log("[getAdminFirestore] Got app:", app.name);
+
     cachedFirestore = getFirestore(app);
+    console.log("[getAdminFirestore] Firestore instance created");
+    console.log("[getAdminFirestore] App name:", app.name);
+    console.log(
+      "[getAdminFirestore] Firestore type:",
+      cachedFirestore.constructor.name
+    );
+    console.log(
+      "[getAdminFirestore] Is Firestore instance?",
+      cachedFirestore instanceof require("firebase-admin/firestore").Firestore
+    );
+
+    // Attempt a test query to verify auth works
+    (async () => {
+      try {
+        console.log("[getAdminFirestore] Attempting test query...");
+        const result = await cachedFirestore!
+          .collection("users")
+          .limit(1)
+          .get();
+        console.log(
+          "[getAdminFirestore] Test query successful, docs count:",
+          result.docs.length
+        );
+      } catch (error: any) {
+        console.error("[getAdminFirestore] Test query failed:", {
+          message: error?.message,
+          code: error?.code,
+          details: error?.details,
+        });
+      }
+    })();
+  } else {
+    console.log("[getAdminFirestore] Using cached Firestore instance");
   }
   return cachedFirestore;
 }

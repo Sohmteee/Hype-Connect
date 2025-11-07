@@ -5,6 +5,13 @@ function getDb() {
   return getAdminFirestore();
 }
 
+/**
+ * Get earnings breakdown for a hypeman
+ * Returns: totalEarned (permanent record), withdrawableBalance, totalWithdrawn
+ *
+ * For backward compatibility, also includes earnings from confirmed/hyped hypes
+ * that haven't been accounted for in stats.totalEarned yet (from ended events)
+ */
 export async function getEarnings(userId: string, profileId: string) {
   try {
     const db = getDb();
@@ -21,15 +28,89 @@ export async function getEarnings(userId: string, profileId: string) {
       throw new Error("Profile not found");
     }
 
-    const earnings = profileDoc.data()?.stats?.earnings || 0;
-    return earnings;
+    const profileData = profileDoc.data();
+    let totalEarned = profileData?.stats?.totalEarned || 0;
+    const totalWithdrawn = profileData?.stats?.totalWithdrawn || 0;
+
+    console.log(`[getEarnings] userId: ${userId}, profileId: ${profileId}`);
+    console.log(
+      `[getEarnings] stored totalEarned: ${totalEarned}, totalWithdrawn: ${totalWithdrawn}`
+    );
+
+    // Also calculate earnings from confirmed/hyped hypes in ALL events (including ended)
+    // This ensures backward compatibility with existing confirmed hypes
+    const eventsSnapshot = await db
+      .collection("events")
+      .where("hypemanProfileId", "==", userId)
+      .get();
+
+    console.log(`[getEarnings] Found ${eventsSnapshot.docs.length} events`);
+
+    let additionalEarnings = 0;
+
+    for (const event of eventsSnapshot.docs) {
+      const eventData = event.data();
+      console.log(
+        `[getEarnings] Processing event: ${event.id}, isActive: ${eventData.isActive}`
+      );
+
+      // Get confirmed hypes
+      const confirmedSnapshot = await db
+        .collection("events")
+        .doc(event.id)
+        .collection("hypes")
+        .where("status", "==", "confirmed")
+        .get();
+
+      confirmedSnapshot.docs.forEach((doc: any) => {
+        const amount = doc.data().amount || 0;
+        console.log(`[getEarnings] Found confirmed hype: ₦${amount}`);
+        additionalEarnings += amount;
+      });
+
+      // Get hyped hypes
+      const hypedSnapshot = await db
+        .collection("events")
+        .doc(event.id)
+        .collection("hypes")
+        .where("status", "==", "hyped")
+        .get();
+
+      hypedSnapshot.docs.forEach((doc: any) => {
+        const amount = doc.data().amount || 0;
+        console.log(`[getEarnings] Found hyped hype: ₦${amount}`);
+        additionalEarnings += amount;
+      });
+    }
+
+    console.log(
+      `[getEarnings] additionalEarnings from hypes: ${additionalEarnings}`
+    );
+
+    // Use whichever is higher - either the stored totalEarned or calculated from hypes
+    // This ensures we never lose earnings and can recover from event deletions
+    totalEarned = Math.max(totalEarned, additionalEarnings);
+
+    console.log(`[getEarnings] final totalEarned: ${totalEarned}`);
+
+    const withdrawableBalance = totalEarned - totalWithdrawn;
+
+    return {
+      totalEarned,
+      withdrawableBalance: Math.max(0, withdrawableBalance),
+      totalWithdrawn,
+    };
   } catch (error) {
     console.error("Get earnings error:", error);
     throw new Error("Failed to get earnings");
   }
 }
 
-export async function updateEarnings(
+/**
+ * Add earned amount to hypeman's total earnings
+ * Called when a hype is confirmed or marked as hyped
+ */
+export async function addEarnings(
   userId: string,
   profileId: string,
   amount: number
@@ -47,26 +128,66 @@ export async function updateEarnings(
       throw new Error("Profile not found");
     }
 
-    const currentEarnings = profileDoc.data()?.stats?.earnings || 0;
-    const newEarnings = currentEarnings + amount;
+    const currentTotal = profileDoc.data()?.stats?.totalEarned || 0;
+    const newTotal = currentTotal + amount;
 
     await profileRef.update({
-      "stats.earnings": newEarnings,
+      "stats.totalEarned": newTotal,
     });
 
-    return newEarnings;
+    return newTotal;
   } catch (error) {
-    console.error("Update earnings error:", error);
-    throw new Error("Failed to update earnings");
+    console.error("Add earnings error:", error);
+    throw new Error("Failed to add earnings");
+  }
+}
+
+/**
+ * Deduct withdrawn amount from withdrawable balance
+ * Called when a withdrawal is processed
+ * Applies 20% platform fee
+ */
+export async function deductWithdrawnAmount(
+  userId: string,
+  profileId: string,
+  amount: number
+) {
+  try {
+    const db = getDb();
+    const profileRef = db
+      .collection("users")
+      .doc(userId)
+      .collection("profiles")
+      .doc(profileId);
+
+    const profileDoc = await profileRef.get();
+    if (!profileDoc.exists) {
+      throw new Error("Profile not found");
+    }
+
+    const totalWithdrawn = profileDoc.data()?.stats?.totalWithdrawn || 0;
+    const newTotalWithdrawn = totalWithdrawn + amount;
+
+    await profileRef.update({
+      "stats.totalWithdrawn": newTotalWithdrawn,
+    });
+
+    return newTotalWithdrawn;
+  } catch (error) {
+    console.error("Deduct withdrawn amount error:", error);
+    throw new Error("Failed to update withdrawal");
   }
 }
 
 interface WithdrawalData {
   amount: number;
   bankName: string;
+  bankCode: string;
   accountNumber: string;
   accountName: string;
 }
+
+const PLATFORM_FEE_PERCENTAGE = 0.2; // 20% platform fee
 
 export async function createWithdrawal(
   userId: string,
@@ -79,16 +200,23 @@ export async function createWithdrawal(
 
     // Check if user has sufficient balance
     const earnings = await getEarnings(userId, profileId);
-    if (earnings < withdrawalData.amount) {
+    if (earnings.withdrawableBalance < withdrawalData.amount) {
       throw new Error("Insufficient balance");
     }
+
+    // Calculate amounts: user gets 80%, platform takes 20%
+    const platformFee = withdrawalData.amount * PLATFORM_FEE_PERCENTAGE;
+    const userReceivesAmount = withdrawalData.amount - platformFee;
 
     const withdrawal = {
       withdrawalId,
       userId,
       profileId,
-      amount: withdrawalData.amount,
+      requestedAmount: withdrawalData.amount,
+      userReceivesAmount,
+      platformFee,
       bankName: withdrawalData.bankName,
+      bankCode: withdrawalData.bankCode,
       accountNumber: withdrawalData.accountNumber,
       accountName: withdrawalData.accountName,
       status: "pending", // pending -> processing -> completed/failed
@@ -99,8 +227,8 @@ export async function createWithdrawal(
 
     await db.collection("withdrawals").doc(withdrawalId).set(withdrawal);
 
-    // Deduct from earnings
-    await updateEarnings(userId, profileId, -withdrawalData.amount);
+    // Deduct from withdrawable balance (total amount including fee)
+    await deductWithdrawnAmount(userId, profileId, withdrawalData.amount);
 
     return withdrawal;
   } catch (error) {

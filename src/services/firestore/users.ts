@@ -139,16 +139,35 @@ export async function getProfile(userId: string, profileId: string) {
 export async function getUserProfiles(userId: string) {
   try {
     const db = getDb();
+    console.log("[getUserProfiles] Starting query for userId:", userId);
+    console.log("[getUserProfiles] Firestore instance:", db.constructor.name);
+    console.log("[getUserProfiles] About to execute Firestore query...");
+
     const snapshot = await db
       .collection("users")
       .doc(userId)
       .collection("profiles")
       .get();
 
-    return snapshot.docs.map((doc: any) => doc.data());
-  } catch (error) {
-    console.error("Get user profiles error:", error);
-    throw new Error("Failed to get user profiles");
+    console.log(
+      "[getUserProfiles] Query successful, found",
+      snapshot.docs.length,
+      "profiles"
+    );
+    // IMPORTANT: Include the document ID (profileId) in the returned data
+    return snapshot.docs.map((doc: any) => ({
+      profileId: doc.id, // Add the Firestore document ID
+      ...doc.data(),
+    }));
+  } catch (error: any) {
+    console.error("[getUserProfiles] Full error object:", {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name,
+      details: error?.details,
+      error: String(error),
+    });
+    throw error;
   }
 }
 

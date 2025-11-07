@@ -1,5 +1,5 @@
 /**
-* @fileoverview Firestore Security Rules for HypeConnect
+* Firestore Security Rules for HypeSonovea
 * 
 * Structure:
 * - /users/{userId}: User profile (auth + roles)
@@ -21,77 +21,53 @@ service cloud.firestore {
       return isAuth() && request.auth.uid == userId;
     }
 
-    function getUserRoles(userId) {
-      return get(/databases/$(database)/documents/users/$(userId)).data.roles;
-    }
-
-    function hasRole(userId, role) {
-      return role in getUserRoles(userId);
-    }
-
     // User Profile - Root document
     match /users/{userId} {
       allow create: if isUser(userId) && 
-      request.resource.data.uid == userId &&
       request.resource.data.email != null &&
-      request.resource.data.displayName != null &&
-      request.resource.data.roles is list &&
-      request.resource.data.roles.size() > 0;
+      request.resource.data.displayName != null;
 
-      allow read: if isUser(userId);
+      allow read: if isUser(userId) || isAuth();
       allow update: if isUser(userId);
       allow delete: if false; // Never delete user profiles
     }
 
     // User Profiles (hypeman/spotlight)
     match /users/{userId}/profiles/{profileId} {
-      allow create: if isUser(userId) &&
-      request.resource.data.type in ['hypeman', 'spotlight'] &&
-      request.resource.data.displayName != null;
-
-      allow read: if 
-      (resource.data.visibility == 'public') ||
-      (isUser(userId));
-
+      allow create: if isUser(userId);
+      allow read: if isUser(userId) || (resource.data.visibility == 'public') || isAuth();
       allow update: if isUser(userId);
       allow delete: if isUser(userId);
     }
 
-    // Events - Public read, hypeman create
+    // Events - Public read, authenticated users can create
     match /events/{eventId} {
-      allow create: if isAuth() &&
-      hasRole(request.auth.uid, 'hypeman') &&
-      request.resource.data.hypemanProfileId != null &&
-      request.resource.data.name != null &&
-      request.resource.data.isActive == true;
-
-      allow read: if true; // Events are public
-
-      allow update: if isAuth() &&
-      resource.data.hypemanProfileId == request.auth.uid;
-
-      allow delete: if isAuth() &&
-      resource.data.hypemanProfileId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.hypemanProfileId != null;
+      allow read: if resource.data.isActive == true || isAuth();
+      allow update: if isAuth() && resource.data.hypemanProfileId == request.auth.uid;
+      allow delete: if false;
 
       // Hype Messages under events
       match /hypes/{hypeId} {
         allow create: if isAuth() &&
         request.resource.data.userId == request.auth.uid &&
-        request.resource.data.eventId == eventId &&
-        request.resource.data.message != null &&
-        request.resource.data.amount > 0;
+        request.resource.data.eventId == eventId;
 
-        allow read: if 
-        (isAuth() && request.auth.uid == resource.data.userId) ||
-        (isAuth() && get(/databases/$(database)/documents/events/$(eventId)).data.hypemanProfileId == request.auth.uid);
+        allow read: if true; // Hypes are public
 
-        // Only hypeman can update hype status
-        allow update: if isAuth() &&
-        get(/databases/$(database)/documents/events/$(eventId)).data.hypemanProfileId == request.auth.uid &&
-        request.resource.data.status in ['new', 'hyped'];
+        // Only hypeman or creator can update hype status
+        allow update: if isAuth() && 
+        (get(/databases/$(database)/documents/events/$(eventId)).data.hypemanProfileId == request.auth.uid ||
+        resource.data.userId == request.auth.uid);
 
-        allow delete: if false; // Never delete hypes
+        allow delete: if isAuth() && resource.data.userId == request.auth.uid;
       }
+    }
+
+    // Leaderboard - Public read
+    match /leaderboard/{document=**} {
+      allow read: if true;
+      allow write: if false; // Write only through Cloud Functions
     }
   }
 }

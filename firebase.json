@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "hype-connect-40b04"
+  },
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

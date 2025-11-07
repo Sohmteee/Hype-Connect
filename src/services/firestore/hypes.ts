@@ -97,21 +97,81 @@ export async function updateHypeStatus(
 export async function getLeaderboard(eventId: string, limit: number = 20) {
   try {
     const db = getDb();
-    const snapshot = await db
+
+    // Get confirmed hypes
+    const confirmedSnapshot = await db
       .collection("events")
       .doc(eventId)
       .collection("hypes")
       .where("status", "==", "confirmed")
-      .orderBy("amount", "desc")
-      .limit(limit)
+      .orderBy("timestamp", "desc")
       .get();
 
-    return snapshot.docs.map((doc: any) => ({
-      senderName: doc.data().senderName,
-      amount: doc.data().amount,
-      message: doc.data().message,
-      timestamp: doc.data().timestamp,
-    }));
+    // Get hyped hypes (also paid, just acknowledged by hypeman)
+    const hypedSnapshot = await db
+      .collection("events")
+      .doc(eventId)
+      .collection("hypes")
+      .where("status", "==", "hyped")
+      .orderBy("timestamp", "desc")
+      .get();
+
+    // Group hypes by userId and sum amounts (use first senderName for display)
+    const tippers: {
+      [key: string]: {
+        amount: number;
+        senderName: string;
+        message: string;
+        timestamp: string;
+      };
+    } = {};
+
+    // Process confirmed hypes
+    confirmedSnapshot.docs.forEach((doc: any) => {
+      const data = doc.data();
+      const userId = data.userId || "anonymous";
+
+      if (!tippers[userId]) {
+        tippers[userId] = {
+          amount: 0,
+          senderName: data.senderName || "Anonymous",
+          message: data.message,
+          timestamp: data.timestamp,
+        };
+      }
+
+      tippers[userId].amount += data.amount;
+    });
+
+    // Process hyped hypes
+    hypedSnapshot.docs.forEach((doc: any) => {
+      const data = doc.data();
+      const userId = data.userId || "anonymous";
+
+      if (!tippers[userId]) {
+        tippers[userId] = {
+          amount: 0,
+          senderName: data.senderName || "Anonymous",
+          message: data.message,
+          timestamp: data.timestamp,
+        };
+      }
+
+      tippers[userId].amount += data.amount;
+    });
+
+    // Convert to array and sort by amount descending
+    const leaderboard = Object.entries(tippers)
+      .map(([userId, data]) => ({
+        senderName: data.senderName,
+        amount: data.amount,
+        message: data.message,
+        timestamp: data.timestamp,
+      }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, limit);
+
+    return leaderboard;
   } catch (error) {
     console.error("Get leaderboard error:", error);
     throw new Error("Failed to get leaderboard");

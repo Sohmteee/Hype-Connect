@@ -1,6 +1,6 @@
 import type { SVGProps } from 'react';
 
-export function HypeConnectLogo(props: SVGProps<SVGSVGElement>) {
+export function HypeSonoveaLogo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -42,21 +42,21 @@ export function HandMicIcon(props: SVGProps<SVGSVGElement>) {
 export function PaperCashIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
     >
-        <path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4" />
-        <path d="M2 9h20" />
-        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
-        <path d="M12 12h.01" />
-        <path d="M17 17c-1.5 1.5-3 1-5 0s-1.5-3.5 0-5 3.5-1.5 5 0 1.5 3.5 0 5z" />
-        <path d="M9.5 9.5c1.5 1.5 3 1 5 0s1.5-3.5 0-5-3.5-1.5-5 0-1.5 3.5 0 5z" />
+      <path d="M2 9V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4" />
+      <path d="M2 9h20" />
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+      <path d="M12 12h.01" />
+      <path d="M17 17c-1.5 1.5-3 1-5 0s-1.5-3.5 0-5 3.5-1.5 5 0 1.5 3.5 0 5z" />
+      <path d="M9.5 9.5c1.5 1.5 3 1 5 0s1.5-3.5 0-5-3.5-1.5-5 0-1.5 3.5 0 5z" />
     </svg>
   );
 }

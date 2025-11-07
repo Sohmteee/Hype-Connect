@@ -1,51 +1,30 @@
 "use client";
 
 import { firebaseConfig } from "@/firebase/config";
-import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, Firestore } from "firebase/firestore";
 
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let firestore: Firestore | undefined;
-
-export function initializeFirebase() {
-  // Return existing instances if already initialized
-  if (app && auth && firestore) {
-    return { firebaseApp: app, auth, firestore };
-  }
-
-  // Check if Firebase is already initialized
-  const existingApps = getApps();
-  if (existingApps.length > 0) {
-    app = existingApps[0];
-  } else {
-    // Initialize new Firebase app
-    app = initializeApp(firebaseConfig);
-  }
-
-  // Initialize Auth and Firestore
-  auth = getAuth(app);
-  firestore = getFirestore(app);
-
-  return { firebaseApp: app, auth, firestore };
+// Validate that Firebase config keys are present
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  throw new Error(
+    "Firebase config is not set or missing API key/project ID. Please check your .env.local file."
+  );
 }
 
-export function getFirebaseApp(): FirebaseApp {
-  if (!app) {
-    const { firebaseApp } = initializeFirebase();
-    return firebaseApp;
-  }
-  return app;
+let app: FirebaseApp;
+
+// Initialize Firebase only once
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApp(); // Get the already initialized app
 }
 
-export function getSdks(firebaseApp: FirebaseApp) {
-  return {
-    firebaseApp,
-    auth: getAuth(firebaseApp),
-    firestore: getFirestore(firebaseApp),
-  };
-}
+const auth: Auth = getAuth(app);
+const firestore: Firestore = getFirestore(app);
+
+export { app, auth, firestore };
 
 export * from "./provider";
 export * from "./firestore/use-collection";

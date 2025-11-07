@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { HypeConnectLogo } from '@/components/icons';
+import { HypeSonoveaLogo } from '@/components/icons';
 import { LayoutDashboard, Info, Mail, Video, User, Home, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -17,7 +17,7 @@ import { Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { ScrollArea } from '../ui/scroll-area';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
+import { auth } from '@/firebase';
 
 export function Header({ className }: { className?: string }) {
   const pathname = usePathname();
@@ -29,7 +29,6 @@ export function Header({ className }: { className?: string }) {
   // Check auth state
   useEffect(() => {
     try {
-      const { auth } = initializeFirebase();
       const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         setUser(currentUser);
         setLoading(false);
@@ -43,9 +42,10 @@ export function Header({ className }: { className?: string }) {
 
   const handleLogout = async () => {
     try {
-      const { auth } = initializeFirebase();
       await signOut(auth);
       setIsMenuOpen(false);
+      // Redirect to homepage after logout
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
     }
@@ -97,8 +97,8 @@ export function Header({ className }: { className?: string }) {
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2 mr-6">
-            <HypeConnectLogo className="h-10 w-10 neon-glow-primary" />
-            <span className={cn("font-bold text-xl font-headline", logoTextClasses)}>HypeConnect</span>
+            <HypeSonoveaLogo className="h-10 w-10 neon-glow-primary" />
+            <span className={cn("font-bold text-xl font-headline", logoTextClasses)}>HypeSonovea</span>
           </Link>
         </div>
         <nav className="hidden md:flex items-center gap-2">
@@ -161,8 +161,8 @@ export function Header({ className }: { className?: string }) {
             <SheetContent side="right" className="w-[80vw] max-w-sm flex flex-col p-0">
               <SheetHeader className="p-4 border-b">
                 <SheetTitle className="flex items-center gap-2">
-                  <HypeConnectLogo className="h-8 w-8 text-primary neon-glow-primary" />
-                  <span className="font-bold text-xl font-headline text-foreground">HypeConnect Menu</span>
+                  <HypeSonoveaLogo className="h-8 w-8 text-primary neon-glow-primary" />
+                  <span className="font-bold text-xl font-headline text-foreground">HypeSonovea Menu</span>
                 </SheetTitle>
               </SheetHeader>
               <ScrollArea className="flex-1">

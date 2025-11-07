@@ -49,6 +49,11 @@ export const createEventSchema = z.object({
     .string()
     .min(3, "Location must be at least 3 characters")
     .max(200),
+  imageUrl: z
+    .string()
+    .url("Please provide a valid image URL")
+    .optional()
+    .or(z.literal("")),
 });
 
 export const updateEventSchema = z.object({
@@ -85,6 +90,7 @@ export const withdrawalSchema = z.object({
     .int("Amount must be a whole number")
     .min(1000, "Minimum withdrawal is 1000 Naira"),
   bankName: z.string().min(2, "Bank name is required"),
+  bankCode: z.string().min(2, "Bank code is required"),
   accountNumber: z.string().regex(/^\d{10,}$/, "Invalid account number"),
   accountName: z.string().min(2, "Account name is required"),
 });

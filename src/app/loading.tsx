@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { HypeConnectLogo } from '@/components/icons';
+import { HypeSonoveaLogo } from '@/components/icons';
 
 const hypePhrases = [
   'Oshey! The party is starting...',
@@ -28,7 +28,7 @@ export default function Loading() {
     <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background">
       <div className="relative flex h-24 w-24 items-center justify-center">
         <div className="absolute h-full w-full animate-pulse rounded-full bg-primary/30" />
-        <HypeConnectLogo className="relative h-12 w-12 text-primary neon-glow-primary" />
+        <HypeSonoveaLogo className="relative h-12 w-12 text-primary neon-glow-primary" />
       </div>
       <p className="mt-4 animate-pulse text-lg font-semibold text-muted-foreground transition-all">
         {currentPhrase}

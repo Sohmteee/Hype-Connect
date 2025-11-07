@@ -28,11 +28,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { getEvents } from '@/lib/data';
 import { Header } from '@/components/layout/Header';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { Hypeman } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { getEventsAction } from '@/app/dashboard/actions';
 import { HandMicIcon, PaperCashIcon } from '@/components/icons';
 import { cn } from '@/lib/utils';
 import { CardDescription } from '@/components/ui/card';
@@ -71,7 +71,7 @@ function HowItWorks() {
       <div className="container px-4 md:px-6">
         <AnimateOnScroll>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-center mb-12 font-headline">
-            How HypeConnect Works
+            How HypeSonovea Works
           </h2>
         </AnimateOnScroll>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
@@ -81,9 +81,9 @@ function HowItWorks() {
                 className="bg-card/50 text-center flex flex-col items-center p-6 h-full"
               >
                 <AnimateOnScroll
-                    animation="flip"
-                    delay={index * 0.2}
-                    className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary"
+                  animation="flip"
+                  delay={index * 0.2}
+                  className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary"
                 >
                   {step.icon}
                 </AnimateOnScroll>
@@ -102,7 +102,7 @@ function HowItWorks() {
   );
 }
 
-function WhyHypeConnect() {
+function WhyHypeSonovea() {
   const features = [
     {
       icon: <ShieldCheck className="w-10 h-10 mb-4 text-accent" />,
@@ -129,17 +129,17 @@ function WhyHypeConnect() {
       <div className="container px-4 md:px-6">
         <AnimateOnScroll>
           <h2 className="text-3xl md:text-5xl font-bold tracking-tighter text-center mb-12 font-headline">
-            The HypeConnect Guarantee
+            The HypeSonovea Guarantee
           </h2>
         </AnimateOnScroll>
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {features.map((feature, index) => (
             <AnimateOnScroll key={index} delay={index * 0.1}>
               <Card className="bg-card text-center flex flex-col items-center p-6 h-full border-primary/20">
-                 <AnimateOnScroll
-                    animation="flip"
-                    delay={index * 0.2}
-                    className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary"
+                <AnimateOnScroll
+                  animation="flip"
+                  delay={index * 0.2}
+                  className="p-4 bg-primary/10 rounded-full mb-4 neon-glow-primary"
                 >
                   {feature.icon}
                 </AnimateOnScroll>
@@ -198,7 +198,7 @@ function FeaturedHypemen({ hypemen }: { hypemen: Hypeman[] }) {
 }
 
 const hypeHeadlines = [
-  'Welcome to HypeConnect',
+  'Welcome to HypeSonovea',
   'The Life of the Party',
   'Your Voice, Your Vibe',
   'E Choke! Send Your Hype',
@@ -207,12 +207,30 @@ const hypeHeadlines = [
 ];
 
 export default function Home() {
-  const allEvents = getEvents();
+  const [allEvents, setAllEvents] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [locationTerm, setLocationTerm] = React.useState('');
   const [filter, setFilter] = React.useState<'all' | 'live'>('live');
   const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-banner-1');
+
+  // Fetch real events from Firestore
+  React.useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const response = await getEventsAction(50, 0);
+        if (response.success) {
+          setAllEvents(response.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to load events:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadEvents();
+  }, []);
 
   React.useEffect(() => {
     let index = 0;
@@ -224,16 +242,25 @@ export default function Home() {
     return () => clearInterval(intervalId);
   }, []);
 
-  const featuredHypemen = Array.from(
-    new Map(allEvents.map((event) => [event.hypeman.id, event.hypeman])).values()
+  const featuredHypemen: Hypeman[] = Array.from(
+    new Map(
+      allEvents
+        .filter((event: any) => event.hypemanProfileId)
+        .map((event: any) => [
+          event.hypemanProfileId,
+          {
+            id: event.hypemanProfileId,
+            name: event.name,
+            avatarUrl: event.imageUrl || 'https://via.placeholder.com/150',
+          },
+        ])
+    ).values()
   );
 
-  const filteredEvents = allEvents.filter(
-    (event) =>
-      (event.clubName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.hypeman.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (event.location.toLowerCase().includes(locationTerm.toLowerCase())) &&
-      (filter === 'live' ? event.isActive : true)
+  const filteredEvents = allEvents.filter((event: any) =>
+    (event.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (event.location.toLowerCase().includes(locationTerm.toLowerCase())) &&
+    (filter === 'live' ? event.isActive : true)
   );
 
   return (
@@ -241,38 +268,38 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <section className="relative w-full h-[90vh] text-white overflow-hidden">
-         {heroImage && (
+          {heroImage && (
             <Image
-                src={heroImage.imageUrl}
-                alt={heroImage.description}
-                fill
-                className="object-cover"
-                data-ai-hint={heroImage.imageHint}
-                priority
+              src={heroImage.imageUrl}
+              alt={heroImage.description}
+              fill
+              className="object-cover"
+              data-ai-hint={heroImage.imageHint}
+              priority
             />
-         )}
+          )}
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 container h-full px-4 md:px-6">
             <div className="flex flex-col items-center justify-center h-full text-center space-y-6">
-                <AnimateOnScroll animation='flip'>
-                    <PartyPopper className="w-16 h-16 text-accent neon-glow" />
-                </AnimateOnScroll>
-                <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl font-headline glowing-text transition-all duration-500">
-                    {headline}
-                </h1>
-                <p className="max-w-[700px] text-neutral-200 md:text-xl">
-                    Join the party, find your event, and send some hype to your
-                    favorite MCs.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                    <Button asChild size="lg" className="glowing-accent-btn px-10 py-6 text-lg">
-                    <Link href="#events">Find Event</Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent px-10 py-6 text-lg">
-                    <Link href="/book-video-hype"><Video className="mr-2"/>Book a Video</Link>
-                    </Button>
-                </div>
+              <AnimateOnScroll animation='flip'>
+                <PartyPopper className="w-16 h-16 text-accent neon-glow" />
+              </AnimateOnScroll>
+              <h1 className="text-5xl font-bold tracking-tighter sm:text-6xl md:text-7xl lg:text-8xl font-headline glowing-text transition-all duration-500">
+                {headline}
+              </h1>
+              <p className="max-w-[700px] text-neutral-200 md:text-xl">
+                Join the party, find your event, and send some hype to your
+                favorite MCs.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button asChild size="lg" className="glowing-accent-btn px-10 py-6 text-lg">
+                  <Link href="#events">Find Event</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10 hover:text-accent px-10 py-6 text-lg">
+                  <Link href="/book-video-hype"><Video className="mr-2" />Book a Video</Link>
+                </Button>
               </div>
+            </div>
           </div>
         </section>
 
@@ -343,20 +370,26 @@ export default function Home() {
             </AnimateOnScroll>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 justify-center">
-              {filteredEvents.map((event, index) => (
-                <AnimateOnScroll key={event.id} delay={index * 0.05}>
+              {filteredEvents.map((event: any, index: number) => (
+                <AnimateOnScroll key={event.eventId || index} delay={index * 0.05}>
                   <Card
                     className="overflow-hidden border-2 border-transparent hover:border-primary transition-all duration-300 group bg-card h-full"
                   >
                     <CardHeader className="p-0 relative">
-                      <Image
-                        src={event.imageUrl}
-                        alt={event.clubName}
-                        width={600}
-                        height={400}
-                        className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105"
-                        data-ai-hint="nightclub party"
-                      />
+                      {event.imageUrl ? (
+                        <Image
+                          src={event.imageUrl}
+                          alt={event.name}
+                          width={600}
+                          height={400}
+                          className="object-cover w-full h-48 transition-transform duration-300 group-hover:scale-105"
+                          data-ai-hint="nightclub party"
+                        />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-accent/30 to-accent/10 flex items-center justify-center">
+                          <PartyPopper className="w-12 h-12 text-accent/50" />
+                        </div>
+                      )}
                       {event.isActive && (
                         <Badge
                           variant="destructive"
@@ -369,20 +402,20 @@ export default function Home() {
                     <CardContent className="p-4">
                       <CardTitle className="flex items-center gap-2 font-headline">
                         <Club className="w-5 h-5 text-accent" />
-                        {event.clubName}
+                        {event.name}
                       </CardTitle>
                       <CardDescription className="flex items-center gap-2 mt-2 text-muted-foreground">
                         <Mic className="w-4 h-4" />
-                        <span>{event.hypeman.name}</span>
+                        <span>{event.hypemanName || event.hypemanProfileId || 'Hypeman'}</span>
                       </CardDescription>
-                       <CardDescription className="flex items-center gap-2 mt-2 text-muted-foreground">
+                      <CardDescription className="flex items-center gap-2 mt-2 text-muted-foreground">
                         <MapPin className="w-4 h-4" />
                         <span>{event.location}</span>
                       </CardDescription>
                     </CardContent>
                     <CardFooter className="p-4">
                       <Button asChild className="w-full glowing-btn">
-                        <Link href={`/event/${event.id}`}>
+                        <Link href={`/event/${event.eventId}`}>
                           Join & Send Hype
                         </Link>
                       </Button>
@@ -390,18 +423,18 @@ export default function Home() {
                   </Card>
                 </AnimateOnScroll>
               ))}
-               {filteredEvents.length > 0 && filteredEvents.length < 4 && (
-                  <AnimateOnScroll>
-                    <Card className="overflow-hidden bg-card/80 border-2 border-dashed border-muted flex flex-col items-center justify-center text-center p-4 h-full">
-                        <Hourglass className="w-12 h-12 text-accent animate-bounce" />
-                        <CardHeader>
-                            <CardTitle className="font-headline text-xl">More Events Soon</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-muted-foreground">Check back later for more parties!</p>
-                        </CardContent>
-                    </Card>
-                  </AnimateOnScroll>
+              {filteredEvents.length > 0 && filteredEvents.length < 4 && (
+                <AnimateOnScroll>
+                  <Card className="overflow-hidden bg-card/80 border-2 border-dashed border-muted flex flex-col items-center justify-center text-center p-4 h-full">
+                    <Hourglass className="w-12 h-12 text-accent animate-bounce" />
+                    <CardHeader>
+                      <CardTitle className="font-headline text-xl">More Events Soon</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">Check back later for more parties!</p>
+                    </CardContent>
+                  </Card>
+                </AnimateOnScroll>
               )}
             </div>
             {filteredEvents.length === 0 && (
@@ -415,8 +448,8 @@ export default function Home() {
         </section>
 
         <HowItWorks />
-        
-        <WhyHypeConnect />
+
+        <WhyHypeSonovea />
 
         <FeaturedHypemen hypemen={featuredHypemen} />
       </main>
@@ -424,4 +457,3 @@ export default function Home() {
   );
 }
 
-    

@@ -1,100 +1,383 @@
+"use client";
 
-'use client';
-
-import * as React from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Header } from '@/components/layout/Header';
-import { Video, Calendar, Download, Mic, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "@/firebase";
+import Link from "next/link";
+import { ArrowLeft, Heart, MapPin, Loader2, Calendar, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Header } from "@/components/layout/Header";
+import { getProfilesAction, getSpotlightUserDataAction } from "@/app/dashboard/actions";
+import { formatDistanceToNow } from "date-fns";
 
-// Mock data, in a real app, this would come from Firestore
-const mockBookings = [
-    {
-        id: 'booking-1',
-        hypemanName: 'MC Gusto',
-        occasion: 'Birthday',
-        bookingDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-        status: 'completed',
-        videoUrl: '#', // Placeholder
-        imageUrl: 'https://images.unsplash.com/photo-1521116311953-abc4a2fa7d7d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYW4lMjBtaWNyb3Bob25lfGVufDB8fHx8MTc2MjIwMTQ0OHww&ixlib=rb-4.1.0&q=80&w=1080',
-    },
-    {
-        id: 'booking-2',
-        hypemanName: 'DJ Flex',
-        occasion: 'Shoutout',
-        bookingDate: new Date(),
-        status: 'pending',
-        videoUrl: null,
-        imageUrl: 'https://images.unsplash.com/photo-1631786083436-02d4b1c98207?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjb25jZXJ0JTIwZGp8ZW58MHx8fHwxNzYyMjAxNDQ4fDA&ixlib-rb-4.1.0&q=80&w=1080',
-    }
-];
+interface Hype {
+  id: string;
+  message: string;
+  amount: number;
+  eventId: string;
+  eventName: string;
+  hypeman: string;
+  timestamp: string;
+  status: "confirmed" | "pending" | "hyped";
+}
+
+interface Profile {
+  profileId: string;
+  type: string;
+  displayName: string;
+  publicBio?: string;
+  visibility: "public" | "private";
+  stats: {
+    hypesReceived: number;
+    earnings: number;
+  };
+}
 
 export default function UserDashboardPage() {
-  
+  const router = useRouter();
+  const [user] = useAuthState(auth);
+  const { toast } = useToast();
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [hypeHistory, setHypeHistory] = useState<Hype[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load user profile and hype history
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+
+    const loadUserData = async () => {
+      try {
+        // First, get all profiles to check what type of user they are
+        const profilesResponse = await getProfilesAction(user.uid);
+        const allProfiles = profilesResponse.data || [];
+
+        // Check if they have a spotlight profile
+        const spotlightProfile = allProfiles.find((p: any) => p.type === "spotlight");
+
+        if (!spotlightProfile) {
+          // If no spotlight profile, redirect to hypeman dashboard
+          router.push("/dashboard");
+          return;
+        }
+
+        // Get spotlight user data (profile + hype history)
+        const response = await getSpotlightUserDataAction(user.uid);
+        if (response.success && response.data) {
+          setProfile(response.data.profile);
+          setHypeHistory(response.data.hypes);
+        } else {
+          toast({
+            title: "No Spotlight Profile",
+            description: "Create a Spotlight profile to view your history",
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        console.error("Load user data error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load profile",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadUserData();
+  }, [user, router, toast]);
+
+  if (!user) {
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <>
+        <Header />
+        <div className="container py-12 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <>
+        <Header />
+        <main className="container py-12">
+          <div className="flex items-center gap-4 mb-8">
+            <Button variant="outline" asChild>
+              <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Link>
+            </Button>
+            <h1 className="text-2xl sm:text-3xl font-bold">My Profile</h1>
+          </div>
+
+          <Card className="text-center p-12">
+            <CardDescription>
+              You don't have a Spotlight profile yet. Spotlight profiles are for receiving hypes and tips.
+              {' '}
+              <Link href="/dashboard" className="text-primary hover:underline">
+                Go to your dashboard
+              </Link>
+              {' '}
+              to manage your Hypeman account and events.
+            </CardDescription>
+          </Card>
+        </main>
+      </>
+    );
+  }
+
+  const totalHyped = hypeHistory.filter((h) => h.status === "confirmed" || h.status === "hyped").length;
+  const totalEarned = hypeHistory
+    .filter((h) => h.status === "confirmed" || h.status === "hyped")
+    .reduce((sum, h) => sum + h.amount, 0);
+
   return (
     <>
       <Header />
-      <main className="container py-8 md:py-12">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tighter font-headline text-center sm:text-left">
-            Your Video Bookings
-          </h1>
+      <main className="container py-8 md:py-12 max-w-4xl">
+        <div className="flex items-center gap-4 mb-8">
           <Button variant="outline" asChild>
-              <Link href="/">
-                <ArrowLeft className="mr-2"/>
-                Go Home
-              </Link>
+            <Link href="/">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Link>
           </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold">My Profile</h1>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {mockBookings.map((booking) => (
-            <Card key={booking.id} className="overflow-hidden">
-                <Image src={booking.imageUrl} alt={booking.hypemanName} width={400} height={200} className="w-full h-48 object-cover" data-ai-hint="nightclub party" />
-              <CardHeader>
-                <div className='flex justify-between items-start'>
-                    <CardTitle>Video for {booking.occasion}</CardTitle>
-                    <Badge variant={booking.status === 'completed' ? 'default' : 'secondary'}>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </Badge>
-                </div>
-                <CardDescription className="flex items-center gap-2 pt-1"><Mic /> From {booking.hypemanName}</CardDescription>
-                <CardDescription className="flex items-center gap-2 pt-1"><Calendar /> Booked on {format(booking.bookingDate, 'PPP')}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {booking.status === 'pending' && <p className='text-sm text-muted-foreground'>Your video is being created. You'll be notified when it's ready!</p>}
-                 {booking.status === 'completed' && <p className='text-sm text-muted-foreground'>Your video is ready to be downloaded!</p>}
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full glowing-accent-btn" disabled={booking.status !== 'completed'}>
-                  <Download className="mr-2" />
-                  Download Video
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-            <Card className="border-dashed border-2 flex flex-col items-center justify-center text-center p-8">
-                <CardTitle>Want another video?</CardTitle>
-                <CardDescription className="my-4">Book a personalized video for any occasion.</CardDescription>
-                <Button asChild>
-                    <Link href="/book-video-hype">
-                        <Video className="mr-2" />
-                        Book a New Video
-                    </Link>
-                </Button>
-            </Card>
-        </div>
+        {/* Profile Header */}
+        <Card className="mb-6 glow-border">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-2xl sm:text-3xl">
+                  {profile.displayName}
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  {profile.publicBio || "Spotlight Member"}
+                </CardDescription>
+              </div>
+              <span className="text-xs font-semibold px-3 py-1 rounded-full bg-primary/20 text-primary">
+                {profile.visibility === "public" ? "🌐 Public" : "🔒 Private"}
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-accent">{totalHyped}</p>
+                <p className="text-xs text-muted-foreground mt-1">Hypes Received</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-400">
+                  ₦{totalEarned.toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Total Earned</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">
+                  {hypeHistory.length}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">Total Messages</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Hype History */}
+        <Tabs defaultValue="history" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="history">Hype History</TabsTrigger>
+            <TabsTrigger value="stats">Statistics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="history" className="space-y-4">
+            {hypeHistory.length > 0 ? (
+              hypeHistory.map((hype) => (
+                <Card key={hype.id}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base">{hype.message}</CardTitle>
+                        <CardDescription className="mt-1">
+                          From {hype.hypeman}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-green-400">
+                          ₦{hype.amount.toLocaleString()}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {hype.status === "hyped" ? "✓✓ Hyped" : hype.status === "confirmed" ? "✓ Confirmed" : "⏳ Pending"}
+                        </p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {hype.eventName}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {formatDistanceToNow(new Date(hype.timestamp), {
+                          addSuffix: true,
+                        })}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card className="text-center p-12">
+                <CardDescription>
+                  <Heart className="h-8 w-8 mx-auto mb-4 text-muted-foreground/50" />
+                  No hypes yet. Share your profile and get hypes from supporters!
+                </CardDescription>
+              </Card>
+            )}
+          </TabsContent>
+
+          <TabsContent value="stats" className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Total Hypes</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">{hypeHistory.length}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {totalHyped} confirmed
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Total Received</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold text-green-400">
+                    ₦{totalEarned.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    From confirmed hypes
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Average Hype</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">
+                    ₦{totalHyped > 0 ? Math.round(totalEarned / totalHyped).toLocaleString() : "0"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Per hype received
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Profile Visibility</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-3xl font-bold">
+                    {profile.visibility === "public" ? "🌐" : "🔒"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {profile.visibility === "public" ? "Discoverable" : "Private"}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Top Supporters */}
+            {hypeHistory.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Top Supporters</CardTitle>
+                  <CardDescription>
+                    People who have hyped you the most
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {hypeHistory
+                      .reduce(
+                        (acc, hype) => {
+                          const existing = acc.find(
+                            (h) => h.hypeman === hype.hypeman
+                          );
+                          if (existing) {
+                            existing.total += hype.amount;
+                            existing.count += 1;
+                          } else {
+                            acc.push({
+                              hypeman: hype.hypeman,
+                              total: hype.amount,
+                              count: 1,
+                            });
+                          }
+                          return acc;
+                        },
+                        [] as Array<{
+                          hypeman: string;
+                          total: number;
+                          count: number;
+                        }>
+                      )
+                      .sort((a, b) => b.total - a.total)
+                      .slice(0, 5)
+                      .map((supporter, index) => (
+                        <div
+                          key={supporter.hypeman}
+                          className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+                        >
+                          <div>
+                            <p className="font-semibold">
+                              {index + 1}. {supporter.hypeman}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {supporter.count} hype{supporter.count > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                          <p className="font-bold text-green-400">
+                            ₦{supporter.total.toLocaleString()}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </main>
     </>
   );

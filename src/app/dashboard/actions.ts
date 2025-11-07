@@ -6,6 +6,7 @@ import {
   updateProfileSchema,
   createHypeMessageSchema,
   withdrawalSchema,
+  createProfileSchema,
 } from "@/lib/schemas";
 import {
   createEvent,
@@ -30,8 +31,41 @@ import {
   getEarnings,
   createWithdrawal,
   getWithdrawalHistory,
+  updateWithdrawalStatus,
+  getWithdrawal,
 } from "@/services/firestore/earnings";
 import { PaystackService } from "@/services/payment/paystack";
+import { getAdminFirestore } from "@/services/firebase-admin";
+
+// ==================== Auth/Validation Actions ====================
+
+export async function validateHypemanAccessAction(userId: string) {
+  try {
+    // Check if user has a hypeman profile
+    const profiles = await getUserProfiles(userId);
+    console.log(
+      `[validateHypemanAccessAction] userId: ${userId}, profiles:`,
+      profiles
+    );
+
+    const isHypeman =
+      profiles &&
+      Array.isArray(profiles) &&
+      profiles.some((p: any) => p.type === "hypeman");
+
+    if (!isHypeman) {
+      return {
+        success: false,
+        error: "Only hypemen can access this dashboard",
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Validate hypeman error:", error);
+    return { success: false, error: "Failed to validate access" };
+  }
+}
 
 // ==================== AI Actions ====================
 
@@ -63,9 +97,16 @@ export async function getAiSuggestionsAction(
 export async function createEventAction(userId: string, formData: unknown) {
   try {
     const validatedData = createEventSchema.parse(formData);
+
+    // Fetch the hypeman's profile to get their name
+    const profiles = await getUserProfiles(userId);
+    const hypemanProfile = profiles?.[0]; // Get the first profile (usually the hypeman profile)
+    const hypemanName = hypemanProfile?.name || "Hypeman";
+
     const eventData = {
       ...validatedData,
       hypemanProfileId: userId,
+      hypemanName: hypemanName,
     };
     const event = await createEvent(userId, eventData);
     return { success: true, data: event };
@@ -80,7 +121,17 @@ export async function createEventAction(userId: string, formData: unknown) {
 
 export async function getEventsAction(limit: number = 20, offset: number = 0) {
   try {
+    console.log(
+      "[getEventsAction] Fetching active events, limit:",
+      limit,
+      "offset:",
+      offset
+    );
     const events = await getActiveEvents(limit, offset);
+    console.log("[getEventsAction] Found events:", events.length, "events");
+    if (events.length > 0) {
+      console.log("[getEventsAction] First event:", events[0]);
+    }
     return { success: true, data: events };
   } catch (error) {
     console.error("Get events error:", error);
@@ -136,8 +187,8 @@ export async function deactivateEventAction(userId: string, eventId: string) {
 
 export async function createProfileAction(userId: string, formData: unknown) {
   try {
-    const validatedData = createEventSchema.parse(formData);
-    const profile = await createProfile(userId, validatedData as any);
+    const validatedData = createProfileSchema.parse(formData);
+    const profile = await createProfile(userId, validatedData);
     return { success: true, data: profile };
   } catch (error) {
     console.error("Create profile error:", error);
@@ -212,6 +263,7 @@ export async function submitHypeAction(
         eventId,
         userId,
         message: validatedData.message,
+        senderName: validatedData.senderName,
       }
     );
 
@@ -219,24 +271,12 @@ export async function submitHypeAction(
       return { success: false, error: "Failed to initialize payment" };
     }
 
-    // Create hype message with pending status
-    const hypeMessage = await createHypeMessage(
-      eventId,
-      {
-        userId,
-        profileId: userId,
-        message: validatedData.message,
-        amount: validatedData.amount,
-        senderName: validatedData.senderName,
-      },
-      paymentInit.data.reference
-    );
-
+    // Return payment URL - client will create the hype message after payment confirmation
     return {
       success: true,
       data: {
-        hypeMessage,
         paymentUrl: paymentInit.data.authorization_url,
+        reference: paymentInit.data.reference,
       },
     };
   } catch (error) {
@@ -245,6 +285,49 @@ export async function submitHypeAction(
       return { success: false, error: error.message };
     }
     return { success: false, error: "Failed to submit hype" };
+  }
+}
+
+export async function submitHypeConfirmedAction(
+  userId: string,
+  eventId: string,
+  hypeData: any
+) {
+  try {
+    // Create the hype message with confirmed status
+    const hypeMessage = await createHypeMessage(
+      eventId,
+      {
+        userId,
+        profileId: hypeData.profileId || userId,
+        message: hypeData.message,
+        amount: hypeData.amount,
+        senderName: hypeData.senderName,
+      },
+      hypeData.paystackReference
+    );
+
+    // Update status to confirmed since payment was successful
+    const db = getAdminFirestore();
+    await db
+      .collection("events")
+      .doc(eventId)
+      .collection("hypes")
+      .doc(hypeMessage.messageId)
+      .update({ status: "confirmed" });
+
+    console.log(
+      "[submitHypeConfirmedAction] Created confirmed hype:",
+      hypeMessage.messageId
+    );
+
+    return { success: true, data: hypeMessage };
+  } catch (error) {
+    console.error("Submit confirmed hype error:", error);
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to create hype" };
   }
 }
 
@@ -302,8 +385,9 @@ export async function getLeaderboardAction(
 
 export async function getEarningsAction(userId: string, profileId: string) {
   try {
+    // Get earnings from the profile document (permanent record + withdrawable balance)
     const earnings = await getEarnings(userId, profileId);
-    return { success: true, data: { earnings } };
+    return { success: true, data: earnings };
   } catch (error) {
     console.error("Get earnings error:", error);
     return { success: false, error: "Failed to fetch earnings" };
@@ -339,5 +423,273 @@ export async function getWithdrawalHistoryAction(
   } catch (error) {
     console.error("Get withdrawal history error:", error);
     return { success: false, error: "Failed to fetch withdrawal history" };
+  }
+}
+
+export async function processWithdrawalAction(withdrawalId: string) {
+  try {
+    // Get the withdrawal details
+    const withdrawal = await getWithdrawal(withdrawalId);
+    if (!withdrawal) {
+      return { success: false, error: "Withdrawal not found" };
+    }
+
+    const {
+      userId,
+      profileId,
+      userReceivesAmount,
+      accountNumber,
+      accountName,
+      bankCode,
+    } = withdrawal;
+
+    // Step 1: Create transfer recipient
+    console.log(
+      `[processWithdrawalAction] Creating transfer recipient for ${accountName}`
+    );
+    const recipientResponse = await PaystackService.createTransferRecipient(
+      "nuban",
+      accountNumber,
+      bankCode,
+      accountName
+    );
+
+    if (!recipientResponse.status) {
+      throw new Error(
+        recipientResponse.message || "Failed to create recipient"
+      );
+    }
+
+    const recipientCode = recipientResponse.data.recipient_code;
+    console.log(
+      `[processWithdrawalAction] Recipient created: ${recipientCode}`
+    );
+
+    // Step 2: Update withdrawal status to processing
+    await updateWithdrawalStatus(withdrawalId, "processing");
+
+    // Step 3: Initiate the transfer
+    console.log(
+      `[processWithdrawalAction] Initiating transfer for ₦${userReceivesAmount} to ${recipientCode}`
+    );
+    const transferResponse = await PaystackService.initiateTransfer(
+      "balance",
+      recipientCode,
+      userReceivesAmount,
+      withdrawalId,
+      `Withdrawal for ${accountName}`
+    );
+
+    if (!transferResponse.status) {
+      throw new Error(
+        transferResponse.message || "Failed to initiate transfer"
+      );
+    }
+
+    const transferCode = transferResponse.data.transfer_code;
+    console.log(
+      `[processWithdrawalAction] Transfer initiated: ${transferCode}`
+    );
+
+    // Step 4: Update withdrawal with transfer code
+    await updateWithdrawalStatus(withdrawalId, "processing", transferCode);
+
+    return {
+      success: true,
+      data: {
+        withdrawalId,
+        transferCode,
+        status: "processing",
+        message: "Transfer initiated successfully",
+      },
+    };
+  } catch (error) {
+    console.error("Process withdrawal error:", error);
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to process withdrawal" };
+  }
+}
+
+// ==================== Dashboard Data Actions ====================
+
+export async function getHypemanDashboardDataAction(userId: string) {
+  try {
+    // First, get the user's hypeman profile ID
+    const profiles = await getUserProfiles(userId);
+    const hypemanProfile = profiles?.find((p: any) => p.type === "hypeman");
+
+    if (!hypemanProfile) {
+      return {
+        success: false,
+        error: "No hypeman profile found for this user",
+      };
+    }
+
+    console.log(
+      `[getHypemanDashboardDataAction] userId: ${userId}, profileId: ${hypemanProfile.profileId}`
+    );
+
+    // Get all events for this hypeman user (including ended/inactive events for earnings calculation)
+    const db = getAdminFirestore();
+    const allEventsSnapshot = await db
+      .collection("events")
+      .where("hypemanProfileId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    // Separate active and ended events
+    const events = allEventsSnapshot.docs
+      .filter((doc: any) => doc.data().isActive === true)
+      .map((doc: any) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+    console.log(
+      `[getHypemanDashboardDataAction] Found ${events.length} active events and ${allEventsSnapshot.docs.length} total events`
+    );
+
+    // Get all hypes for ALL user's events (both active and ended - for earnings calculation)
+    const allHypes: any[] = [];
+    for (const eventDoc of allEventsSnapshot.docs) {
+      const event = eventDoc.data();
+      // Get confirmed hypes
+      const confirmedSnapshot = await db
+        .collection("events")
+        .doc(eventDoc.id)
+        .collection("hypes")
+        .where("status", "==", "confirmed")
+        .orderBy("timestamp", "desc")
+        .get();
+
+      const confirmedHypes = confirmedSnapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        eventId: eventDoc.id,
+        ...doc.data(),
+      }));
+
+      // Get hyped hypes (marked as acknowledged by hypeman)
+      const hypedSnapshot = await db
+        .collection("events")
+        .doc(eventDoc.id)
+        .collection("hypes")
+        .where("status", "==", "hyped")
+        .orderBy("timestamp", "desc")
+        .get();
+
+      const hypedHypes = hypedSnapshot.docs.map((doc: any) => ({
+        id: doc.id,
+        eventId: eventDoc.id,
+        ...doc.data(),
+      }));
+
+      allHypes.push(...confirmedHypes, ...hypedHypes);
+    }
+
+    console.log(
+      `[getHypemanDashboardDataAction] Found ${allHypes.length} hypes total (from all events)`
+    );
+
+    // Calculate total earnings from confirmed and hyped hypes across ALL events
+    const totalEarnings = allHypes.reduce(
+      (sum, hype) => sum + (hype.amount || 0),
+      0
+    );
+
+    console.log(
+      `[getHypemanDashboardDataAction] Total earnings calculated: ₦${totalEarnings}`
+    );
+
+    return {
+      success: true,
+      data: {
+        events, // Only active events for display
+        hypes: allHypes, // All hypes for display (from all events)
+        totalEarnings, // Calculated from all events (active + ended)
+      },
+    };
+  } catch (error) {
+    console.error("Get dashboard data error:", error);
+    if (error instanceof Error) {
+      return { success: false, error: error.message };
+    }
+    return { success: false, error: "Failed to fetch dashboard data" };
+  }
+}
+
+export async function getHypesForEventAction(eventId: string) {
+  try {
+    const db = getAdminFirestore();
+    const hypesSnapshot = await db
+      .collection("events")
+      .doc(eventId)
+      .collection("hypes")
+      .orderBy("timestamp", "desc")
+      .get();
+
+    const hypes = hypesSnapshot.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return { success: true, data: hypes };
+  } catch (error) {
+    console.error("Get event hypes error:", error);
+    return { success: false, error: "Failed to fetch hypes" };
+  }
+}
+
+// ==================== Spotlight User Actions ====================
+
+export async function getSpotlightUserDataAction(userId: string) {
+  try {
+    // Get user profiles
+    const profiles = await getUserProfiles(userId);
+
+    if (!profiles || profiles.length === 0) {
+      return { success: false, error: "No profiles found" };
+    }
+
+    // Find spotlight profile
+    const spotlightProfile = profiles.find((p: any) => p.type === "spotlight");
+    if (!spotlightProfile) {
+      return { success: false, error: "No spotlight profile" };
+    }
+
+    // Get hype history using Admin Firestore
+    const db = getAdminFirestore();
+    const hypesSnapshot = await db
+      .collectionGroup("hypes")
+      .where("userId", "==", userId)
+      .orderBy("timestamp", "desc")
+      .limit(50)
+      .get();
+
+    const hypes = hypesSnapshot.docs.map((doc: any) => {
+      const data = doc.data();
+      return {
+        id: data.messageId || doc.id,
+        message: data.message,
+        amount: data.amount,
+        eventId: data.eventId,
+        eventName: data.eventName || "Event",
+        hypeman: data.senderName || "Anonymous",
+        timestamp: data.timestamp,
+        status: data.status,
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        profile: spotlightProfile,
+        hypes: hypes,
+      },
+    };
+  } catch (error) {
+    console.error("Get spotlight user data error:", error);
+    return { success: false, error: "Failed to load user data" };
   }
 }

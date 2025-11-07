@@ -4,16 +4,18 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
-import { initializeFirebase } from '@/firebase';
+import { auth, firestore } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [role, setRole] = useState<'hypeman' | 'spotlight'>('spotlight');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -48,9 +50,6 @@ export default function RegisterPage() {
         throw new Error('Password must be at least 6 characters');
       }
 
-      // Initialize Firebase
-      const { auth, firestore } = initializeFirebase();
-
       // Create user with Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -67,22 +66,23 @@ export default function RegisterPage() {
 
       // Create user document in Firestore
       await setDoc(doc(firestore, 'users', user.uid), {
+        uid: user.uid,
         email: formData.email,
         displayName: formData.displayName,
-        roles: ['spotlight'],
+        roles: [role],
         createdAt: new Date().toISOString(),
       });
 
       // Create default profile
       await setDoc(doc(firestore, 'users', user.uid, 'profiles', 'default'), {
-        type: 'spotlight',
+        type: role,
         displayName: formData.displayName,
         visibility: 'public',
         createdAt: new Date().toISOString(),
       });
 
-      // Success! Redirect to dashboard
-      router.push('/dashboard');
+      // Success! Redirect to homepage
+      router.push('/');
     } catch (err: any) {
       console.error('Registration error:', err);
 
@@ -107,7 +107,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md border-primary shadow-lg shadow-primary/20">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-accent">HypeConnect</CardTitle>
+          <CardTitle className="text-2xl text-accent">HypeSonovea</CardTitle>
           <CardDescription className="text-muted-foreground">Create your account</CardDescription>
         </CardHeader>
 
@@ -118,6 +118,26 @@ export default function RegisterPage() {
                 {error}
               </div>
             )}
+
+            <div>
+              <label className="text-sm font-medium text-foreground mb-3 block">What's your role?</label>
+              <RadioGroup value={role} onValueChange={(value) => setRole(value as 'hypeman' | 'spotlight')}>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-secondary/50">
+                  <RadioGroupItem value="hypeman" id="hypeman" />
+                  <label htmlFor="hypeman" className="flex-1 cursor-pointer">
+                    <div className="font-medium text-foreground">Hypeman</div>
+                    <div className="text-xs text-muted-foreground">Host events and earn from hype messages</div>
+                  </label>
+                </div>
+                <div className="flex items-center space-x-2 p-2 rounded hover:bg-secondary/50">
+                  <RadioGroupItem value="spotlight" id="spotlight" />
+                  <label htmlFor="spotlight" className="flex-1 cursor-pointer">
+                    <div className="font-medium text-foreground">Spotlight</div>
+                    <div className="text-xs text-muted-foreground">Send hype messages to events</div>
+                  </label>
+                </div>
+              </RadioGroup>
+            </div>
 
             <div>
               <label className="text-sm font-medium text-foreground">Display Name</label>

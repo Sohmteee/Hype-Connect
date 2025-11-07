@@ -1,4 +1,4 @@
-# **App Name**: HypeConnect
+# **App Name**: HypeSonovea
 
 ## Core Features:
 

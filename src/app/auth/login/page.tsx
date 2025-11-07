@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { initializeFirebase } from '@/firebase';
+import { auth } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,12 +41,11 @@ export default function LoginPage() {
         throw new Error('Please fill in all fields');
       }
 
-      // Initialize Firebase and sign in
-      const { auth } = initializeFirebase();
+      // No need to initialize, just use the imported auth instance
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
-      // Success! Redirect to dashboard
-      router.push('/dashboard');
+      // Success! Redirect to homepage
+      router.push('/');
     } catch (err: any) {
       console.error('Login error:', err);
 
@@ -71,7 +70,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <Card className="w-full max-w-md border-primary shadow-lg shadow-primary/20">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl text-accent">HypeConnect</CardTitle>
+          <CardTitle className="text-2xl text-accent">HypeSonovea</CardTitle>
           <CardDescription className="text-muted-foreground">Welcome back</CardDescription>
         </CardHeader>
 
