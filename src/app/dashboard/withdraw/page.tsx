@@ -383,21 +383,21 @@ export default function WithdrawPage() {
             </Card>
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Withdrawable Balance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-400">
-                  ₦{earnings.withdrawableBalance.toLocaleString()}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
                 <CardTitle className="text-sm">Total Withdrawn</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-purple-400">
                   ₦{earnings.totalWithdrawn.toLocaleString()}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm">Withdrawable Balance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-400">
+                  ₦{earnings.withdrawableBalance.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
