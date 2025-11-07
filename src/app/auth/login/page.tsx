@@ -8,15 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const registered = searchParams.get('registered');
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -32,35 +33,55 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       // Validate form
       if (!formData.email || !formData.password) {
-        throw new Error('Please fill in all fields');
+        toast({
+          title: 'Missing Information',
+          description: 'Please enter both email and password.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       // No need to initialize, just use the imported auth instance
       await signInWithEmailAndPassword(auth, formData.email, formData.password);
 
-      // Success! Redirect to homepage
-      router.push('/');
+      // Success! Show toast and redirect
+      toast({
+        title: 'Welcome!',
+        description: 'You have been logged in successfully.',
+        variant: 'default',
+      });
+      
+      setTimeout(() => {
+        router.push('/');
+      }, 500);
     } catch (err: any) {
       console.error('Login error:', err);
 
-      // Handle specific Firebase errors
+      // Handle specific Firebase errors with user-friendly messages
+      let userMessage = 'An error occurred. Please try again.';
+      
       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Invalid email or password');
+        userMessage = 'The email or password you entered is incorrect.';
       } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address');
+        userMessage = 'Please enter a valid email address.';
       } else if (err.code === 'auth/too-many-requests') {
-        setError('Too many attempts. Please try again later.');
+        userMessage = 'Too many login attempts. Please try again later.';
       } else if (err.code === 'auth/network-request-failed') {
-        setError('Network error. Please check your connection.');
-      } else {
-        setError(err.message || 'Login failed. Please try again.');
+        userMessage = 'Network connection failed. Please check your internet.';
+      } else if (err.code === 'auth/invalid-credential') {
+        userMessage = 'The email or password you entered is incorrect.';
       }
+      
+      toast({
+        title: 'Login Failed',
+        description: userMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -84,11 +105,6 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-destructive/20 border border-destructive rounded text-destructive text-sm">
-                {error}
-              </div>
-            )}
 
             <div>
               <label className="text-sm font-medium text-foreground">Email</label>

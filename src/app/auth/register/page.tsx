@@ -9,12 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [role, setRole] = useState<'hypeman' | 'spotlight'>('spotlight');
   const [formData, setFormData] = useState({
     email: '',
@@ -33,21 +34,35 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
       // Validate form
       if (!formData.email || !formData.password || !formData.displayName) {
-        throw new Error('Please fill in all fields');
+        toast({
+          title: 'Missing Information',
+          description: 'Please fill in all required fields.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       if (formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match');
+        toast({
+          title: 'Passwords Don\'t Match',
+          description: 'Please make sure your passwords match.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       if (formData.password.length < 6) {
-        throw new Error('Password must be at least 6 characters');
+        toast({
+          title: 'Password Too Short',
+          description: 'Your password must be at least 6 characters long.',
+          variant: 'destructive',
+        });
+        return;
       }
 
       // Create user with Firebase Auth
@@ -81,23 +96,37 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       });
 
-      // Success! Redirect to homepage
-      router.push('/');
+      // Success! Show toast and redirect
+      toast({
+        title: 'Account Created!',
+        description: 'Your account has been created successfully. Redirecting to login...',
+        variant: 'default',
+      });
+      
+      setTimeout(() => {
+        router.push('/auth/login?registered=true');
+      }, 500);
     } catch (err: any) {
       console.error('Registration error:', err);
 
-      // Handle specific Firebase errors
+      // Handle specific Firebase errors with user-friendly messages
+      let userMessage = 'An error occurred during registration. Please try again.';
+      
       if (err.code === 'auth/email-already-in-use') {
-        setError('Email already registered');
+        userMessage = 'This email is already registered. Please use a different email or try logging in.';
       } else if (err.code === 'auth/invalid-email') {
-        setError('Invalid email address');
+        userMessage = 'Please enter a valid email address.';
       } else if (err.code === 'auth/weak-password') {
-        setError('Password is too weak');
+        userMessage = 'Your password is too weak. Please choose a stronger password.';
       } else if (err.code === 'auth/network-request-failed') {
-        setError('Network error. Please check your connection.');
-      } else {
-        setError(err.message || 'Registration failed. Please try again.');
+        userMessage = 'Network connection failed. Please check your internet and try again.';
       }
+      
+      toast({
+        title: 'Registration Failed',
+        description: userMessage,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -113,11 +142,6 @@ export default function RegisterPage() {
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-destructive/20 border border-destructive rounded text-destructive text-sm">
-                {error}
-              </div>
-            )}
 
             <div>
               <label className="text-sm font-medium text-foreground mb-3 block">What's your role?</label>

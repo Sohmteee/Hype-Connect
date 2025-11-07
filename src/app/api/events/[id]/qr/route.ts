@@ -7,7 +7,7 @@ export async function GET(
 ) {
   try {
     const { id: eventId } = await params;
-    const appUrl = getBaseUrl();
+    const appUrl = getBaseUrl(request.headers);
     const eventUrl = `${appUrl}/event/${eventId}`;
 
     // Using external QRServer API instead

@@ -47,10 +47,11 @@ export class PaystackService {
   static async initializePayment(
     amount: number, // in Naira
     email: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, any>,
+    requestHeaders?: any
   ): Promise<PaystackInitializeResponse> {
     try {
-      const appUrl = getBaseUrl();
+      const appUrl = getBaseUrl(requestHeaders);
       const callbackUrl = `${appUrl}/payment/callback`;
 
       const response = await fetch(

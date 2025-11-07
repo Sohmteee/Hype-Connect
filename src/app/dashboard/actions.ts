@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { generateHypemanContentSuggestions } from "@/ai/flows/hypeman-content-suggestions";
 import {
   createEventSchema,
@@ -256,6 +257,9 @@ export async function submitHypeAction(
       return { success: false, error: "Email is required for payment" };
     }
 
+    // Get request headers for URL reconstruction
+    const requestHeaders = headers();
+
     const paymentInit = await PaystackService.initializePayment(
       validatedData.amount,
       email,
@@ -264,7 +268,8 @@ export async function submitHypeAction(
         userId,
         message: validatedData.message,
         senderName: validatedData.senderName,
-      }
+      },
+      requestHeaders
     );
 
     if (!paymentInit.status) {
