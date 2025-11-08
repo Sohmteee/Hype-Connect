@@ -93,8 +93,12 @@ export default function BookVideoHypePage() {
       try {
         const res = await fetch('/api/hypemen');
         const json = await res.json();
-        if (mounted && json?.success) {
+        if (mounted && json?.success && Array.isArray(json.data) && json.data.length > 0) {
           setHypemen(json.data || []);
+        } else if (mounted) {
+          // If API returns empty list, fall back to locally derived hypemen
+          setHypemen(fallbackHypemen);
+          console.warn('Hypemen API returned empty; using fallbackHypemen');
         }
       } catch (err) {
         console.error('Failed to fetch hypemen:', err);
@@ -173,7 +177,7 @@ export default function BookVideoHypePage() {
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="flex items-center gap-2"><User/> Your Name</FormLabel>
+                        <FormLabel className="flex items-center gap-2"><User /> Your Name</FormLabel>
                         <FormControl>
                           <Input placeholder="Your Name" {...field} />
                         </FormControl>
@@ -200,39 +204,39 @@ export default function BookVideoHypePage() {
                   />
                 </div>
                 <div className="grid sm:grid-cols-2 gap-6">
-                <div className="mb-4">
-                  <label className="text-sm font-medium text-foreground mb-2 block">Search Hypeman</label>
-                  <Input placeholder="Search hypeman by name" value={search} onChange={(e) => setSearch(e.target.value)} />
-                </div>
+                  <div className="mb-4">
+                    <label className="text-sm font-medium text-foreground mb-2 block">Search Hypeman</label>
+                    <Input placeholder="Search hypeman by name" value={search} onChange={(e) => setSearch(e.target.value)} />
+                  </div>
 
-                <div className="mb-6">
-                  <Card className="p-4 mb-4">
-                    <CardHeader>
-                      <CardTitle className="text-lg">Available Hypemen</CardTitle>
-                      <CardDescription className="text-sm">Choose from our verified hypemen.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {hypemen.length === 0 ? (
-                        <div className="py-4 text-center text-sm text-muted-foreground">No hypemen available yet.</div>
-                      ) : (
-                        <ul className="space-y-2">
-                          {(hypemen || fallbackHypemen)
-                            .filter(h => h.displayName.toLowerCase().includes(search.toLowerCase()))
-                            .map(h => (
-                              <li key={h.profileId} className="flex items-center justify-between">
-                                <div>
-                                  <div className="font-semibold">{h.displayName}</div>
-                                  <div className="text-sm text-muted-foreground">{h.publicBio}</div>
-                                </div>
-                              </li>
-                          ))}
-                        </ul>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                  <div className="mb-6">
+                    <Card className="p-4 mb-4">
+                      <CardHeader>
+                        <CardTitle className="text-lg">Available Hypemen</CardTitle>
+                        <CardDescription className="text-sm">Choose from our verified hypemen.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {hypemen.length === 0 ? (
+                          <div className="py-4 text-center text-sm text-muted-foreground">No hypemen available yet.</div>
+                        ) : (
+                          <ul className="space-y-2">
+                            {(hypemen || fallbackHypemen)
+                              .filter(h => h.displayName.toLowerCase().includes(search.toLowerCase()))
+                              .map(h => (
+                                <li key={h.profileId} className="flex items-center justify-between">
+                                  <div>
+                                    <div className="font-semibold">{h.displayName}</div>
+                                    <div className="text-sm text-muted-foreground">{h.publicBio}</div>
+                                  </div>
+                                </li>
+                              ))}
+                          </ul>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </div>
 
-                <FormField
+                  <FormField
                     control={form.control}
                     name="hypemanId"
                     render={({ field }) => (
@@ -293,7 +297,7 @@ export default function BookVideoHypePage() {
                   name="videoDetails"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2"><MessageSquare/> Video Details</FormLabel>
+                      <FormLabel className="flex items-center gap-2"><MessageSquare /> Video Details</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Tell the hypeman what to say. Include names, inside jokes, and any special requests!"
@@ -301,28 +305,28 @@ export default function BookVideoHypePage() {
                           rows={5}
                         />
                       </FormControl>
-                       <FormDescription>
+                      <FormDescription>
                         Maximum 500 characters.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="text-center p-4 rounded-lg bg-secondary">
-                    <p className="font-bold text-2xl text-primary">Total: ₦{bookingPrice.toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">You will be prompted for payment after submission.</p>
+                  <p className="font-bold text-2xl text-primary">Total: ₦{bookingPrice.toLocaleString()}</p>
+                  <p className="text-sm text-muted-foreground">You will be prompted for payment after submission.</p>
                 </div>
 
                 <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
-                   {isSubmitting ? (
-                        <>
-                            <Loader2 className="animate-spin mr-2" />
-                            Submitting Booking...
-                        </>
-                    ) : (
-                        'Book Video Hype'
-                    )}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2" />
+                      Submitting Booking...
+                    </>
+                  ) : (
+                    'Book Video Hype'
+                  )}
                 </Button>
               </form>
             </Form>
