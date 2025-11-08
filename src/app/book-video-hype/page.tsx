@@ -20,6 +20,7 @@ import { getEvents } from '@/lib/data';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   Card,
   CardContent,
@@ -223,13 +224,20 @@ export default function BookVideoHypePage() {
                             {(hypemen || fallbackHypemen)
                               .filter(h => h.displayName.toLowerCase().includes(search.toLowerCase()))
                               .map(h => (
-                                <li key={h.profileId} className="flex items-center justify-between">
-                                  <div>
-                                    <div className="font-semibold">{h.displayName}</div>
-                                    <div className="text-sm text-muted-foreground">{h.publicBio}</div>
+                                <li key={h.profileId} className="flex items-center justify-between gap-4">
+                                  <div className="flex items-center gap-3">
+                                    <Avatar className="h-10 w-10"> 
+                                      <AvatarFallback className="bg-muted text-muted-foreground">
+                                        {h.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                      <div className="font-semibold">{h.displayName}</div>
+                                      <div className="text-sm text-muted-foreground">{h.publicBio}</div>
+                                    </div>
                                   </div>
                                 </li>
-                              ))}
+                            ))}
                           </ul>
                         )}
                       </CardContent>
@@ -316,6 +324,9 @@ export default function BookVideoHypePage() {
                 <div className="text-center p-4 rounded-lg bg-secondary">
                   <p className="font-bold text-2xl text-primary">Total: ₦{bookingPrice.toLocaleString()}</p>
                   <p className="text-sm text-muted-foreground">You will be prompted for payment after submission.</p>
+                  <div className="mt-3 flex items-center justify-center text-xs text-muted-foreground gap-2">
+                    <span className="inline-block rounded px-2 py-1 bg-muted/10 text-muted-foreground">Payment powered by <strong className="ml-1">Lexora</strong></span>
+                  </div>
                 </div>
 
                 <Button type="submit" size="lg" className="w-full glowing-accent-btn" disabled={isSubmitting}>
