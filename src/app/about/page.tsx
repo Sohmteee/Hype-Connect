@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 const teamMembers = [
   { name: 'Damian Wose', role: 'Founder' },
   { name: 'Somtochukwu Ukaegbe', role: 'Head of Dev' },
-  { name: 'Colins', role: 'Head of Operations' },
+  { name: 'Collins Hephzibah', role: 'Head of Operations' },
 ];
 
 export default function AboutPage() {
