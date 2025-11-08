@@ -11,7 +11,6 @@ import {
   Loader2,
   Mail,
   MessageSquare,
-  Mic,
   User,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -72,6 +71,7 @@ export default function BookVideoHypePage() {
   const [user] = useAuthState(auth);
   const [hypemen, setHypemen] = React.useState<Array<any>>([]);
   const [search, setSearch] = React.useState('');
+  const [selectedHypeman, setSelectedHypeman] = React.useState<any | null>(null);
 
   const allEvents = getEvents();
   // fallback: derived hypemen from local events
@@ -212,6 +212,27 @@ export default function BookVideoHypePage() {
                   <div className="mb-4">
                     <label className="text-sm font-medium text-foreground mb-2 block">Search Hypeman</label>
                     <Input placeholder="Search hypeman by name" value={search} onChange={(e) => setSearch(e.target.value)} />
+                    {/* Selected hypeman preview — shows after user taps a hypeman on the right */}
+                    <div className="mt-4">
+                      {selectedHypeman ? (
+                        <Card className="p-3">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-12 w-12">
+                              <AvatarFallback className="bg-muted text-muted-foreground">
+                                {selectedHypeman?.displayName ? selectedHypeman.displayName.charAt(0).toUpperCase() : 'H'}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-semibold">{selectedHypeman?.displayName ?? 'Selected Hypeman'}</div>
+                              <div className="text-sm text-muted-foreground">{selectedHypeman?.publicBio ?? ''}</div>
+                              <div className="text-xs text-muted-foreground mt-1">Tap another hypeman on the right to change selection.</div>
+                            </div>
+                          </div>
+                        </Card>
+                      ) : (
+                        <div className="text-sm text-muted-foreground">Tap a hypeman on the right to select them for this booking.</div>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mb-6">
@@ -230,54 +251,44 @@ export default function BookVideoHypePage() {
                           <ul className="space-y-2">
                             {listToDisplay
                               .filter(h => ((h?.displayName ?? '').toLowerCase().includes((search ?? '').toLowerCase())))
-                              .map((h, i) => (
-                                <li key={h?.profileId || h?.id || `${h?.displayName ?? 'hypeman'}-${i}`} className="flex items-center justify-between gap-4">
-                                  <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10">
-                                      <AvatarFallback className="bg-muted text-muted-foreground">
-                                        {h?.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    <div>
-                                      <div className="font-semibold">{h?.displayName ?? 'Unknown Hypeman'}</div>
-                                      <div className="text-sm text-muted-foreground">{h?.publicBio ?? ''}</div>
-                                    </div>
-                                  </div>
-                                </li>
-                              ))}
+                              .map((h, i) => {
+                                const id = h?.profileId || h?.id || `${h?.displayName ?? 'hypeman'}-${i}`;
+                                const isSelected = selectedHypeman && (selectedHypeman.profileId === h.profileId || selectedHypeman.id === h.id);
+                                return (
+                                  <li key={id}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedHypeman(h);
+                                        // keep form.hypemanId in sync for submission/validation
+                                        form.setValue('hypemanId', h.profileId || h.id || id);
+                                      }}
+                                      className={`w-full text-left flex items-center justify-between gap-4 p-2 rounded ${isSelected ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/5'}`}
+                                    >
+                                      <div className="flex items-center gap-3">
+                                        <Avatar className="h-10 w-10">
+                                          <AvatarFallback className="bg-muted text-muted-foreground">
+                                            {h?.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <div>
+                                          <div className="font-semibold">{h?.displayName ?? 'Unknown Hypeman'}</div>
+                                          <div className="text-sm text-muted-foreground">{h?.publicBio ?? ''}</div>
+                                        </div>
+                                      </div>
+                                      <div className="text-sm text-muted-foreground">{isSelected ? 'Selected' : ''}</div>
+                                    </button>
+                                  </li>
+                                );
+                              })}
                           </ul>
                         </div>
                       </CardContent>
                     </Card>
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name="hypemanId"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2"><Mic /> Choose a Hypeman</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          defaultValue={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a hypeman" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {(hypemen.length > 0 ? hypemen : fallbackHypemen).map((hypeman: any) => (
-                              <SelectItem key={hypeman.profileId || hypeman.id} value={hypeman.profileId || hypeman.id}>
-                                {hypeman.displayName || hypeman.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* hypeman selection is handled by tapping the list on the right; selected item is synced into the form via form.setValue
+                      The old dropdown has been removed. */}
                   <FormField
                     control={form.control}
                     name="occasion"

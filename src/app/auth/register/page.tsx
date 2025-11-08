@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, firestore } from '@/firebase';
@@ -14,6 +14,7 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [role, setRole] = useState<'hypeman' | 'spotlight'>('spotlight');
@@ -104,7 +105,9 @@ export default function RegisterPage() {
       });
 
       setTimeout(() => {
-        router.push('/auth/login?registered=true');
+        const redirect = searchParams.get('redirect');
+        const target = `/auth/login?registered=true${redirect && redirect.startsWith('/') ? `&redirect=${encodeURIComponent(redirect)}` : ''}`;
+        router.push(target);
       }, 500);
     } catch (err: any) {
       console.error('Registration error:', err);
@@ -223,7 +226,7 @@ export default function RegisterPage() {
           <div className="mt-4 text-center">
             <p className="text-muted-foreground text-sm">
               Already have an account?{' '}
-              <Link href="/auth/login" className="text-accent hover:underline">
+              <Link href={`/auth/login${searchParams.get('redirect') ? `?redirect=${encodeURIComponent(searchParams.get('redirect')!)}` : ''}`} className="text-accent hover:underline">
                 Log in
               </Link>
             </p>

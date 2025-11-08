@@ -146,7 +146,7 @@ export default function LoginPage() {
           <div className="mt-4 text-center">
             <p className="text-muted-foreground text-sm">
               Don't have an account?{' '}
-              <Link href="/auth/register" className="text-accent hover:underline">
+              <Link href={`/auth/register${redirectTo ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`} className="text-accent hover:underline">
                 Sign up
               </Link>
             </p>
