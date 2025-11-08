@@ -109,6 +109,10 @@ export default function BookVideoHypePage() {
     return () => { mounted = false; };
   }, []);
 
+  // Decide which list to display (API or fallback)
+  const listToDisplay = (hypemen && hypemen.length > 0) ? hypemen : fallbackHypemen;
+  const hypemenCount = listToDisplay.length;
+
   function onSubmit(data: BookingFormValues) {
     if (!user) {
       toast({ title: 'Sign in required', description: 'Please log in to book a video.', variant: 'destructive' });
@@ -217,16 +221,19 @@ export default function BookVideoHypePage() {
                         <CardDescription className="text-sm">Choose from our verified hypemen.</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        {hypemen.length === 0 ? (
-                          <div className="py-4 text-center text-sm text-muted-foreground">No hypemen available yet.</div>
-                        ) : (
+                        <div className="mb-2 flex items-center justify-between">
+                          <div className="text-sm text-muted-foreground">Showing {hypemenCount} {hypemenCount === 1 ? 'hypeman' : 'hypemen'}</div>
+                          <div className="text-xs text-muted-foreground">Scroll to browse</div>
+                        </div>
+                        {/* Fixed-height scrollable list to keep layout stable */}
+                        <div className="max-h-56 overflow-y-auto pr-2">
                           <ul className="space-y-2">
-                            {(hypemen || fallbackHypemen)
+                            {listToDisplay
                               .filter(h => h.displayName.toLowerCase().includes(search.toLowerCase()))
                               .map(h => (
                                 <li key={h.profileId} className="flex items-center justify-between gap-4">
                                   <div className="flex items-center gap-3">
-                                    <Avatar className="h-10 w-10"> 
+                                    <Avatar className="h-10 w-10">
                                       <AvatarFallback className="bg-muted text-muted-foreground">
                                         {h.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
                                       </AvatarFallback>
@@ -237,9 +244,9 @@ export default function BookVideoHypePage() {
                                     </div>
                                   </div>
                                 </li>
-                            ))}
+                              ))}
                           </ul>
-                        )}
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
