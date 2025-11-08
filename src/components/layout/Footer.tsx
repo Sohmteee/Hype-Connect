@@ -33,7 +33,7 @@ export function Footer() {
             <ul className="space-y-2 text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:info@hypesonovea.com" className="hover:text-primary">info@hypesonovea.com</a>
+                <a href="mailto:info@hypesonovea.com" className="hover:text-primary">hype.sonovea@gmail.com</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
