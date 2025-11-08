@@ -37,7 +37,8 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>+234 812 345 6789</span>
+                {/* Display in Nigerian local format for readability, use E.164 for tel: href */}
+                <a href="tel:+2347089045502" aria-label="Call 0708 904 5502" className="hover:text-primary">0708 904 5502</a>
               </li>
             </ul>
           </div>

@@ -229,18 +229,18 @@ export default function BookVideoHypePage() {
                         <div className="max-h-56 overflow-y-auto pr-2">
                           <ul className="space-y-2">
                             {listToDisplay
-                              .filter(h => h.displayName.toLowerCase().includes(search.toLowerCase()))
-                              .map(h => (
-                                <li key={h.profileId} className="flex items-center justify-between gap-4">
+                              .filter(h => ((h?.displayName ?? '').toLowerCase().includes((search ?? '').toLowerCase())))
+                              .map((h, i) => (
+                                <li key={h?.profileId || h?.id || `${h?.displayName ?? 'hypeman'}-${i}`} className="flex items-center justify-between gap-4">
                                   <div className="flex items-center gap-3">
                                     <Avatar className="h-10 w-10">
                                       <AvatarFallback className="bg-muted text-muted-foreground">
-                                        {h.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
+                                        {h?.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
                                       </AvatarFallback>
                                     </Avatar>
                                     <div>
-                                      <div className="font-semibold">{h.displayName}</div>
-                                      <div className="text-sm text-muted-foreground">{h.publicBio}</div>
+                                      <div className="font-semibold">{h?.displayName ?? 'Unknown Hypeman'}</div>
+                                      <div className="text-sm text-muted-foreground">{h?.publicBio ?? ''}</div>
                                     </div>
                                   </div>
                                 </li>
