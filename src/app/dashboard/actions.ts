@@ -672,25 +672,206 @@ export async function getSpotlightUserDataAction(userId: string) {
       .limit(50)
       .get();
 
-    const hypes = hypesSnapshot.docs.map((doc: any) => {
+    // Map raw hype docs into objects; preserve eventId and any provided eventName
+    const rawHypes = hypesSnapshot.docs.map((doc: any) => {
       const data = doc.data();
       return {
         id: data.messageId || doc.id,
         message: data.message,
         amount: data.amount,
         eventId: data.eventId,
-        eventName: data.eventName || "Event",
+        eventName: data.eventName || null,
         hypeman: data.senderName || "Anonymous",
         timestamp: data.timestamp,
         status: data.status,
       };
     });
 
+    // If some hypes are missing an eventName but have an eventId, fetch those event names in batch
+    const missingEventIds = Array.from(
+      new Set(
+        rawHypes
+          .filter((h) => (!h.eventName || h.eventName === "Event") && h.eventId)
+          .map((h) => h.eventId)
+      )
+    );
+
+    const eventNamesMap: Record<string, string> = {};
+    if (missingEventIds.length > 0) {
+      const eventDocs = await Promise.all(
+        missingEventIds.map(async (eid) => {
+          try {
+            const doc = await db.collection("events").doc(eid).get();
+            return {
+              id: eid,
+              name: doc.exists
+                ? doc.data()?.title || doc.data()?.name || null
+                : null,
+            };
+          } catch (err) {
+            console.debug(
+              `[getSpotlightUserDataAction] failed to fetch event ${eid}:`,
+              err
+            );
+            return { id: eid, name: null };
+          }
+        })
+      );
+
+      eventDocs.forEach((e) => {
+        if (e.name) eventNamesMap[e.id] = e.name;
+      });
+    }
+
+    // Final hypes array: prefer explicit eventName, else use looked-up name, else fallback to 'Event'
+    const hypes = rawHypes.map((h) => ({
+      ...h,
+      eventName: h.eventName || eventNamesMap[h.eventId] || "Event",
+    }));
+
+    // Also compute events where this spotlight user has been a top supporter (i.e. they sent hypes)
+    // We don't store sender userId currently, so we attempt to match by senderName using a few likely candidate names.
+    const candidateNames = [
+      spotlightProfile.displayName,
+      // fallback to profileId so if senderName was stored as profile id we match it
+      spotlightProfile.profileId,
+    ].filter(Boolean) as string[];
+
+    const topSupportedEvents: Array<{
+      eventId: string;
+      eventName: string | null;
+      totalGiven: number;
+      count: number;
+    }> = [];
+
+    try {
+      if (candidateNames.length > 0) {
+        // collectionGroup queries can require special indexes (and may fail in some environments).
+        // To avoid that, iterate events and query each event's hypes subcollection using an 'in' filter
+        // for senderName (candidateNames). This reduces the need for collectionGroup indexes.
+        const allEventsSnapshot = await db.collection("events").get();
+        const totalsByEvent: Record<string, { total: number; count: number }> =
+          {};
+
+        for (const eventDoc of allEventsSnapshot.docs) {
+          const eid = eventDoc.id;
+          try {
+            // Use 'in' operator to match any candidate sender names (Firestore limits 'in' to 10 values)
+            const hypesQuery = db
+              .collection("events")
+              .doc(eid)
+              .collection("hypes")
+              .where("senderName", "in", candidateNames);
+
+            const hypesSnap = await hypesQuery.get();
+            if (hypesSnap.empty) continue;
+
+            hypesSnap.docs.forEach((doc: any) => {
+              const data = doc.data();
+              if (!totalsByEvent[eid])
+                totalsByEvent[eid] = { total: 0, count: 0 };
+              totalsByEvent[eid].total += data.amount || 0;
+              totalsByEvent[eid].count += 1;
+            });
+          } catch (err) {
+            // Ignore per-event query failures and continue
+            console.debug(
+              `[getSpotlightUserDataAction] per-event hypes query failed for ${eid}:`,
+              err
+            );
+            continue;
+          }
+        }
+
+        let supportedEventIds = Object.keys(totalsByEvent);
+        const supportedEventNamesMap: Record<string, string | null> = {};
+        if (supportedEventIds.length > 0) {
+          const fetched = await Promise.all(
+            supportedEventIds.map(async (eid) => {
+              try {
+                const doc = await db.collection("events").doc(eid).get();
+                return {
+                  id: eid,
+                  name: doc.exists
+                    ? doc.data()?.title || doc.data()?.name || null
+                    : null,
+                };
+              } catch (err) {
+                console.debug(
+                  `[getSpotlightUserDataAction] failed to fetch supported event ${eid}:`,
+                  err
+                );
+                return { id: eid, name: null };
+              }
+            })
+          );
+
+          fetched.forEach((e) => {
+            supportedEventNamesMap[e.id] = e.name;
+          });
+        }
+
+        // If we found nothing with the 'in' query, try a safer (but heavier) substring match fallback
+        if (supportedEventIds.length === 0 && spotlightProfile.displayName) {
+          try {
+            const displayLower = String(
+              spotlightProfile.displayName
+            ).toLowerCase();
+            for (const eventDoc of allEventsSnapshot.docs) {
+              const eid = eventDoc.id;
+              try {
+                const allHypesSnap = await db
+                  .collection("events")
+                  .doc(eid)
+                  .collection("hypes")
+                  .orderBy("timestamp", "desc")
+                  .limit(200)
+                  .get();
+
+                allHypesSnap.docs.forEach((doc: any) => {
+                  const data = doc.data();
+                  const sender = String(data.senderName || "").toLowerCase();
+                  if (!sender) return;
+                  if (sender.includes(displayLower)) {
+                    if (!totalsByEvent[eid])
+                      totalsByEvent[eid] = { total: 0, count: 0 };
+                    totalsByEvent[eid].total += data.amount || 0;
+                    totalsByEvent[eid].count += 1;
+                  }
+                });
+              } catch (err) {
+                continue;
+              }
+            }
+          } catch (err) {
+            console.debug("fallback substring scanning failed:", err);
+          }
+        }
+
+        supportedEventIds = Object.keys(totalsByEvent);
+
+        for (const eid of supportedEventIds) {
+          topSupportedEvents.push({
+            eventId: eid,
+            eventName: supportedEventNamesMap[eid] || "Event",
+            totalGiven: totalsByEvent[eid].total,
+            count: totalsByEvent[eid].count,
+          });
+        }
+
+        // sort desc by totalGiven
+        topSupportedEvents.sort((a, b) => b.totalGiven - a.totalGiven);
+      }
+    } catch (err) {
+      console.error("Error computing supported events:", err);
+    }
+
     return {
       success: true,
       data: {
         profile: spotlightProfile,
         hypes: hypes,
+        topSupportedEvents,
       },
     };
   } catch (error) {

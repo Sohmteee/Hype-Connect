@@ -250,8 +250,11 @@ export default function Home() {
           event.hypemanProfileId,
           {
             id: event.hypemanProfileId,
-            name: event.name,
-            avatarUrl: event.imageUrl || 'https://via.placeholder.com/150',
+            // Use the hypeman's name if available on the event, otherwise fall back to a generic label
+            name: event.hypemanName || event.hypeman?.displayName || 'Hypeman',
+            // Prefer a hypeman avatar if included, otherwise fall back to the event image or a placeholder
+            avatarUrl:
+              event.hypeman?.avatarUrl || event.hypemanAvatarUrl || event.imageUrl || 'https://via.placeholder.com/150',
           },
         ])
     ).values()

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { firestore } from '@/firebase';
 import { ScrollArea } from '../ui/scroll-area';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/firebase';
@@ -25,6 +27,8 @@ export function Header({ className }: { className?: string }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [userMeta, setUserMeta] = useState<any | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Check auth state
   useEffect(() => {
@@ -40,6 +44,41 @@ export function Header({ className }: { className?: string }) {
     }
   }, []);
 
+  // Fetch Firestore user doc to get roles / profile info for nav decisions
+  useEffect(() => {
+    let mounted = true;
+    async function loadUserMeta(uid: string) {
+      try {
+        const ref = doc(firestore, 'users', uid);
+        const snap = await getDoc(ref);
+        if (!mounted) return;
+        if (snap.exists()) {
+          setUserMeta(snap.data());
+        } else {
+          setUserMeta(null);
+        }
+      } catch (err) {
+        console.error('[Header] failed to load user meta', err);
+        setUserMeta(null);
+      }
+    }
+
+    if (user?.uid) {
+      loadUserMeta(user.uid);
+    } else {
+      setUserMeta(null);
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
+
+  // Track client mount to avoid hydration mismatches when using pathname and window
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -52,24 +91,29 @@ export function Header({ className }: { className?: string }) {
   };
 
 
-  const mainNavLinks = [
+  // If the logged-in user is a hypeman, we hide public "Book a Video" link
+  const isHypeman = Array.isArray(userMeta?.roles) && userMeta.roles.includes('hypeman');
+  const isSpotlight = Array.isArray(userMeta?.roles) && userMeta.roles.includes('spotlight');
+
+  const mainNavLinks: Array<{ href: string; label: string }> = [
     { href: "/#events", label: "Events" },
     { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
-    { href: "/book-video-hype", label: "Book a Video" },
+    // Only show public booking link when user is not a hypeman
+    ...(isHypeman ? [] : [{ href: "/book-video-hype", label: "Book a Video" }]),
   ];
 
   const mobileNavLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/#events", label: "Events", icon: Info },
     { href: "/about", label: "About", icon: Info },
-    { href: "/contact", label: "Contact", icon: Mail },
-    { href: "/book-video-hype", label: "Book a Video", icon: Video },
+    // only include booking for non-hypemen
+    ...(!isHypeman ? [{ href: "/book-video-hype", label: "Book a Video", icon: Video }] : []),
     ...(user ? [
-      { href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard },
-      { href: "/dashboard/user", label: "User Dashboard", icon: User },
+      // For hypemen, prefer the hypeman dashboard; for spotlight users show a profile link
+      ...(isHypeman ? [{ href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard }] : []),
+      ...(isSpotlight ? [{ href: "/profile", label: "Profile", icon: User }] : [{ href: "/dashboard/user", label: "User Dashboard", icon: User }]),
     ] : []),
-  ]
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -79,7 +123,8 @@ export function Header({ className }: { className?: string }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isHomePage = pathname === '/';
+  // Only evaluate pathname-dependent values after mount to keep server and client HTML consistent
+  const isHomePage = mounted ? pathname === '/' : false;
 
   const headerClasses = cn(
     "sticky top-0 z-50 w-full transition-all duration-300",
@@ -131,12 +176,26 @@ export function Header({ className }: { className?: string }) {
               </>
             ) : user ? (
               <>
+                {/* Primary dashboard link (role-aware label/target) */}
                 <Button
                   variant="ghost"
                   asChild
                   className={navItemClasses}
                 >
-                  <Link href="/dashboard/user">Dashboard</Link>
+                  {isHypeman ? (
+                    <Link href="/dashboard">Hypeman Dashboard</Link>
+                  ) : (
+                    <Link href="/dashboard/user">Dashboard</Link>
+                  )}
+                </Button>
+
+                {/* Always-visible Profile/settings link for quick access to account settings */}
+                <Button
+                  variant="ghost"
+                  asChild
+                  className={navItemClasses}
+                >
+                  <Link href="/profile">Profile</Link>
                 </Button>
                 <Button
                   variant="ghost"
@@ -206,14 +265,29 @@ export function Header({ className }: { className?: string }) {
                   </>
                 ) : user ? (
                   <>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      <Link href="/dashboard/user">Dashboard</Link>
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {isHypeman ? (
+                          <Link href="/dashboard">Hypeman Dashboard</Link>
+                        ) : (
+                          <Link href="/dashboard/user">Dashboard</Link>
+                        )}
+                      </Button>
+
+                      <Button
+                        asChild
+                        variant="ghost"
+                        className="w-full"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Link href="/profile">Profile</Link>
+                      </Button>
+                    </div>
                     <Button
                       variant="destructive"
                       className="w-full"

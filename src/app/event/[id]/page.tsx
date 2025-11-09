@@ -40,7 +40,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/Header';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { submitHypeAction, getLeaderboardAction, getEventAction } from '@/app/dashboard/actions';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -63,6 +63,8 @@ interface LeaderboardItem {
   amount: number;
   message: string;
   timestamp: string;
+  userId?: string;
+  avatarUrl?: string | null;
 }
 
 function Leaderboard({ items, isLoading }: { items: LeaderboardItem[], isLoading: boolean }) {
@@ -88,7 +90,11 @@ function Leaderboard({ items, isLoading }: { items: LeaderboardItem[], isLoading
               <li key={`${item.senderName}-${index}`} className="flex items-center gap-4">
                 <span className="font-bold text-lg text-muted-foreground">{index + 1}</span>
                 <Avatar>
-                  <AvatarFallback>{item.senderName.charAt(0).toUpperCase()}</AvatarFallback>
+                  {item.avatarUrl ? (
+                    <AvatarImage src={item.avatarUrl} alt={item.senderName} />
+                  ) : (
+                    <AvatarFallback>{item.senderName.charAt(0).toUpperCase()}</AvatarFallback>
+                  )}
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold truncate">{item.senderName}</p>

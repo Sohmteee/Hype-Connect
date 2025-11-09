@@ -9,9 +9,9 @@ import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const teamMembers = [
-  { name: 'Damian Wose', role: 'Founder' },
-  { name: 'Somtochukwu Ukaegbe', role: 'Head of Dev' },
-  { name: 'Collins Hephzibah', role: 'Head of Operations' },
+  { name: 'Damian Wose', role: 'Chief Executive Officer', image: '/damian.jpg' },
+  { name: 'Somtochukwu Ukaegbe', role: 'Chief Technology Officer', image: '/sohmtee.jpg' },
+  { name: 'Collins Hephzibah', role: 'Head of Operations', image: '/collins.jpg' },
 ];
 
 export default function AboutPage() {
@@ -57,6 +57,7 @@ export default function AboutPage() {
               {teamMembers.map((member) => (
                 <div key={member.name}>
                   <Avatar className="w-24 h-24 mx-auto mb-4 border-4 border-accent">
+                    <AvatarImage src={member.image} alt={member.name} className="object-cover" />
                     <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <h3 className="font-semibold text-lg">{member.name}</h3>

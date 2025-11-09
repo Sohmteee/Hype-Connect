@@ -50,6 +50,9 @@ export default function UserDashboardPage() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [hypeHistory, setHypeHistory] = useState<Hype[]>([]);
+  const [topSupportedEvents, setTopSupportedEvents] = useState<
+    Array<{ eventId: string; eventName: string | null; totalGiven: number; count: number }>
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load user profile and hype history
@@ -78,7 +81,8 @@ export default function UserDashboardPage() {
         const response = await getSpotlightUserDataAction(user.uid);
         if (response.success && response.data) {
           setProfile(response.data.profile);
-          setHypeHistory(response.data.hypes);
+          setHypeHistory(response.data.hypes || []);
+          setTopSupportedEvents(response.data.topSupportedEvents || []);
         } else {
           toast({
             title: "No Spotlight Profile",
@@ -128,7 +132,7 @@ export default function UserDashboardPage() {
                 Back
               </Link>
             </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold">My Profile</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
           </div>
 
           <Card className="text-center p-12">
@@ -152,6 +156,10 @@ export default function UserDashboardPage() {
     .filter((h) => h.status === "confirmed" || h.status === "hyped")
     .reduce((sum, h) => sum + h.amount, 0);
 
+  // For spotlight users we show totals for how much they HAVE GIVEN (supported)
+  const totalGiven = topSupportedEvents.reduce((sum, e) => sum + (e.totalGiven || 0), 0);
+  const totalSentCount = topSupportedEvents.reduce((sum, e) => sum + (e.count || 0), 0);
+
   return (
     <>
       <Header />
@@ -163,7 +171,7 @@ export default function UserDashboardPage() {
               Back
             </Link>
           </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold">My Profile</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
         </div>
 
         {/* Profile Header */}
@@ -185,22 +193,37 @@ export default function UserDashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-2xl font-bold text-accent">{totalHyped}</p>
-                <p className="text-xs text-muted-foreground mt-1">Hypes Received</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold text-green-400">
-                  ₦{totalEarned.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Total Earned</p>
-              </div>
-              <div className="text-center">
-                <p className="text-2xl font-bold">
-                  {hypeHistory.length}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">Total Messages</p>
-              </div>
+              {profile.type === "spotlight" ? (
+                <>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-accent">{totalSentCount}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Hypes Sent</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-400">₦{totalGiven.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Given</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold">{hypeHistory.length + totalSentCount}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Messages</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-accent">{totalHyped}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Hypes Received</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-green-400">₦{totalEarned.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Earned</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold">{hypeHistory.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Messages</p>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -220,9 +243,7 @@ export default function UserDashboardPage() {
                     <div className="flex items-start justify-between">
                       <div>
                         <CardTitle className="text-base">{hype.message}</CardTitle>
-                        <CardDescription className="mt-1">
-                          From {hype.hypeman}
-                        </CardDescription>
+                        {/* Sender is not shown per request */}
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-green-400">
@@ -276,7 +297,7 @@ export default function UserDashboardPage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Total Received</CardTitle>
+                  <CardTitle className="text-base">Total Given</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-3xl font-bold text-green-400">
@@ -321,57 +342,35 @@ export default function UserDashboardPage() {
             {hypeHistory.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Top Supporters</CardTitle>
+                  <CardTitle>Top Supported Events</CardTitle>
                   <CardDescription>
-                    People who have hyped you the most
+                    Events you supported the most (total given)
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {hypeHistory
-                      .reduce(
-                        (acc, hype) => {
-                          const existing = acc.find(
-                            (h) => h.hypeman === hype.hypeman
-                          );
-                          if (existing) {
-                            existing.total += hype.amount;
-                            existing.count += 1;
-                          } else {
-                            acc.push({
-                              hypeman: hype.hypeman,
-                              total: hype.amount,
-                              count: 1,
-                            });
-                          }
-                          return acc;
-                        },
-                        [] as Array<{
-                          hypeman: string;
-                          total: number;
-                          count: number;
-                        }>
-                      )
-                      .sort((a, b) => b.total - a.total)
-                      .slice(0, 5)
-                      .map((supporter, index) => (
+                    {topSupportedEvents.length > 0 ? (
+                      topSupportedEvents.slice(0, 5).map((evt, idx) => (
                         <div
-                          key={supporter.hypeman}
+                          key={evt.eventId}
                           className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
                         >
                           <div>
                             <p className="font-semibold">
-                              {index + 1}. {supporter.hypeman}
+                              {idx + 1}. {evt.eventName || evt.eventId}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {supporter.count} hype{supporter.count > 1 ? "s" : ""}
+                              {evt.count} support{evt.count > 1 ? "s" : ""}
                             </p>
                           </div>
                           <p className="font-bold text-green-400">
-                            ₦{supporter.total.toLocaleString()}
+                            ₦{evt.totalGiven.toLocaleString()}
                           </p>
                         </div>
-                      ))}
+                      ))
+                    ) : (
+                      <div className="text-sm text-muted-foreground">You haven't supported any events yet.</div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

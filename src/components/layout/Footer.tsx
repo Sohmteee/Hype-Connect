@@ -19,21 +19,11 @@ export function Footer() {
             </p>
           </div>
           <div className="space-y-2">
-            <h4 className="font-semibold text-foreground">Quick Links</h4>
-            <ul className="space-y-1">
-              <li><Link href="/#events" className="text-muted-foreground hover:text-primary">Live Events</Link></li>
-              <li><Link href="/book-video-hype" className="text-muted-foreground hover:text-primary">Book a Video</Link></li>
-              <li><Link href="/about" className="text-muted-foreground hover:text-primary">About Us</Link></li>
-              <li><Link href="/contact" className="text-muted-foreground hover:text-primary">Contact</Link></li>
-              <li><Link href="/signup" className="text-muted-foreground hover:text-primary">For Creators</Link></li>
-            </ul>
-          </div>
-          <div className="space-y-2">
             <h4 className="font-semibold text-foreground">Contact</h4>
             <ul className="space-y-2 text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:info@hypesonovea.com" className="hover:text-primary">hype.sonovea@gmail.com</a>
+                <a href="mailto:hype.sonovea@gmail.com" className="hover:text-primary">hype.sonovea@gmail.com</a>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />

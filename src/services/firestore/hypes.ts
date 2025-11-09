@@ -160,14 +160,43 @@ export async function getLeaderboard(eventId: string, limit: number = 20) {
       tippers[userId].amount += data.amount;
     });
 
-    // Convert to array and sort by amount descending
-    const leaderboard = Object.entries(tippers)
-      .map(([userId, data]) => ({
+    // Convert to array and sort by amount descending. Attempt to enrich with user profile (avatar) when available.
+    const leaderboardEntries: any[] = Object.entries(tippers).map(
+      ([userId, data]) => ({
+        userId,
         senderName: data.senderName,
         amount: data.amount,
         message: data.message,
         timestamp: data.timestamp,
-      }))
+      })
+    );
+
+    // Try to fetch user docs for the userIds we have, to include avatar/photoURL if present.
+    for (const entry of leaderboardEntries) {
+      try {
+        if (entry.userId && entry.userId !== "anonymous") {
+          const userDoc = await db.collection("users").doc(entry.userId).get();
+          if (userDoc.exists) {
+            const u = userDoc.data() as any;
+            // prefer profile photoURL if present on users doc
+            entry.avatarUrl = u?.photoURL || u?.avatarUrl || null;
+            // prefer displayName from users doc over senderName if available
+            if (u?.displayName) {
+              entry.senderName = u.displayName;
+            }
+          }
+        }
+      } catch (err) {
+        console.debug(
+          "Failed to enrich leaderboard entry for",
+          entry.userId,
+          err
+        );
+        entry.avatarUrl = null;
+      }
+    }
+
+    const leaderboard = leaderboardEntries
       .sort((a, b) => b.amount - a.amount)
       .slice(0, limit);
 
