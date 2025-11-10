@@ -32,6 +32,8 @@ export function CreateEventDialog({ onEventCreated }: CreateEventDialogProps) {
     name: "",
     location: "",
     imageUrl: "",
+    startDateTime: "",
+    endDateTime: "",
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,13 +82,36 @@ export function CreateEventDialog({ onEventCreated }: CreateEventDialogProps) {
       return;
     }
 
+    if (!formData.startDateTime) {
+      toast({
+        title: "Error",
+        description: "Please select a start date/time",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const response = await createEventAction(user.uid, formData);
+      // Convert datetime-local to ISO string
+      const startDateTime = formData.startDateTime
+        ? new Date(formData.startDateTime).toISOString()
+        : "";
+      const endDateTime = formData.endDateTime
+        ? new Date(formData.endDateTime).toISOString()
+        : "";
+
+      const submitData = {
+        ...formData,
+        startDateTime,
+        endDateTime,
+      };
+
+      const response = await createEventAction(user.uid, submitData);
 
       if (response.success) {
         onEventCreated(response.data);
-        setFormData({ name: "", location: "", imageUrl: "" });
+        setFormData({ name: "", location: "", imageUrl: "", startDateTime: "", endDateTime: "" });
         setImagePreview(null);
         setOpen(false);
         toast({
@@ -170,6 +195,31 @@ export function CreateEventDialog({ onEventCreated }: CreateEventDialogProps) {
                 />
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="startDateTime">Event Start Date & Time</Label>
+            <Input
+              id="startDateTime"
+              name="startDateTime"
+              type="datetime-local"
+              value={formData.startDateTime}
+              onChange={handleInputChange}
+              disabled={isLoading}
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="endDateTime">Event End Date & Time (Optional)</Label>
+            <Input
+              id="endDateTime"
+              name="endDateTime"
+              type="datetime-local"
+              value={formData.endDateTime}
+              onChange={handleInputChange}
+              disabled={isLoading}
+            />
           </div>
 
           <DialogFooter>

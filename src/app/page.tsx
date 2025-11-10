@@ -34,7 +34,7 @@ import type { Hypeman } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { getEventsAction } from '@/app/dashboard/actions';
 import { HandMicIcon, PaperCashIcon } from '@/components/icons';
-import { cn } from '@/lib/utils';
+import { cn, isEventLive, formatEventDateTimeRange } from '@/lib/utils';
 import { CardDescription } from '@/components/ui/card';
 import { AnimateOnScroll } from '@/components/AnimateOnScroll';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -286,7 +286,7 @@ export default function Home() {
   const filteredEvents = allEvents.filter((event: any) =>
     (event.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
     (event.location.toLowerCase().includes(locationTerm.toLowerCase())) &&
-    (filter === 'live' ? event.isActive : true)
+    (filter === 'live' ? isEventLive(event.startDateTime, event.endDateTime) : true)
   );
 
   return (
@@ -416,7 +416,7 @@ export default function Home() {
                           <PartyPopper className="w-12 h-12 text-accent/50" />
                         </div>
                       )}
-                      {event.isActive && (
+                      {isEventLive(event.startDateTime, event.endDateTime) && (
                         <Badge
                           variant="destructive"
                           className="absolute top-2 right-2 glowing-text"
@@ -437,6 +437,10 @@ export default function Home() {
                       <CardDescription className="flex items-center gap-2 mt-2 text-muted-foreground">
                         <MapPin className="w-4 h-4" />
                         <span>{event.location}</span>
+                      </CardDescription>
+                      <CardDescription className="flex items-center gap-2 mt-3 text-sm text-accent">
+                        <Hourglass className="w-4 h-4" />
+                        <span>{formatEventDateTimeRange(event.startDateTime, event.endDateTime)}</span>
                       </CardDescription>
                     </CardContent>
                     <CardFooter className="p-4">

@@ -11,6 +11,8 @@ interface EventData {
   hypemanProfileId: string;
   hypemanName?: string;
   imageUrl?: string;
+  startDateTime: string;
+  endDateTime?: string;
 }
 
 export async function createEvent(hypemanUserId: string, eventData: EventData) {
@@ -25,6 +27,8 @@ export async function createEvent(hypemanUserId: string, eventData: EventData) {
       name: eventData.name,
       location: eventData.location,
       imageUrl: eventData.imageUrl || null,
+      startDateTime: eventData.startDateTime,
+      endDateTime: eventData.endDateTime || null,
       isActive: true,
       createdAt: new Date().toISOString(),
     };

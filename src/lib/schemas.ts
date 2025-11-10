@@ -54,6 +54,13 @@ export const createEventSchema = z.object({
     .url("Please provide a valid image URL")
     .optional()
     .or(z.literal("")),
+  startDateTime: z
+    .string()
+    .datetime("Start date/time must be a valid ISO datetime"),
+  endDateTime: z
+    .string()
+    .datetime("End date/time must be a valid ISO datetime")
+    .optional(),
 });
 
 export const updateEventSchema = z.object({

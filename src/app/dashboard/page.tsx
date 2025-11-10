@@ -24,6 +24,7 @@ import {
   MapPin,
   PowerOff,
   Sparkles,
+  Hourglass,
 } from "lucide-react";
 
 import {
@@ -52,6 +53,7 @@ import { Header } from "@/components/layout/Header";
 import { CreateEventDialog } from "@/components/dialogs/CreateEventDialog";
 import { BookingDetailsDialog } from "@/components/dialogs/BookingDetailsDialog";
 import Wallet from "@/components/Wallet";
+import { isEventLive, formatEventDateTimeRange } from "@/lib/utils";
 
 interface Hype {
   id: string;
@@ -72,6 +74,8 @@ interface Event {
   isActive: boolean;
   createdAt: string;
   imageUrl?: string;
+  startDateTime: string;
+  endDateTime?: string;
 }
 
 interface Booking {
@@ -545,7 +549,7 @@ export default function DashboardPage() {
                 {events.length > 0 ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {events.map((event) => (
-                      <Card key={event.id}>
+                      <Card key={event.id} className="relative">
                         {event.imageUrl && (
                           <img
                             src={event.imageUrl}
@@ -553,11 +557,23 @@ export default function DashboardPage() {
                             className="rounded-t-lg object-cover h-32 w-full"
                           />
                         )}
+                        {isEventLive(event.startDateTime, event.endDateTime) && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute top-2 right-2"
+                          >
+                            LIVE
+                          </Badge>
+                        )}
                         <CardHeader>
                           <CardTitle className="line-clamp-2">{event.name}</CardTitle>
                           <CardDescription className="flex items-center gap-2 pt-1">
                             <MapPin className="h-4 w-4 shrink-0" />
                             <span className="line-clamp-1">{event.location}</span>
+                          </CardDescription>
+                          <CardDescription className="flex items-center gap-2 pt-1 text-accent">
+                            <Hourglass className="h-4 w-4 shrink-0" />
+                            <span className="text-xs">{formatEventDateTimeRange(event.startDateTime, event.endDateTime)}</span>
                           </CardDescription>
                         </CardHeader>
                         <CardFooter>
