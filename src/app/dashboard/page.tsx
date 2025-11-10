@@ -3,9 +3,18 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase";
+import { auth, firestore } from "@/firebase";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
+import {
+  collectionGroup,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  collection,
+} from "firebase/firestore";
 import {
   ArrowLeft,
   Check,
@@ -41,6 +50,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
 import { CreateEventDialog } from "@/components/dialogs/CreateEventDialog";
+import { BookingDetailsDialog } from "@/components/dialogs/BookingDetailsDialog";
 import Wallet from "@/components/Wallet";
 
 interface Hype {
@@ -162,6 +172,8 @@ export default function DashboardPage() {
   const [isEndingEvent, setIsEndingEvent] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
 
   // Initial page load - validate access and fetch data
   useEffect(() => {
@@ -236,6 +248,132 @@ export default function DashboardPage() {
 
     initializePage();
   }, [user, loading, router, toast]);
+
+  // Real-time listeners for hypes, bookings, and wallet updates
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribers: Array<() => void> = [];
+
+    // Real-time hypes listener - Query hypes by eventId instead of collectionGroup
+    try {
+      // First, get all events for this hypeman, then subscribe to their hypes
+      const eventsQuery = query(
+        collection(firestore, "events"),
+        where("hypemanUserId", "==", user.uid)
+      );
+
+      const unsubscribeEvents = onSnapshot(
+        eventsQuery,
+        (eventSnapshot) => {
+          // For each event, subscribe to its hypes
+          const hypesUnsubscribers: Array<() => void> = [];
+          const allHypes: any[] = [];
+
+          eventSnapshot.docs.forEach((eventDoc) => {
+            const hypesRef = collection(firestore, "events", eventDoc.id, "hypes");
+            const hypesUnsubscribe = onSnapshot(
+              query(hypesRef, orderBy("timestamp", "desc")),
+              (hypesSnapshot) => {
+                const eventHypes = hypesSnapshot.docs.map((doc) => ({
+                  id: doc.id,
+                  ...doc.data(),
+                }));
+
+                // Merge all hypes from all events
+                allHypes.length = 0;
+                eventSnapshot.docs.forEach((e) => {
+                  const hypes = eventHypes.filter((h: any) => h.eventId === e.id);
+                  allHypes.push(...hypes);
+                });
+
+                setHypes(allHypes as Hype[]);
+
+                // Recalculate total earnings
+                const total = allHypes.reduce(
+                  (sum, h: any) => sum + (h.amount || 0),
+                  0
+                );
+                setTotalEarnings(total);
+              },
+              (error) => {
+                console.error("[DashboardPage] Hypes listener error:", error);
+              }
+            );
+            hypesUnsubscribers.push(hypesUnsubscribe);
+          });
+
+          unsubscribers.push(() => {
+            hypesUnsubscribers.forEach((unsub) => unsub());
+          });
+        },
+        (error) => {
+          console.error("[DashboardPage] Events listener error:", error);
+        }
+      );
+
+      unsubscribers.push(unsubscribeEvents);
+    } catch (error) {
+      console.error("[DashboardPage] Error setting up hypes listener:", error);
+    }
+
+    // Real-time bookings listener
+    try {
+      const bookingsQuery = query(
+        collection(firestore, "bookings"),
+        where("hypemanUserId", "==", user.uid),
+        orderBy("createdAt", "desc")
+      );
+
+      const unsubscribeBookings = onSnapshot(
+        bookingsQuery,
+        (snapshot) => {
+          const bookingsData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setBookings(bookingsData as Booking[]);
+        },
+        (error) => {
+          console.error("[DashboardPage] Bookings listener error:", error);
+          // Don't show toast for permission errors, just log
+        }
+      );
+      unsubscribers.push(unsubscribeBookings);
+    } catch (error) {
+      console.error("[DashboardPage] Error setting up bookings listener:", error);
+    }
+
+    // Real-time wallet listener
+    try {
+      const walletQuery = query(
+        collection(firestore, "wallets"),
+        where("userId", "==", user.uid)
+      );
+
+      const unsubscribeWallet = onSnapshot(
+        walletQuery,
+        (snapshot) => {
+          if (!snapshot.empty) {
+            const walletData = snapshot.docs[0].data();
+            setTotalEarnings(walletData.balance || 0);
+          }
+        },
+        (error) => {
+          console.error("[DashboardPage] Wallet listener error:", error);
+          // Don't show toast for permission errors, just log
+        }
+      );
+      unsubscribers.push(unsubscribeWallet);
+    } catch (error) {
+      console.error("[DashboardPage] Error setting up wallet listener:", error);
+    }
+
+    // Cleanup all listeners on unmount
+    return () => {
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
+    };
+  }, [user]);
 
   const handleSelectHype = (hype: Hype, isSelected: boolean) => {
     setSelectedHypes((prev) =>
@@ -458,14 +596,31 @@ export default function DashboardPage() {
 
               {/* Video Bookings Section */}
               <section className="space-y-4">
-                <h2 className="text-xl sm:text-2xl font-semibold">Video Bookings</h2>
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl sm:text-2xl font-semibold">Video Bookings</h2>
+                  {bookings.length > 3 && (
+                    <Link
+                      href="/dashboard/bookings"
+                      className="text-primary hover:underline text-sm font-medium"
+                    >
+                      View all ({bookings.length})
+                    </Link>
+                  )}
+                </div>
                 {bookings.length > 0 ? (
                   <div className="space-y-4">
-                    {bookings.map((booking) => (
-                      <Card key={booking.id} className={`${booking.status === "confirmed" ? "border-green-500/50" :
+                    {bookings.slice(0, 3).map((booking) => (
+                      <Card
+                        key={booking.id}
+                        className={`${booking.status === "confirmed" ? "border-green-500/50" :
                           booking.status === "failed" ? "border-destructive/50" :
                             "border-amber-500/50"
-                        }`}>
+                          } cursor-pointer hover:bg-accent/50 transition-colors`}
+                        onClick={() => {
+                          setSelectedBooking(booking);
+                          setBookingDialogOpen(true);
+                        }}
+                      >
                         <CardHeader>
                           <div className="flex justify-between items-start">
                             <div>
@@ -558,8 +713,7 @@ export default function DashboardPage() {
                                   }
                                   className="text-sm sm:text-base shrink-0"
                                 >
-                                  <DollarSign className="h-4 w-4 mr-1" />
-                                  {(hype.amount || 0).toLocaleString()}
+                                  ₦{(hype.amount || 0).toLocaleString()}
                                 </Badge>
                               </div>
                             </CardHeader>
@@ -626,6 +780,13 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* Booking Details Dialog */}
+        <BookingDetailsDialog
+          booking={selectedBooking}
+          open={bookingDialogOpen}
+          onOpenChange={setBookingDialogOpen}
+        />
       </main>
     </>
   );

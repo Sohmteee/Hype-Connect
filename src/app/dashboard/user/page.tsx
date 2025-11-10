@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/firebase";
+import { auth, firestore } from "@/firebase";
 import Link from "next/link";
 import { ArrowLeft, Heart, MapPin, Loader2, Calendar, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
 import { getSpotlightUserDataAction } from "@/app/dashboard/actions";
 import { formatDistanceToNow } from "date-fns";
+import { collectionGroup, query, where, orderBy, limit, onSnapshot } from "firebase/firestore";
 
 interface Hype {
   id: string;
@@ -115,6 +116,51 @@ export default function UserDashboardPage() {
 
     loadUserData();
   }, [user, router, toast, searchParams]);
+
+  // Set up real-time listener for hype updates
+  useEffect(() => {
+    if (!user || !profile || profile.type !== "spotlight") {
+      return;
+    }
+
+    try {
+      const q = query(
+        collectionGroup(firestore, "hypes"),
+        where("userId", "==", user.uid),
+        orderBy("timestamp", "desc"),
+        limit(50)
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const updatedHypes = snapshot.docs.map((doc) => {
+            const data = doc.data();
+            return {
+              id: data.messageId || doc.id,
+              message: data.message,
+              amount: data.amount,
+              eventId: data.eventId,
+              eventName: data.eventName || null,
+              hypeman: data.senderName || "Anonymous",
+              timestamp: data.timestamp,
+              status: data.status,
+            };
+          });
+
+          setHypeHistory(updatedHypes);
+        },
+        (error) => {
+          console.error("[UserDashboard] Real-time listener error:", error);
+          // Don't show toast for permission errors, just log
+        }
+      );
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("[UserDashboard] Failed to set up real-time listener:", error);
+    }
+  }, [user, profile]);
 
   if (!user) {
     return null;

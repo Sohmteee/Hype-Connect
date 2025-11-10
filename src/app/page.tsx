@@ -39,6 +39,14 @@ import { CardDescription } from '@/components/ui/card';
 import { AnimateOnScroll } from '@/components/AnimateOnScroll';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import {
+  collection,
+  onSnapshot,
+  query,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
+import { firestore } from '@/firebase';
+import {
   Carousel,
   CarouselContent,
   CarouselItem,
@@ -215,21 +223,36 @@ export default function Home() {
   const [headline, setHeadline] = React.useState(hypeHeadlines[0]);
   const heroImage = PlaceHolderImages.find(img => img.id === 'hero-banner-1');
 
-  // Fetch real events from Firestore
+  // Fetch real events from Firestore with real-time updates
   React.useEffect(() => {
-    const loadEvents = async () => {
-      try {
-        const response = await getEventsAction(50, 0);
-        if (response.success) {
-          setAllEvents(response.data || []);
+    try {
+      const eventsQuery = query(
+        collection(firestore, "events"),
+        orderBy("createdAt", "desc"),
+        limit(50)
+      );
+
+      const unsubscribe = onSnapshot(
+        eventsQuery,
+        (snapshot) => {
+          const eventsData = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setAllEvents(eventsData);
+          setIsLoading(false);
+        },
+        (error) => {
+          console.error("[Home] Events listener error:", error);
+          setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Failed to load events:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadEvents();
+      );
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error('Failed to load events:', error);
+      setIsLoading(false);
+    }
   }, []);
 
   React.useEffect(() => {

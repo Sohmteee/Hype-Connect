@@ -109,9 +109,8 @@ export function Header({ className }: { className?: string }) {
     // only include booking for non-hypemen
     ...(!isHypeman ? [{ href: "/book-video-hype", label: "Book a Video", icon: Video }] : []),
     ...(user ? [
-      // For hypemen, prefer the hypeman dashboard; for spotlight users show a profile link
-      ...(isHypeman ? [{ href: "/dashboard", label: "Hypeman Dashboard", icon: LayoutDashboard }] : []),
-      ...(isSpotlight ? [{ href: "/profile", label: "Profile", icon: User }] : [{ href: "/dashboard/user", label: "User Dashboard", icon: User }]),
+      // For hypemen, show dashboard; for spotlight users show user dashboard  
+      ...(isHypeman ? [{ href: "/dashboard", label: "Dashboard", icon: LayoutDashboard }] : [{ href: "/dashboard/user", label: "Dashboard", icon: LayoutDashboard }]),
     ] : []),
   ];
 
@@ -183,7 +182,7 @@ export function Header({ className }: { className?: string }) {
                   className={navItemClasses}
                 >
                   {isHypeman ? (
-                    <Link href="/dashboard">Hypeman Dashboard</Link>
+                    <Link href="/dashboard">Dashboard</Link>
                   ) : (
                     <Link href="/dashboard/user">Dashboard</Link>
                   )}
@@ -273,7 +272,7 @@ export function Header({ className }: { className?: string }) {
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {isHypeman ? (
-                          <Link href="/dashboard">Hypeman Dashboard</Link>
+                          <Link href="/dashboard">Dashboard</Link>
                         ) : (
                           <Link href="/dashboard/user">Dashboard</Link>
                         )}
