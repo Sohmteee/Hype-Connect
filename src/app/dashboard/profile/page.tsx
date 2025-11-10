@@ -28,32 +28,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
-import { getProfilesAction, updateProfileAction } from "@/app/dashboard/actions";
-
-interface Profile {
-  profileId: string;
-  type: string;
-  displayName: string;
-  publicBio?: string;
-  visibility: "public" | "private";
-  payoutInfo?: {
-    bankName?: string;
-    accountNumber?: string;
-    accountName?: string;
-  };
-  stats: {
-    earnings: number;
-    hypesReceived: number;
-  };
-}
+import { updateUserProfileAction } from "@/app/dashboard/actions";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
 
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -67,27 +48,30 @@ export default function ProfilePage() {
     accountName: "",
   });
 
-  // Load profiles
+  // Load user profile
   useEffect(() => {
     if (!user) {
       router.push("/auth/login");
       return;
     }
 
-    const loadProfiles = async () => {
+    const loadProfile = async () => {
       try {
-        const response = await getProfilesAction(user.uid);
-        if (response.success && response.data) {
-          setProfiles(response.data);
-          if (response.data.length > 0) {
-            setSelectedProfileId(response.data[0].profileId);
-          }
-        }
+        // User profile is in the user doc directly, not in subcollections anymore
+        // We can get it from Firebase Auth's displayName and from Firestore user doc
+        setFormData({
+          displayName: user.displayName || "",
+          publicBio: "",
+          visibility: "public" as "public" | "private",
+          bankName: "",
+          accountNumber: "",
+          accountName: "",
+        });
       } catch (error) {
-        console.error("Load profiles error:", error);
+        console.error("Load profile error:", error);
         toast({
           title: "Error",
-          description: "Failed to load profiles",
+          description: "Failed to load profile",
           variant: "destructive",
         });
       } finally {
@@ -95,25 +79,8 @@ export default function ProfilePage() {
       }
     };
 
-    loadProfiles();
+    loadProfile();
   }, [user, router, toast]);
-
-  // Update form when selected profile changes
-  useEffect(() => {
-    if (!selectedProfileId) return;
-
-    const profile = profiles.find((p) => p.profileId === selectedProfileId);
-    if (profile) {
-      setFormData({
-        displayName: profile.displayName,
-        publicBio: profile.publicBio || "",
-        visibility: profile.visibility,
-        bankName: profile.payoutInfo?.bankName || "",
-        accountNumber: profile.payoutInfo?.accountNumber || "",
-        accountName: profile.payoutInfo?.accountName || "",
-      });
-    }
-  }, [selectedProfileId, profiles]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -137,7 +104,7 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user || !selectedProfileId) return;
+    if (!user) return;
 
     if (!formData.displayName) {
       toast({
@@ -150,15 +117,10 @@ export default function ProfilePage() {
 
     setIsSubmitting(true);
     try {
-      const response = await updateProfileAction(user.uid, selectedProfileId, {
+      const response = await updateUserProfileAction(user.uid, {
         displayName: formData.displayName,
         publicBio: formData.publicBio,
         visibility: formData.visibility,
-        payoutInfo: {
-          bankName: formData.bankName,
-          accountNumber: formData.accountNumber,
-          accountName: formData.accountName,
-        },
       });
 
       if (response.success) {
@@ -166,24 +128,6 @@ export default function ProfilePage() {
           title: "Success",
           description: "Profile updated successfully",
         });
-        // Update local state
-        setProfiles((prev) =>
-          prev.map((p) =>
-            p.profileId === selectedProfileId
-              ? {
-                ...p,
-                displayName: formData.displayName,
-                publicBio: formData.publicBio,
-                visibility: formData.visibility,
-                payoutInfo: {
-                  bankName: formData.bankName,
-                  accountNumber: formData.accountNumber,
-                  accountName: formData.accountName,
-                },
-              }
-              : p
-          )
-        );
       } else {
         toast({
           title: "Error",
@@ -218,34 +162,6 @@ export default function ProfilePage() {
     );
   }
 
-  if (profiles.length === 0) {
-    return (
-      <>
-        <Header />
-        <main className="container py-12">
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold">Profile Settings</h1>
-          </div>
-
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              You don't have any profiles yet. Create one to get started.
-            </AlertDescription>
-          </Alert>
-        </main>
-      </>
-    );
-  }
-
-  const selectedProfile = profiles.find((p) => p.profileId === selectedProfileId);
-
   return (
     <>
       <Header />
@@ -261,56 +177,6 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid gap-6">
-          {/* Profile Selection */}
-          {profiles.length > 1 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Profile</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select profile" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {profiles.map((profile) => (
-                      <SelectItem key={profile.profileId} value={profile.profileId}>
-                        {profile.displayName} ({profile.type})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Profile Stats */}
-          {selectedProfile && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Total Earnings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold text-green-400">
-                    ₦{selectedProfile.stats.earnings.toLocaleString()}
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base">Hypes Received</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-2xl font-bold">
-                    {selectedProfile.stats.hypesReceived}
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
           {/* Edit Profile Form */}
           <Card>
             <CardHeader>

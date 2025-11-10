@@ -27,16 +27,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
-import { getProfilesAction, getEarningsAction, requestWithdrawalAction } from "@/app/dashboard/actions";
-
-interface Profile {
-  profileId: string;
-  type: string;
-  displayName: string;
-  stats: {
-    earnings: number;
-  };
-}
+import { getEarningsAction, requestWithdrawalAction } from "@/app/dashboard/actions";
 
 interface Bank {
   id: number;
@@ -50,11 +41,9 @@ export default function WithdrawPage() {
   const { toast } = useToast();
 
   // State
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [selectedProfileId, setSelectedProfileId] = useState("");
   const [earnings, setEarnings] = useState({
+    balance: 0,
     totalEarned: 0,
-    withdrawableBalance: 0,
     totalWithdrawn: 0,
   });
   const [banks, setBanks] = useState<Bank[]>([]);
@@ -82,16 +71,10 @@ export default function WithdrawPage() {
 
     const loadData = async () => {
       try {
-        // Get profiles
-        const profilesResponse = await getProfilesAction(user.uid);
-        if (profilesResponse.success && profilesResponse.data) {
-          const hypemenProfiles = profilesResponse.data.filter(
-            (p: any) => p.type === "hypeman"
-          );
-          setProfiles(hypemenProfiles);
-          if (hypemenProfiles.length > 0) {
-            setSelectedProfileId(hypemenProfiles[0].profileId);
-          }
+        // Get earnings for the current user
+        const earningsResponse = await getEarningsAction(user.uid);
+        if (earningsResponse.success && earningsResponse.data) {
+          setEarnings(earningsResponse.data);
         }
 
         // Get banks from Paystack
@@ -131,24 +114,6 @@ export default function WithdrawPage() {
 
     loadData();
   }, [user, router]);
-
-  // Load earnings when profile is selected
-  useEffect(() => {
-    if (!user || !selectedProfileId) return;
-
-    const loadEarnings = async () => {
-      try {
-        const response = await getEarningsAction(user.uid, selectedProfileId);
-        if (response.success && response.data) {
-          setEarnings(response.data);
-        }
-      } catch (error) {
-        console.error("Load earnings error:", error);
-      }
-    };
-
-    loadEarnings();
-  }, [user, selectedProfileId]);
 
   // Handle input changes
   const handleInputChange = (
@@ -245,7 +210,7 @@ export default function WithdrawPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user || !selectedProfileId) return;
+    if (!user) return;
 
     if (!formData.amount || !formData.bankCode || !formData.accountNumber || !formData.accountName) {
       toast({
@@ -266,7 +231,7 @@ export default function WithdrawPage() {
       return;
     }
 
-    if (amount > earnings.withdrawableBalance) {
+    if (amount > earnings.balance) {
       toast({
         title: "Error",
         description: "Insufficient balance",
@@ -277,7 +242,7 @@ export default function WithdrawPage() {
 
     setIsSubmitting(true);
     try {
-      const response = await requestWithdrawalAction(user.uid, selectedProfileId, {
+      const response = await requestWithdrawalAction(user.uid, {
         amount,
         bankName: formData.bankName,
         bankCode: formData.bankCode,
@@ -326,34 +291,6 @@ export default function WithdrawPage() {
     );
   }
 
-  if (profiles.length === 0) {
-    return (
-      <>
-        <Header />
-        <main className="container py-12">
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Link>
-            </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold">Withdraw Earnings</h1>
-          </div>
-
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              You need to be a Hypeman to withdraw earnings. Please create a Hypeman profile first.
-            </AlertDescription>
-          </Alert>
-        </main>
-      </>
-    );
-  }
-
-  const selectedProfile = profiles.find((p) => p.profileId === selectedProfileId);
-
   return (
     <>
       <Header />
@@ -397,7 +334,7 @@ export default function WithdrawPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-green-400">
-                  ₦{earnings.withdrawableBalance.toLocaleString()}
+                  ₦{earnings.balance.toLocaleString()}
                 </div>
               </CardContent>
             </Card>
@@ -413,29 +350,12 @@ export default function WithdrawPage() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Profile Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="profile">Select Profile</Label>
-                  <Select value={selectedProfileId} onValueChange={setSelectedProfileId}>
-                    <SelectTrigger id="profile">
-                      <SelectValue placeholder="Select profile" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {profiles.map((profile) => (
-                        <SelectItem key={profile.profileId} value={profile.profileId}>
-                          {profile.displayName} ({profile.type})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Amount */}
                 <div className="space-y-2">
                   <Label htmlFor="amount">
                     Withdrawal Amount (₦)
                     <span className="text-xs text-muted-foreground ml-2">
-                      Available: ₦{earnings.withdrawableBalance.toLocaleString()}
+                      Available: ₦{earnings.balance.toLocaleString()}
                     </span>
                   </Label>
                   <div className="relative">

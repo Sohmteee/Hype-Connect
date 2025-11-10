@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/firebase";
 import Link from "next/link";
@@ -17,7 +17,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Header } from "@/components/layout/Header";
-import { getProfilesAction, getSpotlightUserDataAction } from "@/app/dashboard/actions";
+import { getSpotlightUserDataAction } from "@/app/dashboard/actions";
 import { formatDistanceToNow } from "date-fns";
 
 interface Hype {
@@ -32,19 +32,15 @@ interface Hype {
 }
 
 interface Profile {
-  profileId: string;
-  type: string;
   displayName: string;
-  publicBio?: string;
+  publicBio: string;
   visibility: "public" | "private";
-  stats: {
-    hypesReceived: number;
-    earnings: number;
-  };
+  type: string;
 }
 
 export default function UserDashboardPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
 
@@ -62,48 +58,63 @@ export default function UserDashboardPage() {
       return;
     }
 
+    // Check for booking success
+    if (searchParams.get("booking") === "success") {
+      toast({
+        title: "Booking Confirmed!",
+        description: "Your video booking has been confirmed. The hypeman will send your video soon!",
+      });
+    }
+
     const loadUserData = async () => {
       try {
-        // First, get all profiles to check what type of user they are
-        const profilesResponse = await getProfilesAction(user.uid);
-        const allProfiles = profilesResponse.data || [];
+        console.log("[UserDashboard] Loading spotlight user data for:", user.uid);
+        // Get spotlight user data if user is a spotlight user
+        const response = await getSpotlightUserDataAction(user.uid);
 
-        // Check if they have a spotlight profile
-        const spotlightProfile = allProfiles.find((p: any) => p.type === "spotlight");
+        console.log("[UserDashboard] Response:", response);
 
-        if (!spotlightProfile) {
-          // If no spotlight profile, redirect to hypeman dashboard
+        if (!response.success) {
+          console.log("[UserDashboard] Not a spotlight user, redirecting to hypeman dashboard");
+          // If not a spotlight user, redirect to hypeman dashboard
+          toast({
+            title: "Access Denied",
+            description: "This page is for spotlight users only.",
+            variant: "destructive",
+          });
+          setIsLoading(false);
           router.push("/dashboard");
           return;
         }
 
-        // Get spotlight user data (profile + hype history)
-        const response = await getSpotlightUserDataAction(user.uid);
-        if (response.success && response.data) {
+        if (response.data) {
+          console.log("[UserDashboard] Setting profile data:", response.data);
           setProfile(response.data.profile);
           setHypeHistory(response.data.hypes || []);
           setTopSupportedEvents(response.data.topSupportedEvents || []);
+          setIsLoading(false);
         } else {
+          console.log("[UserDashboard] No data returned");
           toast({
-            title: "No Spotlight Profile",
-            description: "Create a Spotlight profile to view your history",
-            variant: "default",
+            title: "No Data",
+            description: "Could not load your profile data.",
+            variant: "destructive",
           });
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("Load user data error:", error);
+        console.error("[UserDashboard] Load user data error:", error);
         toast({
           title: "Error",
-          description: "Failed to load profile",
+          description: "Failed to load data: " + (error instanceof Error ? error.message : String(error)),
           variant: "destructive",
         });
-      } finally {
         setIsLoading(false);
       }
     };
 
     loadUserData();
-  }, [user, router, toast]);
+  }, [user, router, toast, searchParams]);
 
   if (!user) {
     return null;

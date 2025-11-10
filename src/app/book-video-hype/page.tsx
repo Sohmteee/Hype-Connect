@@ -72,6 +72,7 @@ export default function BookVideoHypePage() {
   const [hypemen, setHypemen] = React.useState<Array<any>>([]);
   const [search, setSearch] = React.useState('');
   const [selectedHypeman, setSelectedHypeman] = React.useState<any | null>(null);
+  const [isLoadingHypemen, setIsLoadingHypemen] = React.useState(true);
 
   const allEvents = getEvents();
   // fallback: derived hypemen from local events
@@ -104,6 +105,8 @@ export default function BookVideoHypePage() {
       } catch (err) {
         console.error('Failed to fetch hypemen:', err);
         setHypemen(fallbackHypemen);
+      } finally {
+        if (mounted) setIsLoadingHypemen(false);
       }
     })();
     return () => { mounted = false; };
@@ -242,47 +245,56 @@ export default function BookVideoHypePage() {
                         <CardDescription className="text-sm">Choose from our verified hypemen.</CardDescription>
                       </CardHeader>
                       <CardContent>
-                        <div className="mb-2 flex items-center justify-between">
-                          <div className="text-sm text-muted-foreground">Showing {hypemenCount} {hypemenCount === 1 ? 'hypeman' : 'hypemen'}</div>
-                          <div className="text-xs text-muted-foreground">Scroll to browse</div>
-                        </div>
-                        {/* Fixed-height scrollable list to keep layout stable */}
-                        <div className="max-h-56 overflow-y-auto pr-2">
-                          <ul className="space-y-2">
-                            {listToDisplay
-                              .filter(h => ((h?.displayName ?? '').toLowerCase().includes((search ?? '').toLowerCase())))
-                              .map((h, i) => {
-                                const id = h?.profileId || h?.id || `${h?.displayName ?? 'hypeman'}-${i}`;
-                                const isSelected = selectedHypeman && (selectedHypeman.profileId === h.profileId || selectedHypeman.id === h.id);
-                                return (
-                                  <li key={id}>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setSelectedHypeman(h);
-                                        // keep form.hypemanId in sync for submission/validation
-                                        form.setValue('hypemanId', h.profileId || h.id || id);
-                                      }}
-                                      className={`w-full text-left flex items-center justify-between gap-4 p-2 rounded ${isSelected ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/5'}`}
-                                    >
-                                      <div className="flex items-center gap-3">
-                                        <Avatar className="h-10 w-10">
-                                          <AvatarFallback className="bg-muted text-muted-foreground">
-                                            {h?.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <div>
-                                          <div className="font-semibold">{h?.displayName ?? 'Unknown Hypeman'}</div>
-                                          <div className="text-sm text-muted-foreground">{h?.publicBio ?? ''}</div>
-                                        </div>
-                                      </div>
-                                      <div className="text-sm text-muted-foreground">{isSelected ? 'Selected' : ''}</div>
-                                    </button>
-                                  </li>
-                                );
-                              })}
-                          </ul>
-                        </div>
+                        {isLoadingHypemen ? (
+                          <div className="flex flex-col items-center justify-center py-8">
+                            <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                            <p className="text-sm text-muted-foreground">Loading hypemen...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="mb-2 flex items-center justify-between">
+                              <div className="text-sm text-muted-foreground">Showing {hypemenCount} {hypemenCount === 1 ? 'hypeman' : 'hypemen'}</div>
+                              <div className="text-xs text-muted-foreground">Scroll to browse</div>
+                            </div>
+                            {/* Fixed-height scrollable list to keep layout stable */}
+                            <div className="max-h-56 overflow-y-auto pr-2">
+                              <ul className="space-y-2">
+                                {listToDisplay
+                                  .filter(h => ((h?.displayName ?? '').toLowerCase().includes((search ?? '').toLowerCase())))
+                                  .map((h, i) => {
+                                    const id = h?.userId || h?.id || `${h?.displayName ?? 'hypeman'}-${i}`;
+                                    const isSelected = selectedHypeman && selectedHypeman.userId === h.userId;
+                                    return (
+                                      <li key={id}>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setSelectedHypeman(h);
+                                            // keep form.hypemanId in sync for submission/validation - use userId
+                                            form.setValue('hypemanId', h.userId || h.id);
+                                          }}
+                                          className={`w-full text-left flex items-center justify-between gap-4 p-2 rounded ${isSelected ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/5'}`}
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <Avatar className="h-10 w-10">
+                                              <AvatarFallback className="bg-muted text-muted-foreground">
+                                                {h?.displayName ? h.displayName.charAt(0).toUpperCase() : 'H'}
+                                              </AvatarFallback>
+                                            </Avatar>
+                                            <div>
+                                              <div className="font-semibold">{h?.displayName ?? 'Unknown Hypeman'}</div>
+                                              <div className="text-sm text-muted-foreground">{h?.publicBio ?? ''}</div>
+                                            </div>
+                                          </div>
+                                          <div className="text-sm text-muted-foreground">{isSelected ? 'Selected' : ''}</div>
+                                        </button>
+                                      </li>
+                                    );
+                                  })}
+                              </ul>
+                            </div>
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   </div>

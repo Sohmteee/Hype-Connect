@@ -85,14 +85,7 @@ export default function RegisterPage() {
         uid: user.uid,
         email: formData.email,
         displayName: formData.displayName,
-        roles: [role],
-        createdAt: new Date().toISOString(),
-      });
-
-      // Create default profile
-      await setDoc(doc(firestore, 'users', user.uid, 'profiles', 'default'), {
         type: role,
-        displayName: formData.displayName,
         visibility: 'public',
         createdAt: new Date().toISOString(),
       });

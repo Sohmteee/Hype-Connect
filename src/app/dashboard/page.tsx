@@ -23,7 +23,7 @@ import {
   deactivateEventAction,
   getAiSuggestionsAction,
   validateHypemanAccessAction,
-  createProfileAction,
+  getHypemanBookingsAction,
 } from "./actions";
 
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,22 @@ interface Event {
   isActive: boolean;
   createdAt: string;
   imageUrl?: string;
+}
+
+interface Booking {
+  id: string;
+  name: string;
+  email: string;
+  hypemanProfileId: string;
+  occasion: string;
+  videoDetails: string;
+  amount: number;
+  platformFee: number;
+  hypemanAmount: number;
+  status: "pending" | "confirmed" | "failed";
+  paystackReference?: string;
+  createdAt: string;
+  confirmedAt?: string;
 }
 
 function AiSuggestions({
@@ -138,6 +154,7 @@ export default function DashboardPage() {
 
   const [events, setEvents] = useState<Event[]>([]);
   const [hypes, setHypes] = useState<Hype[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
   const [selectedHypes, setSelectedHypes] = useState<Hype[]>([]);
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -145,46 +162,6 @@ export default function DashboardPage() {
   const [isEndingEvent, setIsEndingEvent] = useState<string | null>(null);
   const [accessDenied, setAccessDenied] = useState(false);
   const [accessError, setAccessError] = useState<string | null>(null);
-  const [isCreatingProfile, setIsCreatingProfile] = useState(false);
-
-  const handleCreateHypemanProfile = async () => {
-    if (!user) return;
-    setIsCreatingProfile(true);
-    try {
-      // Create hypeman profile
-      const response = await createProfileAction(user.uid, {
-        type: "hypeman",
-        displayName: user.displayName || "Hypeman",
-        visibility: "public",
-      });
-
-      if (response.success) {
-        toast({
-          title: "Success!",
-          description: "Hypeman profile created successfully",
-        });
-        // Reset access denied state
-        setAccessDenied(false);
-        // Reload page to fetch new data
-        window.location.reload();
-      } else {
-        toast({
-          title: "Error",
-          description: response.error || "Failed to create profile",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error("Create profile error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create hypeman profile",
-        variant: "destructive",
-      });
-    } finally {
-      setIsCreatingProfile(false);
-    }
-  };
 
   // Initial page load - validate access and fetch data
   useEffect(() => {
@@ -225,6 +202,10 @@ export default function DashboardPage() {
         const response = await getHypemanDashboardDataAction(user.uid);
         console.log("[DashboardPage] Dashboard data response:", response);
 
+        // Fetch bookings
+        const bookingsResponse = await getHypemanBookingsAction(user.uid);
+        console.log("[DashboardPage] Bookings response:", bookingsResponse);
+
         if (response.success && response.data) {
           setEvents(response.data.events || []);
           setHypes(response.data.hypes || []);
@@ -236,6 +217,10 @@ export default function DashboardPage() {
             description: response.error || "Failed to load dashboard",
             variant: "destructive",
           });
+        }
+
+        if (bookingsResponse.success && bookingsResponse.data) {
+          setBookings(bookingsResponse.data || []);
         }
       } catch (error) {
         console.error("Dashboard error:", error);
@@ -364,23 +349,9 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-foreground">
-                Only hypemen can access this dashboard. You need to create a hypeman profile first.
+                Only hypemen can access this dashboard. You must sign up as a hypeman to access it.
               </p>
               <div className="flex flex-col gap-2">
-                <Button
-                  onClick={handleCreateHypemanProfile}
-                  disabled={isCreatingProfile}
-                  className="glowing-accent-btn"
-                >
-                  {isCreatingProfile ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating Profile...
-                    </>
-                  ) : (
-                    "Create Hypeman Profile"
-                  )}
-                </Button>
                 <Button variant="outline" asChild>
                   <Link href="/">Go Home</Link>
                 </Button>
@@ -478,6 +449,60 @@ export default function DashboardPage() {
                   <Card className="text-center p-8">
                     <CardDescription>
                       No active events. Create one to start receiving hypes!
+                    </CardDescription>
+                  </Card>
+                )}
+              </section>
+
+              <Separator className="my-8" />
+
+              {/* Video Bookings Section */}
+              <section className="space-y-4">
+                <h2 className="text-xl sm:text-2xl font-semibold">Video Bookings</h2>
+                {bookings.length > 0 ? (
+                  <div className="space-y-4">
+                    {bookings.map((booking) => (
+                      <Card key={booking.id} className={`${booking.status === "confirmed" ? "border-green-500/50" :
+                          booking.status === "failed" ? "border-destructive/50" :
+                            "border-amber-500/50"
+                        }`}>
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-base sm:text-lg">{booking.name}</CardTitle>
+                              <CardDescription className="mt-1">
+                                <span className="inline-block px-2 py-1 rounded text-xs font-semibold bg-primary/20 text-primary mr-2">
+                                  {booking.occasion}
+                                </span>
+                                {booking.email}
+                              </CardDescription>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-semibold text-green-400">₦{booking.hypemanAmount.toLocaleString()}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {booking.status === "confirmed" ? "✓ Confirmed" :
+                                  booking.status === "failed" ? "✗ Failed" :
+                                    "⏳ Pending"}
+                              </p>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2 text-sm text-muted-foreground">
+                            <p><span className="font-medium">Details:</span> {booking.videoDetails}</p>
+                            <p><span className="font-medium">Requested:</span> {formatDistanceToNow(new Date(booking.createdAt), { addSuffix: true })}</p>
+                            {booking.status === "confirmed" && booking.confirmedAt && (
+                              <p><span className="font-medium">Confirmed:</span> {formatDistanceToNow(new Date(booking.confirmedAt), { addSuffix: true })}</p>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card className="text-center p-8">
+                    <CardDescription>
+                      No video bookings yet. Share your profile and get bookings!
                     </CardDescription>
                   </Card>
                 )}

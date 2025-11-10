@@ -17,13 +17,19 @@ export async function POST(request: NextRequest) {
     const db = getAdminFirestore();
 
     // Create a booking document
+    const bookingAmount = 25000;
+    const platformFee = Math.round(bookingAmount * 0.2); // 20%
+    const hypemanAmount = bookingAmount - platformFee; // 80%
+
     const bookingRef = await db.collection("bookings").add({
       name,
       email,
-      hypemanProfileId: hypemanId,
+      hypemanUserId: hypemanId,
       occasion,
       videoDetails,
-      amount: 25000,
+      amount: bookingAmount,
+      platformFee,
+      hypemanAmount,
       status: "pending",
       createdAt: new Date().toISOString(),
     });
@@ -34,7 +40,7 @@ export async function POST(request: NextRequest) {
     const headers = request.headers;
 
     const paymentInit = await PaystackService.initializePayment(
-      25000,
+      bookingAmount,
       email,
       {
         bookingId,

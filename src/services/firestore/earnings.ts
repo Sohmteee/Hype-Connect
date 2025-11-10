@@ -7,175 +7,33 @@ function getDb() {
 
 /**
  * Get earnings breakdown for a hypeman
- * Returns: totalEarned (permanent record), withdrawableBalance, totalWithdrawn
- *
- * For backward compatibility, also includes earnings from confirmed/hyped hypes
- * that haven't been accounted for in stats.totalEarned yet (from ended events)
+ * Returns: balance (withdrawable), totalEarned, totalWithdrawn from wallet doc
  */
-export async function getEarnings(userId: string, profileId: string) {
+export async function getEarnings(userId: string) {
   try {
     const db = getDb();
 
-    // Get the profile
-    const profileDoc = await db
-      .collection("users")
-      .doc(userId)
-      .collection("profiles")
-      .doc(profileId)
-      .get();
+    // Get the wallet document
+    const walletDoc = await db.collection("wallets").doc(userId).get();
 
-    if (!profileDoc.exists) {
-      throw new Error("Profile not found");
+    if (!walletDoc.exists) {
+      // Return default empty wallet if not found
+      return {
+        balance: 0,
+        totalEarned: 0,
+        totalWithdrawn: 0,
+      };
     }
 
-    const profileData = profileDoc.data();
-    let totalEarned = profileData?.stats?.totalEarned || 0;
-    const totalWithdrawn = profileData?.stats?.totalWithdrawn || 0;
-
-    console.log(`[getEarnings] userId: ${userId}, profileId: ${profileId}`);
-    console.log(
-      `[getEarnings] stored totalEarned: ${totalEarned}, totalWithdrawn: ${totalWithdrawn}`
-    );
-
-    // Also calculate earnings from confirmed/hyped hypes in ALL events (including ended)
-    // This ensures backward compatibility with existing confirmed hypes
-    const eventsSnapshot = await db
-      .collection("events")
-      .where("hypemanProfileId", "==", userId)
-      .get();
-
-    console.log(`[getEarnings] Found ${eventsSnapshot.docs.length} events`);
-
-    let additionalEarnings = 0;
-
-    for (const event of eventsSnapshot.docs) {
-      const eventData = event.data();
-      console.log(
-        `[getEarnings] Processing event: ${event.id}, isActive: ${eventData.isActive}`
-      );
-
-      // Get confirmed hypes
-      const confirmedSnapshot = await db
-        .collection("events")
-        .doc(event.id)
-        .collection("hypes")
-        .where("status", "==", "confirmed")
-        .get();
-
-      confirmedSnapshot.docs.forEach((doc: any) => {
-        const amount = doc.data().amount || 0;
-        console.log(`[getEarnings] Found confirmed hype: ₦${amount}`);
-        additionalEarnings += amount;
-      });
-
-      // Get hyped hypes
-      const hypedSnapshot = await db
-        .collection("events")
-        .doc(event.id)
-        .collection("hypes")
-        .where("status", "==", "hyped")
-        .get();
-
-      hypedSnapshot.docs.forEach((doc: any) => {
-        const amount = doc.data().amount || 0;
-        console.log(`[getEarnings] Found hyped hype: ₦${amount}`);
-        additionalEarnings += amount;
-      });
-    }
-
-    console.log(
-      `[getEarnings] additionalEarnings from hypes: ${additionalEarnings}`
-    );
-
-    // Use whichever is higher - either the stored totalEarned or calculated from hypes
-    // This ensures we never lose earnings and can recover from event deletions
-    totalEarned = Math.max(totalEarned, additionalEarnings);
-
-    console.log(`[getEarnings] final totalEarned: ${totalEarned}`);
-
-    const withdrawableBalance = totalEarned - totalWithdrawn;
-
+    const walletData = walletDoc.data();
     return {
-      totalEarned,
-      withdrawableBalance: Math.max(0, withdrawableBalance),
-      totalWithdrawn,
+      balance: walletData?.balance || 0,
+      totalEarned: walletData?.totalEarned || 0,
+      totalWithdrawn: walletData?.totalWithdrawn || 0,
     };
   } catch (error) {
-    console.error("Get earnings error:", error);
-    throw new Error("Failed to get earnings");
-  }
-}
-
-/**
- * Add earned amount to hypeman's total earnings
- * Called when a hype is confirmed or marked as hyped
- */
-export async function addEarnings(
-  userId: string,
-  profileId: string,
-  amount: number
-) {
-  try {
-    const db = getDb();
-    const profileRef = db
-      .collection("users")
-      .doc(userId)
-      .collection("profiles")
-      .doc(profileId);
-
-    const profileDoc = await profileRef.get();
-    if (!profileDoc.exists) {
-      throw new Error("Profile not found");
-    }
-
-    const currentTotal = profileDoc.data()?.stats?.totalEarned || 0;
-    const newTotal = currentTotal + amount;
-
-    await profileRef.update({
-      "stats.totalEarned": newTotal,
-    });
-
-    return newTotal;
-  } catch (error) {
-    console.error("Add earnings error:", error);
-    throw new Error("Failed to add earnings");
-  }
-}
-
-/**
- * Deduct withdrawn amount from withdrawable balance
- * Called when a withdrawal is processed
- * Applies 20% platform fee
- */
-export async function deductWithdrawnAmount(
-  userId: string,
-  profileId: string,
-  amount: number
-) {
-  try {
-    const db = getDb();
-    const profileRef = db
-      .collection("users")
-      .doc(userId)
-      .collection("profiles")
-      .doc(profileId);
-
-    const profileDoc = await profileRef.get();
-    if (!profileDoc.exists) {
-      throw new Error("Profile not found");
-    }
-
-    const totalWithdrawn = profileDoc.data()?.stats?.totalWithdrawn || 0;
-    const newTotalWithdrawn = totalWithdrawn + amount;
-
-    await profileRef.update({
-      "stats.totalWithdrawn": newTotalWithdrawn,
-    });
-
-    return newTotalWithdrawn;
-  } catch (error) {
-    console.error("Deduct withdrawn amount error:", error);
-    throw new Error("Failed to update withdrawal");
+    console.error("[getEarnings] Error fetching wallet:", error);
+    throw error;
   }
 }
 
@@ -191,7 +49,6 @@ const PLATFORM_FEE_PERCENTAGE = 0.2; // 20% platform fee
 
 export async function createWithdrawal(
   userId: string,
-  profileId: string,
   withdrawalData: WithdrawalData
 ) {
   try {
@@ -199,8 +56,8 @@ export async function createWithdrawal(
     const withdrawalId = uuidv4();
 
     // Check if user has sufficient balance
-    const earnings = await getEarnings(userId, profileId);
-    if (earnings.withdrawableBalance < withdrawalData.amount) {
+    const earnings = await getEarnings(userId);
+    if (earnings.balance < withdrawalData.amount) {
       throw new Error("Insufficient balance");
     }
 
@@ -211,7 +68,6 @@ export async function createWithdrawal(
     const withdrawal = {
       withdrawalId,
       userId,
-      profileId,
       requestedAmount: withdrawalData.amount,
       userReceivesAmount,
       platformFee,
@@ -227,8 +83,20 @@ export async function createWithdrawal(
 
     await db.collection("withdrawals").doc(withdrawalId).set(withdrawal);
 
-    // Deduct from withdrawable balance (total amount including fee)
-    await deductWithdrawnAmount(userId, profileId, withdrawalData.amount);
+    // Deduct from wallet balance
+    const walletRef = db.collection("wallets").doc(userId);
+    const walletDoc = await walletRef.get();
+    const currentBalance = walletDoc.exists
+      ? walletDoc.data()?.balance || 0
+      : 0;
+    const currentWithdrawn = walletDoc.exists
+      ? walletDoc.data()?.totalWithdrawn || 0
+      : 0;
+
+    await walletRef.update({
+      balance: currentBalance - withdrawalData.amount,
+      totalWithdrawn: currentWithdrawn + withdrawalData.amount,
+    });
 
     return withdrawal;
   } catch (error) {

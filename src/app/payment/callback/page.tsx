@@ -32,45 +32,60 @@ export default function PaymentCallbackPage() {
 
         if (verification.status && verification.data?.status === 'success') {
           setStatus('success');
-          setMessage('Payment successful! Creating your hype...');
 
-          // Get the hype data from session storage
-          const pendingHypeStr = sessionStorage.getItem('pendingHype');
+          // Determine if this is a hype message or a booking
+          const isHype = verification.data?.metadata?.eventId && verification.data?.metadata?.userId && verification.data?.metadata?.message;
+          const isBooking = verification.data?.metadata?.bookingId;
 
-          if (pendingHypeStr) {
-            try {
-              const pendingHype = JSON.parse(pendingHypeStr);
+          if (isBooking) {
+            setMessage('Payment successful! Your booking is confirmed...');
+          } else {
+            setMessage('Payment successful! Creating your hype...');
+          }
 
-              // Create the hype message with the payment reference
-              const hypeResult = await submitHypeConfirmedAction(
-                pendingHype.userId,
-                pendingHype.eventId,
-                {
-                  message: pendingHype.message,
-                  amount: pendingHype.amount,
-                  senderName: pendingHype.senderName,
-                  paystackReference: reference,
-                  profileId: pendingHype.profileId,
+          // Get the hype data from session storage if this is a hype payment
+          if (isHype) {
+            const pendingHypeStr = sessionStorage.getItem('pendingHype');
+
+            if (pendingHypeStr) {
+              try {
+                const pendingHype = JSON.parse(pendingHypeStr);
+
+                // Create the hype message with the payment reference
+                const hypeResult = await submitHypeConfirmedAction(
+                  pendingHype.userId,
+                  pendingHype.eventId,
+                  {
+                    message: pendingHype.message,
+                    amount: pendingHype.amount,
+                    senderName: pendingHype.senderName,
+                    paystackReference: reference,
+                    profileId: pendingHype.profileId,
+                  }
+                );
+
+                if (!hypeResult.success) {
+                  console.error('Failed to create hype:', hypeResult.error);
                 }
-              );
 
-              if (!hypeResult.success) {
-                console.error('Failed to create hype:', hypeResult.error);
+                // Clear session storage
+                sessionStorage.removeItem('pendingHype');
+              } catch (error) {
+                console.error('Error parsing pending hype:', error);
               }
-
-              // Clear session storage
-              sessionStorage.removeItem('pendingHype');
-            } catch (error) {
-              console.error('Error parsing pending hype:', error);
             }
           }
 
-          // Get the event ID from metadata
+          // Get the event ID from metadata for hype redirects
           const eventId = verification.data?.metadata?.eventId;
 
-          // Redirect to event page after 2 seconds
+          // Redirect after 2 seconds
           setTimeout(() => {
-            if (eventId) {
+            if (isBooking) {
+              // Redirect to dashboard for booking confirmations
+              router.push('/dashboard/user?booking=success');
+            } else if (eventId) {
+              // Redirect to event page for hype message confirmations
               router.push(`/event/${eventId}?payment=success`);
             } else {
               router.push('/');
@@ -139,7 +154,7 @@ export default function PaymentCallbackPage() {
 
           {status === 'success' && (
             <p className="text-sm text-muted-foreground text-center">
-              Your hype message has been sent! Redirecting you back to the event...
+              Your transaction has been processed successfully! Redirecting you now...
             </p>
           )}
 

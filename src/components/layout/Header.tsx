@@ -92,8 +92,8 @@ export function Header({ className }: { className?: string }) {
 
 
   // If the logged-in user is a hypeman, we hide public "Book a Video" link
-  const isHypeman = Array.isArray(userMeta?.roles) && userMeta.roles.includes('hypeman');
-  const isSpotlight = Array.isArray(userMeta?.roles) && userMeta.roles.includes('spotlight');
+  const isHypeman = userMeta?.type === "hypeman";
+  const isSpotlight = userMeta?.type === "spotlight";
 
   const mainNavLinks: Array<{ href: string; label: string }> = [
     { href: "/#events", label: "Events" },

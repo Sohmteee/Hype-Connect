@@ -11,7 +11,7 @@ function getAuthService() {
 interface UserData {
   email: string;
   displayName: string;
-  roles: string[];
+  type: "hypeman" | "spotlight";
 }
 
 export async function createUser(userId: string, userData: UserData) {
@@ -22,8 +22,10 @@ export async function createUser(userId: string, userData: UserData) {
       uid: userId,
       email: userData.email,
       displayName: userData.displayName,
-      roles: userData.roles,
-      defaultProfileId: null,
+      type: userData.type,
+      photoURL: null,
+      publicBio: "",
+      visibility: "public",
       createdAt: new Date().toISOString(),
     };
 
@@ -66,114 +68,14 @@ export async function updateUser(userId: string, updates: Partial<UserData>) {
 }
 
 interface ProfileData {
-  type: "hypeman" | "spotlight";
   displayName: string;
   publicBio?: string;
   visibility: "public" | "private";
-  payoutInfo?: Record<string, any>;
+  photoURL?: string | null;
 }
 
-export async function createProfile(userId: string, profileData: ProfileData) {
-  try {
-    const db = getDb();
-    const profileId = `${profileData.type}-${Date.now()}`;
-
-    const profile = {
-      profileId,
-      type: profileData.type,
-      displayName: profileData.displayName,
-      publicBio: profileData.publicBio || "",
-      visibility: profileData.visibility,
-      payoutInfo: profileData.payoutInfo || {},
-      stats: {
-        hypesReceived: 0,
-        earnings: 0,
-      },
-      createdAt: new Date().toISOString(),
-    };
-
-    await db
-      .collection("users")
-      .doc(userId)
-      .collection("profiles")
-      .doc(profileId)
-      .set(profile);
-
-    // Set as default profile if first one
-    const user = await getUser(userId);
-    if (!user?.defaultProfileId) {
-      await db
-        .collection("users")
-        .doc(userId)
-        .update({ defaultProfileId: profileId });
-    }
-
-    return profile;
-  } catch (error) {
-    console.error("Create profile error:", error);
-    throw new Error("Failed to create profile");
-  }
-}
-
-export async function getProfile(userId: string, profileId: string) {
-  try {
-    const db = getDb();
-    const doc = await db
-      .collection("users")
-      .doc(userId)
-      .collection("profiles")
-      .doc(profileId)
-      .get();
-
-    if (!doc.exists) {
-      return null;
-    }
-
-    return doc.data();
-  } catch (error) {
-    console.error("Get profile error:", error);
-    throw new Error("Failed to get profile");
-  }
-}
-
-export async function getUserProfiles(userId: string) {
-  try {
-    const db = getDb();
-    console.log("[getUserProfiles] Starting query for userId:", userId);
-    console.log("[getUserProfiles] Firestore instance:", db.constructor.name);
-    console.log("[getUserProfiles] About to execute Firestore query...");
-
-    const snapshot = await db
-      .collection("users")
-      .doc(userId)
-      .collection("profiles")
-      .get();
-
-    console.log(
-      "[getUserProfiles] Query successful, found",
-      snapshot.docs.length,
-      "profiles"
-    );
-    // IMPORTANT: Include the document ID (profileId) in the returned data
-    return snapshot.docs.map((doc: any) => ({
-      profileId: doc.id, // Add the Firestore document ID
-      ...doc.data(),
-    }));
-  } catch (error: any) {
-    console.error("[getUserProfiles] Full error object:", {
-      message: error?.message,
-      code: error?.code,
-      name: error?.name,
-      details: error?.details,
-      error: String(error),
-    });
-    throw error;
-  }
-}
-
-export async function updateProfile(
+export async function updateUserProfile(
   userId: string,
-  profileId: string,
   updates: Partial<ProfileData>
 ) {
   try {
@@ -182,13 +84,11 @@ export async function updateProfile(
     await db
       .collection("users")
       .doc(userId)
-      .collection("profiles")
-      .doc(profileId)
-      .update(updates);
+      .update(updates as any);
 
     return { success: true };
   } catch (error) {
-    console.error("Update profile error:", error);
-    throw new Error("Failed to update profile");
+    console.error("Update user profile error:", error);
+    throw new Error("Failed to update user profile");
   }
 }

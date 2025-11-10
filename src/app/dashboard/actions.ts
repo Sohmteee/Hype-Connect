@@ -16,12 +16,7 @@ import {
   updateEvent,
   deactivateEvent,
 } from "@/services/firestore/events";
-import {
-  createProfile,
-  getProfile,
-  getUserProfiles,
-  updateProfile,
-} from "@/services/firestore/users";
+import { getUser } from "@/services/firestore/users";
 import {
   createHypeMessage,
   getHypeMessages,
@@ -42,19 +37,13 @@ import { getAdminFirestore } from "@/services/firebase-admin";
 
 export async function validateHypemanAccessAction(userId: string) {
   try {
-    // Check if user has a hypeman profile
-    const profiles = await getUserProfiles(userId);
+    // Check if user is a hypeman
+    const user = await getUser(userId);
     console.log(
-      `[validateHypemanAccessAction] userId: ${userId}, profiles:`,
-      profiles
+      `[validateHypemanAccessAction] userId: ${userId}, userType: ${user?.type}`
     );
 
-    const isHypeman =
-      profiles &&
-      Array.isArray(profiles) &&
-      profiles.some((p: any) => p.type === "hypeman");
-
-    if (!isHypeman) {
+    if (!user || user.type !== "hypeman") {
       return {
         success: false,
         error: "Only hypemen can access this dashboard",
@@ -99,10 +88,9 @@ export async function createEventAction(userId: string, formData: unknown) {
   try {
     const validatedData = createEventSchema.parse(formData);
 
-    // Fetch the hypeman's profile to get their name
-    const profiles = await getUserProfiles(userId);
-    const hypemanProfile = profiles?.[0]; // Get the first profile (usually the hypeman profile)
-    const hypemanName = hypemanProfile?.name || "Hypeman";
+    // Get the hypeman's name from their user doc
+    const user = await getUser(userId);
+    const hypemanName = user?.displayName || "Hypeman";
 
     const eventData = {
       ...validatedData,
@@ -186,51 +174,27 @@ export async function deactivateEventAction(userId: string, eventId: string) {
 
 // ==================== Profile Actions ====================
 
-export async function createProfileAction(userId: string, formData: unknown) {
+export async function getUserAction(userId: string) {
   try {
-    const validatedData = createProfileSchema.parse(formData);
-    const profile = await createProfile(userId, validatedData);
-    return { success: true, data: profile };
-  } catch (error) {
-    console.error("Create profile error:", error);
-    if (error instanceof Error) {
-      return { success: false, error: error.message };
+    const user = await getUser(userId);
+    if (!user) {
+      return { success: false, error: "User not found" };
     }
-    return { success: false, error: "Failed to create profile" };
-  }
-}
-
-export async function getProfilesAction(userId: string) {
-  try {
-    const profiles = await getUserProfiles(userId);
-    return { success: true, data: profiles };
+    return { success: true, data: user };
   } catch (error) {
-    console.error("Get profiles error:", error);
-    return { success: false, error: "Failed to fetch profiles" };
+    console.error("Get user error:", error);
+    return { success: false, error: "Failed to fetch user" };
   }
 }
 
-export async function getProfileAction(userId: string, profileId: string) {
-  try {
-    const profile = await getProfile(userId, profileId);
-    if (!profile) {
-      return { success: false, error: "Profile not found" };
-    }
-    return { success: true, data: profile };
-  } catch (error) {
-    console.error("Get profile error:", error);
-    return { success: false, error: "Failed to fetch profile" };
-  }
-}
-
-export async function updateProfileAction(
+export async function updateUserProfileAction(
   userId: string,
-  profileId: string,
   formData: unknown
 ) {
   try {
     const validatedData = updateProfileSchema.parse(formData);
-    await updateProfile(userId, profileId, validatedData as any);
+    const { updateUserProfile } = await import("@/services/firestore/users");
+    await updateUserProfile(userId, validatedData as any);
     return { success: true, message: "Profile updated" };
   } catch (error) {
     console.error("Update profile error:", error);
@@ -388,10 +352,10 @@ export async function getLeaderboardAction(
 
 // ==================== Earnings & Withdrawal Actions ====================
 
-export async function getEarningsAction(userId: string, profileId: string) {
+export async function getEarningsAction(userId: string) {
   try {
-    // Get earnings from the profile document (permanent record + withdrawable balance)
-    const earnings = await getEarnings(userId, profileId);
+    // Get earnings from the wallet document (for hypemen)
+    const earnings = await getEarnings(userId);
     return { success: true, data: earnings };
   } catch (error) {
     console.error("Get earnings error:", error);
@@ -401,12 +365,11 @@ export async function getEarningsAction(userId: string, profileId: string) {
 
 export async function requestWithdrawalAction(
   userId: string,
-  profileId: string,
   formData: unknown
 ) {
   try {
     const validatedData = withdrawalSchema.parse(formData);
-    const withdrawal = await createWithdrawal(userId, profileId, validatedData);
+    const withdrawal = await createWithdrawal(userId, validatedData);
     return { success: true, data: withdrawal };
   } catch (error) {
     console.error("Request withdrawal error:", error);
@@ -521,19 +484,18 @@ export async function processWithdrawalAction(withdrawalId: string) {
 
 export async function getHypemanDashboardDataAction(userId: string) {
   try {
-    // First, get the user's hypeman profile ID
-    const profiles = await getUserProfiles(userId);
-    const hypemanProfile = profiles?.find((p: any) => p.type === "hypeman");
+    // First, get the user to verify they are a hypeman
+    const user = await getUser(userId);
 
-    if (!hypemanProfile) {
+    if (!user || user.type !== "hypeman") {
       return {
         success: false,
-        error: "No hypeman profile found for this user",
+        error: "Only hypemen can access this dashboard",
       };
     }
 
     console.log(
-      `[getHypemanDashboardDataAction] userId: ${userId}, profileId: ${hypemanProfile.profileId}`
+      `[getHypemanDashboardDataAction] userId: ${userId}, userType: ${user.type}`
     );
 
     // Get all events for this hypeman user (including ended/inactive events for earnings calculation)
@@ -646,22 +608,45 @@ export async function getHypesForEventAction(eventId: string) {
   }
 }
 
+export async function getHypemanBookingsAction(userId: string) {
+  try {
+    const db = getAdminFirestore();
+    const bookingsSnapshot = await db
+      .collection("bookings")
+      .where("hypemanUserId", "==", userId)
+      .orderBy("createdAt", "desc")
+      .get();
+
+    const bookings = bookingsSnapshot.docs.map((doc: any) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return { success: true, data: bookings };
+  } catch (error) {
+    console.error("Get hypeman bookings error:", error);
+    return { success: false, error: "Failed to fetch bookings" };
+  }
+}
+
 // ==================== Spotlight User Actions ====================
 
 export async function getSpotlightUserDataAction(userId: string) {
   try {
-    // Get user profiles
-    const profiles = await getUserProfiles(userId);
+    // Get user and verify they are a spotlight user
+    const user = await getUser(userId);
 
-    if (!profiles || profiles.length === 0) {
-      return { success: false, error: "No profiles found" };
+    if (!user || user.type !== "spotlight") {
+      return { success: false, error: "Only spotlight users can access this" };
     }
 
-    // Find spotlight profile
-    const spotlightProfile = profiles.find((p: any) => p.type === "spotlight");
-    if (!spotlightProfile) {
-      return { success: false, error: "No spotlight profile" };
-    }
+    // Build profile object from user doc
+    const profile = {
+      displayName: user.displayName,
+      publicBio: user.publicBio || "",
+      visibility: user.visibility || "public",
+      type: user.type,
+    };
 
     // Get hype history using Admin Firestore
     const db = getAdminFirestore();
@@ -730,12 +715,8 @@ export async function getSpotlightUserDataAction(userId: string) {
     }));
 
     // Also compute events where this spotlight user has been a top supporter (i.e. they sent hypes)
-    // We don't store sender userId currently, so we attempt to match by senderName using a few likely candidate names.
-    const candidateNames = [
-      spotlightProfile.displayName,
-      // fallback to profileId so if senderName was stored as profile id we match it
-      spotlightProfile.profileId,
-    ].filter(Boolean) as string[];
+    // We don't store sender userId currently, so we attempt to match by senderName
+    const candidateNames = [profile.displayName].filter(Boolean) as string[];
 
     const topSupportedEvents: Array<{
       eventId: string;
@@ -812,11 +793,9 @@ export async function getSpotlightUserDataAction(userId: string) {
         }
 
         // If we found nothing with the 'in' query, try a safer (but heavier) substring match fallback
-        if (supportedEventIds.length === 0 && spotlightProfile.displayName) {
+        if (supportedEventIds.length === 0 && profile.displayName) {
           try {
-            const displayLower = String(
-              spotlightProfile.displayName
-            ).toLowerCase();
+            const displayLower = String(profile.displayName).toLowerCase();
             for (const eventDoc of allEventsSnapshot.docs) {
               const eid = eventDoc.id;
               try {
@@ -869,7 +848,7 @@ export async function getSpotlightUserDataAction(userId: string) {
     return {
       success: true,
       data: {
-        profile: spotlightProfile,
+        profile,
         hypes: hypes,
         topSupportedEvents,
       },

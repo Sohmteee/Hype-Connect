@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const teamMembers = [
-  { name: 'Damian Wose', role: 'Chief Executive Officer', image: '/damian.jpg' },
+  { name: 'Damian Nwose', role: 'Chief Executive Officer', image: '/damian.jpg' },
   { name: 'Somtochukwu Ukaegbe', role: 'Chief Technology Officer', image: '/sohmtee.jpg' },
   { name: 'Collins Hephzibah', role: 'Head of Operations', image: '/collins.jpg' },
 ];
