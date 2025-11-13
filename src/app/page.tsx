@@ -44,6 +44,7 @@ import {
   query,
   orderBy,
   limit,
+  where,
 } from 'firebase/firestore';
 import { firestore } from '@/firebase';
 import {
@@ -228,6 +229,7 @@ export default function Home() {
     try {
       const eventsQuery = query(
         collection(firestore, "events"),
+        where("isActive", "==", true),
         orderBy("createdAt", "desc"),
         limit(50)
       );
@@ -239,6 +241,7 @@ export default function Home() {
             id: doc.id,
             ...doc.data(),
           }));
+          console.log("[Home] Events loaded:", eventsData.length, eventsData);
           setAllEvents(eventsData);
           setIsLoading(false);
         },
@@ -283,11 +286,21 @@ export default function Home() {
     ).values()
   );
 
-  const filteredEvents = allEvents.filter((event: any) =>
-    (event.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (event.location.toLowerCase().includes(locationTerm.toLowerCase())) &&
-    (filter === 'live' ? isEventLive(event.startDateTime, event.endDateTime) : true)
-  );
+  const filteredEvents = allEvents.filter((event: any) => {
+    const matchesSearch = (event.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (event.location.toLowerCase().includes(locationTerm.toLowerCase()));
+
+    if (filter === 'live') {
+      // For new events with startDateTime, use computed status
+      // For old events without startDateTime, fall back to isActive field
+      const isLive = event.startDateTime
+        ? isEventLive(event.startDateTime, event.endDateTime)
+        : event.isActive;
+      return matchesSearch && isLive;
+    }
+
+    return matchesSearch;
+  });
 
   return (
     <>
@@ -416,14 +429,21 @@ export default function Home() {
                           <PartyPopper className="w-12 h-12 text-accent/50" />
                         </div>
                       )}
-                      {isEventLive(event.startDateTime, event.endDateTime) && (
-                        <Badge
-                          variant="destructive"
-                          className="absolute top-2 right-2 glowing-text"
-                        >
-                          LIVE
-                        </Badge>
-                      )}
+                      {(() => {
+                        // For new events with startDateTime, use computed status
+                        // For old events without startDateTime, fall back to isActive field
+                        const isLive = event.startDateTime
+                          ? isEventLive(event.startDateTime, event.endDateTime)
+                          : event.isActive;
+                        return isLive && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute top-2 right-2 glowing-text"
+                          >
+                            LIVE
+                          </Badge>
+                        );
+                      })()}
                     </CardHeader>
                     <CardContent className="p-4">
                       <CardTitle className="flex items-center gap-2 font-headline">
@@ -438,10 +458,12 @@ export default function Home() {
                         <MapPin className="w-4 h-4" />
                         <span>{event.location}</span>
                       </CardDescription>
-                      <CardDescription className="flex items-center gap-2 mt-3 text-sm text-accent">
-                        <Hourglass className="w-4 h-4" />
-                        <span>{formatEventDateTimeRange(event.startDateTime, event.endDateTime)}</span>
-                      </CardDescription>
+                      {event.startDateTime && (
+                        <CardDescription className="flex items-center gap-2 mt-3 text-sm text-accent">
+                          <Hourglass className="w-4 h-4" />
+                          <span>{formatEventDateTimeRange(event.startDateTime, event.endDateTime)}</span>
+                        </CardDescription>
+                      )}
                     </CardContent>
                     <CardFooter className="p-4">
                       <Button asChild className="w-full glowing-btn">

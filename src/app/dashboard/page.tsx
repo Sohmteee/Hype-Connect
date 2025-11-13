@@ -557,24 +557,33 @@ export default function DashboardPage() {
                             className="rounded-t-lg object-cover h-32 w-full"
                           />
                         )}
-                        {isEventLive(event.startDateTime, event.endDateTime) && (
-                          <Badge
-                            variant="destructive"
-                            className="absolute top-2 right-2"
-                          >
-                            LIVE
-                          </Badge>
-                        )}
+                        {(() => {
+                          // For new events with startDateTime, use computed status
+                          // For old events without startDateTime, fall back to isActive field
+                          const isLive = event.startDateTime
+                            ? isEventLive(event.startDateTime, event.endDateTime)
+                            : event.isActive;
+                          return isLive && (
+                            <Badge
+                              variant="destructive"
+                              className="absolute top-2 right-2"
+                            >
+                              LIVE
+                            </Badge>
+                          );
+                        })()}
                         <CardHeader>
                           <CardTitle className="line-clamp-2">{event.name}</CardTitle>
                           <CardDescription className="flex items-center gap-2 pt-1">
                             <MapPin className="h-4 w-4 shrink-0" />
                             <span className="line-clamp-1">{event.location}</span>
                           </CardDescription>
-                          <CardDescription className="flex items-center gap-2 pt-1 text-accent">
-                            <Hourglass className="h-4 w-4 shrink-0" />
-                            <span className="text-xs">{formatEventDateTimeRange(event.startDateTime, event.endDateTime)}</span>
-                          </CardDescription>
+                          {event.startDateTime && (
+                            <CardDescription className="flex items-center gap-2 pt-1 text-accent">
+                              <Hourglass className="h-4 w-4 shrink-0" />
+                              <span className="text-xs">{formatEventDateTimeRange(event.startDateTime, event.endDateTime)}</span>
+                            </CardDescription>
+                          )}
                         </CardHeader>
                         <CardFooter>
                           <Button

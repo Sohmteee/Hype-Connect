@@ -40,6 +40,75 @@ if (!PAYSTACK_SECRET_KEY) {
   console.warn("PAYSTACK_SECRET_KEY is not set in environment variables");
 }
 
+/**
+ * Retry logic for failed requests
+ * Exponential backoff: 1s, 2s, 4s
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(15000), // 15 second timeout
+      });
+
+      // Success status codes
+      if (response.ok) {
+        return response;
+      }
+
+      // Don't retry on 4xx errors (client errors)
+      if (response.status >= 400 && response.status < 500) {
+        throw new Error(
+          `Paystack API error: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // 5xx errors can be retried
+      if (response.status >= 500) {
+        lastError = new Error(
+          `Paystack API error: ${response.status} ${response.statusText}`
+        );
+
+        // Exponential backoff before retry
+        if (attempt < maxRetries - 1) {
+          const delayMs = Math.pow(2, attempt) * 1000;
+          console.warn(
+            `Paystack API error, retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries})`
+          );
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
+          continue;
+        }
+      }
+
+      return response;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Retry on network errors and timeouts
+      if (attempt < maxRetries - 1) {
+        const delayMs = Math.pow(2, attempt) * 1000;
+        console.warn(
+          `Paystack request failed, retrying in ${delayMs}ms (attempt ${attempt + 1}/${maxRetries}):`,
+          lastError.message
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
+  }
+
+  throw (
+    lastError ||
+    new Error("Paystack API request failed after multiple retries")
+  );
+}
+
 export class PaystackService {
   /**
    * Initialize a payment transaction
@@ -54,7 +123,7 @@ export class PaystackService {
       const appUrl = getBaseUrl(requestHeaders);
       const callbackUrl = `${appUrl}/payment/callback`;
 
-      const response = await fetch(
+      const response = await fetchWithRetry(
         `${PAYSTACK_BASE_URL}/transaction/initialize`,
         {
           method: "POST",
@@ -71,10 +140,6 @@ export class PaystackService {
         }
       );
 
-      if (!response.ok) {
-        throw new Error(`Paystack API error: ${response.statusText}`);
-      }
-
       return await response.json();
     } catch (error) {
       console.error("Paystack initialize payment error:", error);
@@ -84,12 +149,13 @@ export class PaystackService {
 
   /**
    * Verify a payment transaction
+   * Uses retry logic for reliability
    */
   static async verifyPayment(
     reference: string
   ): Promise<PaystackVerifyResponse> {
     try {
-      const response = await fetch(
+      const response = await fetchWithRetry(
         `${PAYSTACK_BASE_URL}/transaction/verify/${reference}`,
         {
           method: "GET",
@@ -99,10 +165,6 @@ export class PaystackService {
           },
         }
       );
-
-      if (!response.ok) {
-        throw new Error(`Paystack API error: ${response.statusText}`);
-      }
 
       return await response.json();
     } catch (error) {

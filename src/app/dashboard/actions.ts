@@ -240,6 +240,29 @@ export async function submitHypeAction(
       return { success: false, error: "Failed to initialize payment" };
     }
 
+    // SECURITY: Record payment transaction for validation
+    const { recordPaymentInitialized } = await import(
+      "@/services/firebase/payment-transactions"
+    );
+
+    try {
+      await recordPaymentInitialized(
+        paymentInit.data.reference,
+        userId,
+        email,
+        validatedData.amount,
+        {
+          eventId,
+          userId,
+          message: validatedData.message,
+          senderName: validatedData.senderName,
+        }
+      );
+    } catch (err) {
+      console.error("Failed to record payment transaction:", err);
+      // Don't fail the entire request just because logging failed
+    }
+
     // Return payment URL - client will create the hype message after payment confirmation
     return {
       success: true,
@@ -482,6 +505,39 @@ export async function processWithdrawalAction(withdrawalId: string) {
 
 // ==================== Dashboard Data Actions ====================
 
+/**
+ * Serialize Firestore data for Server Actions (converts Timestamps to ISO strings)
+ */
+function serializeFirestoreData(data: any): any {
+  if (data === null || data === undefined) return data;
+
+  if (typeof data === "object") {
+    // Handle Timestamp objects
+    if (data.toDate && typeof data.toDate === "function") {
+      return data.toDate().toISOString();
+    }
+
+    // Handle Date objects
+    if (data instanceof Date) {
+      return data.toISOString();
+    }
+
+    // Handle arrays
+    if (Array.isArray(data)) {
+      return data.map((item) => serializeFirestoreData(item));
+    }
+
+    // Handle objects recursively
+    const serialized: any = {};
+    for (const key in data) {
+      serialized[key] = serializeFirestoreData(data[key]);
+    }
+    return serialized;
+  }
+
+  return data;
+}
+
 export async function getHypemanDashboardDataAction(userId: string) {
   try {
     // First, get the user to verify they are a hypeman
@@ -509,10 +565,12 @@ export async function getHypemanDashboardDataAction(userId: string) {
     // Separate active and ended events
     const events = allEventsSnapshot.docs
       .filter((doc: any) => doc.data().isActive === true)
-      .map((doc: any) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      .map((doc: any) =>
+        serializeFirestoreData({
+          id: doc.id,
+          ...doc.data(),
+        })
+      );
 
     console.log(
       `[getHypemanDashboardDataAction] Found ${events.length} active events and ${allEventsSnapshot.docs.length} total events`
@@ -531,11 +589,13 @@ export async function getHypemanDashboardDataAction(userId: string) {
         .orderBy("timestamp", "desc")
         .get();
 
-      const confirmedHypes = confirmedSnapshot.docs.map((doc: any) => ({
-        id: doc.id,
-        eventId: eventDoc.id,
-        ...doc.data(),
-      }));
+      const confirmedHypes = confirmedSnapshot.docs.map((doc: any) =>
+        serializeFirestoreData({
+          id: doc.id,
+          eventId: eventDoc.id,
+          ...doc.data(),
+        })
+      );
 
       // Get hyped hypes (marked as acknowledged by hypeman)
       const hypedSnapshot = await db
@@ -546,11 +606,13 @@ export async function getHypemanDashboardDataAction(userId: string) {
         .orderBy("timestamp", "desc")
         .get();
 
-      const hypedHypes = hypedSnapshot.docs.map((doc: any) => ({
-        id: doc.id,
-        eventId: eventDoc.id,
-        ...doc.data(),
-      }));
+      const hypedHypes = hypedSnapshot.docs.map((doc: any) =>
+        serializeFirestoreData({
+          id: doc.id,
+          eventId: eventDoc.id,
+          ...doc.data(),
+        })
+      );
 
       allHypes.push(...confirmedHypes, ...hypedHypes);
     }
@@ -596,10 +658,12 @@ export async function getHypesForEventAction(eventId: string) {
       .orderBy("timestamp", "desc")
       .get();
 
-    const hypes = hypesSnapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const hypes = hypesSnapshot.docs.map((doc: any) =>
+      serializeFirestoreData({
+        id: doc.id,
+        ...doc.data(),
+      })
+    );
 
     return { success: true, data: hypes };
   } catch (error) {
@@ -617,10 +681,12 @@ export async function getHypemanBookingsAction(userId: string) {
       .orderBy("createdAt", "desc")
       .get();
 
-    const bookings = bookingsSnapshot.docs.map((doc: any) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const bookings = bookingsSnapshot.docs.map((doc: any) =>
+      serializeFirestoreData({
+        id: doc.id,
+        ...doc.data(),
+      })
+    );
 
     return { success: true, data: bookings };
   } catch (error) {

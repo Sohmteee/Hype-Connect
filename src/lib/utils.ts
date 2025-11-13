@@ -69,7 +69,7 @@ export function formatEventDateTime(dateTime: string): string {
  * Formats a datetime range for display
  * @param startDateTime - ISO datetime string
  * @param endDateTime - ISO datetime string (optional)
- * @returns Formatted string like "Dec 15, 2025 - 8:30 PM to 11:00 PM"
+ * @returns Formatted string like "Dec 15, 2025 - 8:30 PM to 11:00 PM" or "Dec 15, 2025 - 8:30 PM to Dec 16, 2025 - 2:30 PM"
  */
 export function formatEventDateTimeRange(
   startDateTime: string,
@@ -79,13 +79,28 @@ export function formatEventDateTimeRange(
   if (!endDateTime) return startFormatted;
 
   try {
+    const startDate = new Date(startDateTime);
     const endDate = new Date(endDateTime);
-    const endTime = endDate.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-    return `${startFormatted} to ${endTime}`;
+
+    // Check if same day
+    const isSameDay =
+      startDate.getFullYear() === endDate.getFullYear() &&
+      startDate.getMonth() === endDate.getMonth() &&
+      startDate.getDate() === endDate.getDate();
+
+    if (isSameDay) {
+      // Same day - just show end time
+      const endTime = endDate.toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+      return `${startFormatted} to ${endTime}`;
+    } else {
+      // Different days - show full date and time for end
+      const endFormatted = formatEventDateTime(endDateTime);
+      return `${startFormatted} to ${endFormatted}`;
+    }
   } catch {
     return startFormatted;
   }

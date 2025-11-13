@@ -6,7 +6,44 @@ let cachedApp: App | undefined;
 let cachedAuth: Auth | undefined;
 let cachedFirestore: Firestore | undefined;
 
+/**
+ * Production environment validation
+ * Warns about potential payment configuration issues
+ */
+function validateProductionEnv(): void {
+  const pubKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
+  const secKey = process.env.PAYSTACK_SECRET_KEY || "";
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction) {
+    // In production runtime, warn about test keys but allow builds
+    if (pubKey.includes("test") || secKey.includes("test")) {
+      console.warn(
+        "⚠ WARNING: Production environment detected using TEST Paystack keys! " +
+          "Real payments will NOT work. " +
+          "Update NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY and PAYSTACK_SECRET_KEY to production keys. " +
+          "See: https://dashboard.paystack.com/settings/developer"
+      );
+    } else {
+      console.log(
+        "✓ Production environment using production Paystack keys (pk_live_*, sk_live_*)"
+      );
+    }
+  } else {
+    // In development
+    if (!pubKey.includes("test") && pubKey) {
+      console.warn(
+        "⚠ WARNING: Development environment using PRODUCTION Paystack keys! " +
+          "This could cause real charges. Use test keys (pk_test_*, sk_test_*) for development."
+      );
+    }
+  }
+}
+
 function initializeFirebaseAdmin(): App {
+  // Validate production environment
+  validateProductionEnv();
+
   // If app is already initialized, return it
   const existingApps = getApps();
   if (existingApps.length > 0) {

@@ -1,9 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import { PaystackService } from "@/services/payment/paystack";
 import { getAdminFirestore } from "@/services/firebase-admin";
+import {
+  validatePaymentAmount,
+  validateWebhookMetadata,
+  isBookingAlreadyPaid,
+} from "@/services/firebase/payment-validator";
+import {
+  markPaymentVerified,
+  markPaymentCompleted,
+  markPaymentRejected,
+} from "@/services/firebase/payment-transactions";
 import { v4 as uuidv4 } from "uuid";
 
+/**
+ * Webhook idempotency: Prevent duplicate processing if Paystack retries the webhook
+ * Paystack can deliver the same webhook multiple times - we must handle this safely
+ */
+async function isWebhookAlreadyProcessed(
+  db: FirebaseFirestore.Firestore,
+  webhookId: string
+): Promise<boolean> {
+  const logRef = db.collection("webhook-logs").doc(webhookId);
+  const doc = await logRef.get();
+  return doc.exists;
+}
+
+async function markWebhookProcessed(
+  db: FirebaseFirestore.Firestore,
+  webhookId: string,
+  event: string,
+  status: string,
+  error?: string
+): Promise<void> {
+  await db.collection("webhook-logs").doc(webhookId).set({
+    event,
+    status,
+    processedAt: new Date().toISOString(),
+    error,
+    environment: process.env.NODE_ENV,
+  });
+}
+
 export async function POST(request: NextRequest) {
+  let webhookId = "";
   try {
     const body = await request.text();
     const signature = request.headers.get("x-paystack-signature");
@@ -22,11 +62,88 @@ export async function POST(request: NextRequest) {
     }
 
     const event = JSON.parse(body);
+    const db = getAdminFirestore();
+
+    // Generate a unique webhook ID based on event type and data
+    // Paystack provides an ID in their webhook events
+    webhookId = event.id || `${event.event}-${event.data?.reference}`;
+
+    // CRITICAL: Check if this webhook has already been processed
+    const alreadyProcessed = await isWebhookAlreadyProcessed(db, webhookId);
+    if (alreadyProcessed) {
+      console.log(
+        `Webhook ${webhookId} already processed, skipping to prevent duplicates`
+      );
+      return NextResponse.json({
+        success: true,
+        message: "Webhook already processed (idempotent)",
+      });
+    }
 
     // Handle charge success - create hype message or confirm booking
     if (event.event === "charge.success") {
       const { reference, metadata } = event.data;
-      const db = getAdminFirestore();
+      const amount = event.data.amount / 100; // Paystack returns amount in kobo
+
+      // SECURITY: Validate amount against original payment request
+      console.log(
+        `[Webhook] Validating payment amount for reference: ${reference}`
+      );
+      const amountValidation = await validatePaymentAmount(reference, amount);
+
+      if (!amountValidation.valid) {
+        console.error(
+          `[Webhook] Amount validation FAILED: expected ₦${amountValidation.expectedAmount}, received ₦${amount}`
+        );
+        // Reject this webhook - don't process payment
+        await markWebhookProcessed(
+          db,
+          webhookId,
+          event.event,
+          "rejected",
+          `Amount mismatch: expected ₦${amountValidation.expectedAmount}, received ₦${amount}`
+        );
+        await markPaymentRejected(
+          reference,
+          `Amount tampering detected: expected ₦${amountValidation.expectedAmount}, received ₦${amount}`
+        );
+        return NextResponse.json(
+          { error: "Payment validation failed", details: "Amount mismatch" },
+          { status: 400 }
+        );
+      }
+
+      // SECURITY: Validate metadata hasn't been tampered with
+      console.log(`[Webhook] Validating metadata for reference: ${reference}`);
+      const metadataValidation = await validateWebhookMetadata(
+        reference,
+        metadata
+      );
+
+      if (!metadataValidation.valid) {
+        console.error(
+          `[Webhook] Metadata validation FAILED for reference: ${reference}`
+        );
+        // Reject this webhook
+        await markWebhookProcessed(
+          db,
+          webhookId,
+          event.event,
+          "rejected",
+          "Metadata tampering detected"
+        );
+        await markPaymentRejected(reference, "Metadata tampering detected");
+        return NextResponse.json(
+          {
+            error: "Payment validation failed",
+            details: "Metadata tampering detected",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Mark payment as verified in transaction log
+      await markPaymentVerified(reference, event.data);
 
       // Handle hype message (event tips)
       if (metadata?.eventId && metadata?.userId && metadata?.message) {
@@ -44,7 +161,7 @@ export async function POST(request: NextRequest) {
             profileId: metadata.userId,
             eventId: metadata.eventId,
             message: metadata.message,
-            amount: event.data.amount / 100, // Paystack returns amount in cents
+            amount,
             senderName: metadata.senderName || "Anonymous",
             paystackReference: reference,
             status: "confirmed",
@@ -56,9 +173,28 @@ export async function POST(request: NextRequest) {
 
       // Handle booking payment
       if (metadata?.bookingId && metadata?.hypemanId) {
-        const amount = event.data.amount / 100; // Convert from kobo to Naira
         const platformFee = Math.round(amount * 0.2); // 20%
         const hypemanAmount = amount - platformFee; // 80%
+
+        // SECURITY: Check if booking is already paid (prevent double-charge)
+        const alreadyPaid = await isBookingAlreadyPaid(metadata.bookingId);
+        if (alreadyPaid) {
+          console.error(
+            `[Webhook] Booking ${metadata.bookingId} already paid, rejecting duplicate payment`
+          );
+          // Mark webhook as processed but don't duplicate charges
+          await markWebhookProcessed(
+            db,
+            webhookId,
+            event.event,
+            "skipped",
+            "Booking already paid (duplicate prevention)"
+          );
+          return NextResponse.json({
+            success: true,
+            message: "Booking already confirmed - duplicate webhook ignored",
+          });
+        }
 
         // Update booking status
         const bookingRef = db.collection("bookings").doc(metadata.bookingId);
@@ -120,6 +256,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Mark this webhook as successfully processed (idempotency)
+      await markWebhookProcessed(db, webhookId, event.event, "success");
+
       return NextResponse.json({
         success: true,
         message: "Payment confirmed and processed",
@@ -129,7 +268,10 @@ export async function POST(request: NextRequest) {
     // Handle charge failure
     if (event.event === "charge.failure") {
       console.log("Payment failed:", event.data.reference);
-      // No hype message created on failure
+
+      // Mark this webhook as processed
+      await markWebhookProcessed(db, webhookId, event.event, "failure");
+
       return NextResponse.json({
         success: true,
         message: "Payment failure recorded",
@@ -138,6 +280,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Event processed" });
   } catch (error) {
+    // Mark webhook as failed to process
+    const db = getAdminFirestore();
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    if (webhookId) {
+      await markWebhookProcessed(
+        db,
+        webhookId,
+        "unknown",
+        "error",
+        errorMessage
+      ).catch((e) => console.error("Failed to log webhook error:", e));
+    }
+
     console.error("Webhook processing error:", error);
     return NextResponse.json(
       { error: "Failed to process webhook" },

@@ -40,10 +40,10 @@ service cloud.firestore {
       allow delete: if isUser(userId);
     }
 
-    // Events - Public read, authenticated users can create
+    // Events - Public read (active only for unauthenticated), all for authenticated
     match /events/{eventId} {
       allow create: if isAuth() && request.resource.data.hypemanUserId != null;
-      allow read: if resource.data.isActive == true || isAuth();
+      allow read: if (resource.data.isActive == true) || isAuth();
       allow update: if isAuth() && resource.data.hypemanUserId == request.auth.uid;
       allow delete: if false;
 
@@ -85,6 +85,40 @@ service cloud.firestore {
       allow create: if isUser(userId);
       allow read: if isUser(userId) || isAuth();
       allow update: if isUser(userId);
+      allow delete: if false;
+    }
+
+    // Webhook Logs - Server-only, no client access
+    match /webhook-logs/{webhookId} {
+      allow read, write: if false;
+    }
+
+    // Payment Transactions - User can read their own, but writes are server-only
+    match /payment-transactions/{reference} {
+      allow create: if false; // Server-only via admin SDK
+      allow read: if isAuth() && 
+      request.auth.uid == get(/databases/$(database)/documents/payment-transactions/$(reference)).data.userId;
+      allow update, delete: if false;
+    }
+
+    // Fraud Alerts - Admin only, no client access
+    match /fraud-alerts/{alertId} {
+      allow read, write: if false;
+    }
+
+    // Platform Earnings - Server-only tracking
+    match /platform-earnings/{document=**} {
+      allow read: if false; // Only admin via admin SDK
+      allow write: if false;
+    }
+
+    // Withdrawals - User can read/write their own
+    match /withdrawals/{withdrawalId} {
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAuth() && 
+      (request.auth.uid == resource.data.userId || 
+      request.auth.uid == resource.data.approvedBy);
+      allow update: if false; // Only server-side updates
       allow delete: if false;
     }
   }

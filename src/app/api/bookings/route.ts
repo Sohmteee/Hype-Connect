@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminFirestore } from "@/services/firebase-admin";
 import { PaystackService } from "@/services/payment/paystack";
+import { recordPaymentInitialized } from "@/services/firebase/payment-transactions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,6 +62,20 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // SECURITY: Record payment transaction for validation
+    // This creates the source of truth for amount/metadata validation later
+    await recordPaymentInitialized(
+      paymentInit.data.reference,
+      hypemanId, // Store the user requesting this payment
+      email,
+      bookingAmount,
+      {
+        bookingId,
+        hypemanId,
+        name,
+      }
+    );
 
     // Update booking with payment reference
     await bookingRef.update({

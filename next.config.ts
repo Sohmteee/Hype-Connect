@@ -3,7 +3,7 @@ import type {NextConfig} from 'next';
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
-    
+    optimizePackageImports: ['@radix-ui/react-*'],
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Optimize for Firebase deployment
+  outputFileTracing: [],
+  swcMinify: true,
   images: {
     remotePatterns: [
       {
