@@ -680,6 +680,7 @@ export async function getHypemanBookingsAction(userId: string) {
     const bookingsSnapshot = await db
       .collection("bookings")
       .where("hypemanUserId", "==", userId)
+      .where("status", "==", "confirmed")
       .orderBy("createdAt", "desc")
       .get();
 

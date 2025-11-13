@@ -326,6 +326,7 @@ export default function DashboardPage() {
       const bookingsQuery = query(
         collection(firestore, "bookings"),
         where("hypemanUserId", "==", user.uid),
+        where("status", "==", "confirmed"),
         orderBy("createdAt", "desc")
       );
 
