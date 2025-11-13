@@ -128,7 +128,9 @@ export async function getEventsAction(limit: number = 20, offset: number = 0) {
   }
 }
 
-export async function getEventAction(eventId: string): Promise<{ success: boolean; data?: any; error?: string }> {
+export async function getEventAction(
+  eventId: string
+): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const event = await getEvent(eventId);
     if (!event) {
