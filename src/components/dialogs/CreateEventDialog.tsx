@@ -91,6 +91,15 @@ export function CreateEventDialog({ onEventCreated }: CreateEventDialogProps) {
       return;
     }
 
+    if (!formData.endDateTime) {
+      toast({
+        title: "Error",
+        description: "Please select an end date/time",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       // Convert datetime-local to ISO string
@@ -211,7 +220,7 @@ export function CreateEventDialog({ onEventCreated }: CreateEventDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="endDateTime">Event End Date & Time (Optional)</Label>
+            <Label htmlFor="endDateTime">Event End Date & Time</Label>
             <Input
               id="endDateTime"
               name="endDateTime"
@@ -219,6 +228,7 @@ export function CreateEventDialog({ onEventCreated }: CreateEventDialogProps) {
               value={formData.endDateTime}
               onChange={handleInputChange}
               disabled={isLoading}
+              required
             />
           </div>
 

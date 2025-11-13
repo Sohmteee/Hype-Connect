@@ -7,17 +7,17 @@ import { getAdminFirestore } from "@/services/firebase-admin";
  */
 function serializeFirestoreData(data: any): any {
   if (!data) return data;
-  
-  if (typeof data !== 'object') return data;
-  
-  if (data.toDate && typeof data.toDate === 'function') {
+
+  if (typeof data !== "object") return data;
+
+  if (data.toDate && typeof data.toDate === "function") {
     return data.toDate().toISOString();
   }
-  
+
   if (Array.isArray(data)) {
-    return data.map(item => serializeFirestoreData(item));
+    return data.map((item) => serializeFirestoreData(item));
   }
-  
+
   const serialized: any = {};
   for (const key in data) {
     serialized[key] = serializeFirestoreData(data[key]);
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
         }
 
         const hypesSnapshot = await hypesQuery.get();
-        const hypes = hypesSnapshot.docs.map((doc) => 
+        const hypes = hypesSnapshot.docs.map((doc) =>
           serializeFirestoreData({
             id: doc.id,
             ...doc.data(),

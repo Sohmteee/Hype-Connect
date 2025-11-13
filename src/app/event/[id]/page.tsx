@@ -155,6 +155,16 @@ function EventDetails({ event, leaderboard, isLeaderboardLoading }: { event: Eve
       return;
     }
 
+    // Check if event is active (current time is between start and end time)
+    if (!event.isActive) {
+      toast({
+        title: 'Event not active',
+        description: 'This event is not currently active. Hypes can only be sent during active events.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -427,13 +437,14 @@ export default function EventPage() {
         // Fetch event details
         const eventResponse = await getEventAction(id);
         if (eventResponse.success && eventResponse.data) {
+          const eventData = eventResponse.data as any;
           setEvent({
             id,
-            name: eventResponse.data.name || '',
-            location: eventResponse.data.location || '',
-            hypemanProfileId: eventResponse.data.hypemanProfileId || '',
-            isActive: eventResponse.data.isActive ?? false,
-            createdAt: eventResponse.data.createdAt || new Date().toISOString(),
+            name: eventData.name || '',
+            location: eventData.location || '',
+            hypemanProfileId: eventData.hypemanProfileId || '',
+            isActive: eventData.isActive ?? false,
+            createdAt: eventData.createdAt || new Date().toISOString(),
           });
 
           // Fetch leaderboard

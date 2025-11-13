@@ -59,8 +59,7 @@ export const createEventSchema = z.object({
     .datetime("Start date/time must be a valid ISO datetime"),
   endDateTime: z
     .string()
-    .datetime("End date/time must be a valid ISO datetime")
-    .optional(),
+    .datetime("End date/time must be a valid ISO datetime"),
 });
 
 export const updateEventSchema = z.object({

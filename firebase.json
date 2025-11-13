@@ -2,6 +2,9 @@
   "projects": {
     "default": "hype-connect-40b04"
   },
+  "apphosting": {
+    "configFilePath": "apphosting.yaml"
+  },
   "firestore": {
     "rules": "firestore.rules"
   },

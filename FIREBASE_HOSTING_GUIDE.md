@@ -1,7 +1,9 @@
 # Firebase Hosting Deployment Guide for Hype-Connect
 
 ## Current Status ✅
+
 Your project is **partially configured** for Firebase:
+
 - ✅ Firebase project created (`hype-connect-40b04`)
 - ✅ Firebase CLI installed
 - ✅ `firebase.json` configured
@@ -14,55 +16,68 @@ Your project is **partially configured** for Firebase:
 ## What I've Done For You ✅
 
 ### 1. **Updated `apphosting.yaml`** (if needed)
-   - Configured for Next.js with optimal settings
-   - Set `maxInstances` for scaling
+
+- Configured for Next.js with optimal settings
+- Set `maxInstances` for scaling
 
 ### 2. **Created `.firebaserc` file** (local config)
-   - Maps your local development to the Firebase project
-   - Ensures correct project deployment
+
+- Maps your local development to the Firebase project
+- Ensures correct project deployment
 
 ### 3. **Environment Variables Setup**
-   - Verified all `NEXT_PUBLIC_*` and `FIREBASE_ADMIN_*` variables are configured
-   - Ready for production environment
+
+- Verified all `NEXT_PUBLIC_*` and `FIREBASE_ADMIN_*` variables are configured
+- Ready for production environment
 
 ---
 
 ## What You Need To Do ⚠️
 
 ### Step 1: Install Firebase Tools (If Not Already Done)
+
 ```powershell
 npm install -g firebase-tools
 ```
 
 ### Step 2: Authenticate with Firebase
+
 ```powershell
 firebase login
 ```
+
 This will open your browser and authenticate your Google account with Firebase.
 
 ### Step 3: Verify Project Connection
+
 ```powershell
 firebase projects:list
 ```
+
 You should see `hype-connect-40b04` in the list.
 
 ### Step 4: Set Active Project
+
 ```powershell
 firebase use hype-connect-40b04
 ```
 
 ### Step 5: Build the Next.js App
+
 ```powershell
 npm run build
 ```
+
 This creates the `.next` folder with optimized production build.
 
 ### Step 6: Deploy to Firebase App Hosting
+
 ```powershell
 firebase deploy
 ```
 
 This will:
+
 - Deploy to Firebase App Hosting
 - Deploy Firestore rules (`firestore.rules`)
 - Deploy Storage rules (`storage.rules`)
@@ -73,22 +88,26 @@ This will:
 ## Deployment Options 🚀
 
 ### Option A: Firebase App Hosting (Recommended)
+
 - **Best for**: Next.js with backend/Server Actions
 - **Cost**: $0.50/month per backend instance + usage
 - **Auto-scaling**: Yes
 - **CI/CD**: Can connect GitHub for auto-deploy on push
 
 **Deploy:**
+
 ```powershell
 firebase deploy
 ```
 
 ### Option B: Firebase Hosting (Static Only)
+
 - **Best for**: Static sites only
 - **Cost**: Free tier available
 - **Note**: Won't work well with Server Actions
 
 ### Option C: Vercel (Alternative)
+
 - **Best for**: Next.js optimized
 - **Cost**: Free tier available
 - **Benefit**: Easier Next.js integration
@@ -100,25 +119,30 @@ firebase deploy
 After deploying, verify:
 
 1. **Check Deployment Status**
+
    ```powershell
    firebase deploy:list
    ```
 
 2. **View Live App**
+
    - Check Firebase Console: https://console.firebase.google.com
    - Your app URL will be displayed
 
 3. **Monitor Functions & Logs**
+
    ```powershell
    firebase functions:log
    firebase hosting:log
    ```
 
 4. **Set Up Custom Domain** (Optional)
+
    - Firebase Console → App Hosting → Domains
    - Connect your domain (e.g., hype-connect.com)
 
 5. **Enable HTTPS** ✅
+
    - Automatic with Firebase Hosting
 
 6. **Set Up CI/CD** (Optional)
@@ -132,6 +156,7 @@ After deploying, verify:
 Make sure these are set in Firebase Console:
 
 **In Firebase Console → Settings → Environment Variables:**
+
 ```
 NEXT_PUBLIC_FIREBASE_API_KEY=<your-api-key>
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<your-auth-domain>
@@ -152,21 +177,27 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ## Troubleshooting 🔧
 
 ### Issue: "Project not found"
+
 **Solution:** Run `firebase use hype-connect-40b04`
 
 ### Issue: "Permission denied" on Firestore/Storage rules
+
 **Solution:** Update rules in Firebase Console or ensure you're authenticated as project owner
 
 ### Issue: Build fails with TypeScript errors
+
 **Solution:** Your `next.config.ts` has `ignoreBuildErrors: true`, so this shouldn't happen
 
 ### Issue: 502 Bad Gateway after deployment
-**Solution:** 
+
+**Solution:**
+
 - Check logs: `firebase functions:log`
 - Verify environment variables are set
 - Check if Server Actions are working correctly
 
 ### Issue: Firestore not accessible from deployed app
+
 **Solution:** Update Firestore rules to allow your domain
 
 ---
@@ -174,22 +205,25 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ## Performance Tips 🚀
 
 1. **Enable Caching**
+
    ```
    Set Cache-Control headers in functions
    ```
 
 2. **Use Firebase CDN**
+
    - Automatic for static assets
    - Optimizes image delivery
 
 3. **Monitor Backend Instances**
+
    ```powershell
    firebase deploy:list
    ```
 
 4. **Set Auto-scaling in `apphosting.yaml`**
    ```yaml
-   maxInstances: 5  # Increase if needed
+   maxInstances: 5 # Increase if needed
    ```
 
 ---
@@ -235,6 +269,7 @@ firebase functions:log
 ## Questions?
 
 For more help:
+
 - Firebase Docs: https://firebase.google.com/docs
 - Next.js Deployment: https://nextjs.org/docs/app/building-your-application/deploying
 - Firebase App Hosting: https://firebase.google.com/docs/app-hosting

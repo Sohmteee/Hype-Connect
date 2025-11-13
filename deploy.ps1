@@ -11,7 +11,8 @@ Write-Host "Step 1: Checking Firebase CLI..." -ForegroundColor Yellow
 try {
   firebase --version | Out-Null
   Write-Host "✅ Firebase CLI is installed" -ForegroundColor Green
-} catch {
+}
+catch {
   Write-Host "❌ Firebase CLI not found. Install it:" -ForegroundColor Red
   Write-Host "npm install -g firebase-tools" -ForegroundColor White
   exit 1
@@ -23,7 +24,8 @@ Write-Host "Step 2: Checking Firebase authentication..." -ForegroundColor Yellow
 try {
   firebase projects:list | Out-Null
   Write-Host "✅ Firebase CLI authenticated" -ForegroundColor Green
-} catch {
+}
+catch {
   Write-Host "⚠️  Not authenticated. Running: firebase login" -ForegroundColor Yellow
   firebase login
 }
@@ -40,7 +42,8 @@ Write-Host "Step 4: Installing dependencies..." -ForegroundColor Yellow
 npm install
 if ($LASTEXITCODE -eq 0) {
   Write-Host "✅ Dependencies installed" -ForegroundColor Green
-} else {
+}
+else {
   Write-Host "❌ Failed to install dependencies" -ForegroundColor Red
   exit 1
 }
@@ -51,7 +54,8 @@ Write-Host "Step 5: Building Next.js app..." -ForegroundColor Yellow
 npm run build
 if ($LASTEXITCODE -eq 0) {
   Write-Host "✅ Build successful" -ForegroundColor Green
-} else {
+}
+else {
   Write-Host "❌ Build failed" -ForegroundColor Red
   exit 1
 }
@@ -68,7 +72,8 @@ if ($LASTEXITCODE -eq 0) {
   Write-Host "Your app is now live! 🚀" -ForegroundColor Cyan
   Write-Host "Visit: https://console.firebase.google.com" -ForegroundColor White
   Write-Host ""
-} else {
+}
+else {
   Write-Host ""
   Write-Host "❌ Deployment failed" -ForegroundColor Red
   Write-Host "Check the logs above for details" -ForegroundColor Yellow

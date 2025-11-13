@@ -3,6 +3,7 @@
 ## 🚀 Quick Deploy (5 Minutes)
 
 ### Prerequisites
+
 - Node.js 18+ installed
 - Firebase account created
 - Firebase project: `hype-connect-40b04`
@@ -10,12 +11,15 @@
 ### Deploy Now
 
 **Option 1: Automated Script (Recommended)**
+
 ```powershell
 .\deploy.ps1
 ```
+
 This handles everything: authentication, build, and deployment.
 
 **Option 2: Manual Steps**
+
 ```powershell
 # 1. Authenticate
 firebase login
@@ -46,6 +50,7 @@ firebase deploy
 ## 🌐 After Deployment
 
 Your app will be available at:
+
 ```
 https://hype-connect-40b04-<hash>.firebase.com
 ```
@@ -57,6 +62,7 @@ Find your exact URL in Firebase Console → App Hosting → Backends
 ## 📋 Deployment Checklist
 
 Before deploying, ensure:
+
 - ✅ All environment variables are set
 - ✅ `npm run build` completes without errors
 - ✅ Firebase CLI is authenticated
@@ -88,18 +94,22 @@ firebase functions:log
 ## 💡 Tips
 
 1. **Test Locally First**
+
    ```powershell
    npm run dev
    # Visit http://localhost:9002
    ```
 
 2. **Preview Before Production**
+
    ```powershell
    firebase hosting:channel:deploy preview-v1
    ```
+
    This creates a unique preview URL.
 
 3. **Monitor After Deploy**
+
    - Check Firebase Console → Monitoring
    - Watch for errors in logs
 

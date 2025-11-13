@@ -128,7 +128,7 @@ export async function getEventsAction(limit: number = 20, offset: number = 0) {
   }
 }
 
-export async function getEventAction(eventId: string) {
+export async function getEventAction(eventId: string): Promise<{ success: boolean; data?: any; error?: string }> {
   try {
     const event = await getEvent(eventId);
     if (!event) {
@@ -345,7 +345,7 @@ export async function markHypeAsHypedAction(
   try {
     // Verify user owns the event before allowing status update
     const event = await getEvent(eventId);
-    if (!event || event.hypemanProfileId !== userId) {
+    if (!event || (event as any).hypemanProfileId !== userId) {
       return { success: false, error: "Unauthorized" };
     }
 

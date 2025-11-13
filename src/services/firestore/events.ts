@@ -51,7 +51,31 @@ export async function getEvent(eventId: string) {
       return null;
     }
 
-    return doc.data();
+    const eventData = doc.data() as any;
+
+    // Calculate if event is currently active
+    // isActive should be true only if:
+    // 1. The isActive flag is true AND
+    // 2. The current time is between start and end times
+    const startDateTime = eventData?.startDateTime
+      ? new Date(eventData.startDateTime)
+      : null;
+    const endDateTime = eventData?.endDateTime
+      ? new Date(eventData.endDateTime)
+      : null;
+    const now = new Date();
+
+    const isCurrentlyActive =
+      eventData?.isActive &&
+      startDateTime &&
+      endDateTime &&
+      now >= startDateTime &&
+      now <= endDateTime;
+
+    return {
+      ...eventData,
+      isActive: isCurrentlyActive,
+    } as EventData & { isActive: boolean; createdAt: string; eventId: string };
   } catch (error) {
     console.error("Get event error:", error);
     throw new Error("Failed to get event");
